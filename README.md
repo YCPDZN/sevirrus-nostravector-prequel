@@ -8,7 +8,9 @@ A browser game built with [three.js](https://threejs.org). The whole game is one
 
 ## Play
 
-Open `index.html` in a modern desktop or mobile browser (internet needed the first time, to load three.js). It can also be hosted with GitHub Pages: **Settings → Pages → Deploy from branch → `main` / root**.
+**https://ycpdzn.github.io/sevirrus-nostravector-prequel/** (GitHub Pages: Settings → Pages → Deploy from a branch → `main` / root).
+
+`index.html` is the game; it loads its models and voices from `assets/` when it starts, so it needs to be served over the web (GitHub Pages, or `python3 -m http.server` in this folder, then open http://localhost:8000). Only three.js comes from a CDN.
 
 ## What's in it
 
@@ -41,7 +43,9 @@ The game saves only when the player chooses to (pause menu, or at the end of a c
 
 | Path | Contents |
 |---|---|
-| `index.html` | the game |
+| `index.html` | the game (website build) |
+| `assets/` | the game's models (`.glb`) and voice lines and music (`.mp3`), loaded by `index.html` |
+| `tools/build_site.py` | builds `index.html` and `assets/` from the single-file game (every asset embedded) |
 | `models/` | original concept models (Sevirrus, Jakal, Damix Chompjak, Chompy soldier), rigged versions (18-bone armature: Hips, Spine, Neck, Head, Eye_L/R, UpperArm, LowerArm, Hand, UpperLeg, LowerLeg, Foot), and the alien settler |
 | `music/fields_of_carax.mp3` | the duel score, synthesized from scratch |
 | `tools/rig_glb.py` | adds the armature and skin weights to the character models |
