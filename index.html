@@ -344,7 +344,8 @@ body.combat .g-hp { display: block; position: fixed; left: max(16px, env(safe-ar
 <div class="gwrap" id="gPause" hidden><div class="panel" role="dialog" aria-labelledby="hPause">
   <h3 id="hPause">Paused</h3><p>Carax, two days after the massacre.</p>
   <div class="eyebrow">Save game</div><ol class="slots" id="pauseSlots"></ol>
-  <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="close" id="gResume">Resume</button><button class="close" id="gQuit">Return to menu</button></div></div></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="close" id="gResume">Resume</button><button class="close" id="gLoad">Load game</button><button class="close" id="gQuit">Main menu</button></div>
+  <div id="gLoadWrap" hidden><div class="eyebrow" style="margin-top:14px">Load game · unsaved progress will be lost</div><ol class="slots" id="pauseLoadSlots"></ol></div></div></div>
 <div class="gwrap" id="gDone" hidden><div class="panel" role="dialog" aria-labelledby="hDone">
   <div class="eyebrow">Chapter I · Investigation</div><h3 id="hDone">Chapter complete</h3>
   <p>Save your progress? Nothing is saved unless you choose a slot.</p>
@@ -705,11 +706,13 @@ body.combat .g-hp { display: block; position: fixed; left: max(16px, env(safe-ar
   function loadSlot(i) {
     const sv = readSave(i); if (!sv) return;
     $('#pSaves').hidden = true;
+    if (window.__menu.quitChapter) window.__menu.quitChapter(true);
     primeAudio();
     if (sv.complete) { applyProgress(sv); say('Chapter I is complete in this save. Chapter II is not written yet.'); items[0].focus(); return; }
     if (window.__menu.loadState && window.__menu.loadState(sv)) say('Game loaded'); else say('Still loading. Try again in a moment.');
   }
-  window.__menu.renderPauseSlots = () => renderSlots($('#pauseSlots'), 'save');
+  window.__menu.renderPauseSlots = () => { renderSlots($('#pauseSlots'), 'save'); $('#gLoadWrap').hidden = true; };
+  window.__menu.renderPauseLoad = () => renderSlots($('#pauseLoadSlots'), 'load');
   window.__menu.renderDoneSlots = () => renderSlots($('#doneSlots'), 'save');
   window.__menu.onChapterComplete = () => {};
   window.__menu.onChapterEnd = done => { refreshMenu(); if (done) say('Chapter II is not written yet.'); items[0].focus(); };
@@ -2131,6 +2134,10 @@ G('gJournalBtn').addEventListener('click', () => toggleJournal());
 G('gPauseBtn').addEventListener('click', () => togglePause());
 G('gResume').addEventListener('click', () => togglePause());
 G('gQuit').addEventListener('click', () => endChapter());
+G('gLoad').addEventListener('click', () => { const w = G('gLoadWrap'); w.hidden = !w.hidden; if (!w.hidden) { M.renderPauseLoad && M.renderPauseLoad(); const b = w.querySelector('button:not([disabled])'); b && b.focus(); } });
+// leave the chapter without the menu's end-of-chapter messages (used when loading a save mid-game)
+M.quitChapter = quiet => { if (!game) return; quietEnd = quiet; endChapter(); quietEnd = false; };
+let quietEnd = false;
 G('gJClose').addEventListener('click', () => toggleJournal());
 G('gDoneMenu').addEventListener('click', () => { G('gDone').hidden = true; endChapter(); });
 
@@ -2285,7 +2292,7 @@ function endChapter() {
   camera.fov = 32; camera.updateProjectionMatrix();
   } catch (err) { console.error(err); }
   document.body.classList.remove('game', 'driving', 'combat'); hud.pause.hidden = true;
-  M.onChapterEnd && M.onChapterEnd(wasDone);
+  if (!quietEnd) M.onChapterEnd && M.onChapterEnd(wasDone);
 }
 function narrate(html, cls = '') {
   cineEls.card.dataset.html = html; cineEls.card.innerHTML = html; cineEls.card.className = 'cine-card ' + cls; cineEls.card.style.opacity = 1;
