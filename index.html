@@ -243,6 +243,11 @@ body.combat .g-hp { display: block; position: fixed; left: max(16px, env(safe-ar
 .g-boss .g-bar i { background: linear-gradient(90deg, #7a0a16, var(--crimson)); }
 @media (pointer: coarse) { .g-stick, .g-ex { display: block; } .g-help, .g-prompt kbd { display: none; } .g-dodge { display: none; } body.combat .g-dodge { display: block; bottom: calc(env(safe-area-inset-bottom, 0px) + 128px); } }
 @media (max-width: 820px) { .g-help { display: none; } }
+.h-run, .g-sev, .g-blast { display: none; } body.run .h-combat { display: none; } body.run .h-run { display: inline; }
+body.run .g-sev { display: block; position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); top: calc(env(safe-area-inset-top, 0px) + 112px); z-index: 8; text-align: right; font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--dim); }
+body.run .g-sev b { display: block; margin-top: 4px; font-size: 13px; letter-spacing: .14em; color: var(--bone); font-weight: 500; }
+body.run .g-sev.near b { color: var(--crimson); }
+@media (pointer: coarse) { body.run .g-blast { display: block; bottom: calc(env(safe-area-inset-bottom, 0px) + 208px); } }
 .gwrap { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(8,3,14,.74); z-index: 12;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px); }
@@ -382,7 +387,7 @@ body.combat .g-hp { display: block; position: fixed; left: max(16px, env(safe-ar
     </div>
   </div>
 
-  <div class="foot">Build 0.2 · Chapters I–II</div>
+  <div class="foot">Build 0.3 · Chapters I–II</div>
 
   <aside class="dossier" aria-label="Subject dossier">
     <h2><span>Subject file</span><span>№ 0-1790</span></h2>
@@ -683,6 +688,7 @@ body.combat .g-hp { display: block; position: fixed; left: max(16px, env(safe-ar
   const dropSave = i => { try { localStorage.removeItem(skey(i)); } catch (e) {} };
   function latestSave() { let best = null; for (let i = 1; i <= SLOTS; i++) { const sv = readSave(i); if (sv && (!best || sv.t > best.s.t)) best = { s: sv, i }; } return best; }
   function describe(sv) {
+    if (sv.chapter === 2) return sv.complete ? 'Chapter II complete' : `The road to Alphinos · ${Math.max(0, Math.round(sv.pos[1] + 204))} m to the gates`;
     if (sv.complete) return 'Chapter I complete · on to Chapter II';
     if (sv.phase === 'bastion') return `Bastion of Carax · floor ${sv.floor + 1} of 5`;
     if (sv.phase === 'drive') return `On the road · ${Math.max(0, 5 * (1 - sv.dist / 12000)).toFixed(1)} miles to go`;
@@ -692,7 +698,7 @@ body.combat .g-hp { display: block; position: fixed; left: max(16px, env(safe-ar
   const when = t => new Date(t).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   // the menu reflects the most recent save: Continue, and his threat assessment once Chapter I is done
   function applyProgress(sv) {
-    $('#curName').textContent = sv && sv.complete ? 'II · The Siege of Aridaxx' : 'I · Investigation';
+    $('#curName').textContent = sv && (sv.complete || sv.chapter === 2) ? 'II · The Siege of Aridaxx' : 'I · Investigation';
     const done = !!(sv && sv.complete);
     $('#threatTxt').textContent = 'Threat assessment · ' + (done ? '12' : '11') + ' / 12';
     $('#threatLast').classList.toggle('f', done);
@@ -708,7 +714,7 @@ body.combat .g-hp { display: block; position: fixed; left: max(16px, env(safe-ar
     el.innerHTML = '';
     for (let i = 1; i <= SLOTS; i++) {
       const sv = readSave(i), li = document.createElement('li');
-      li.innerHTML = `<span class="sn">Slot ${i}</span><span class="sd${sv ? '' : ' empty'}">${sv ? describe(sv) + `<small>Chapter I · saved ${when(sv.t)}</small>` : 'Empty'}</span><span class="sb"></span>`;
+      li.innerHTML = `<span class="sn">Slot ${i}</span><span class="sd${sv ? '' : ' empty'}">${sv ? describe(sv) + `<small>Chapter ${sv.chapter === 2 ? 'II' : 'I'} · saved ${when(sv.t)}</small>` : 'Empty'}</span><span class="sb"></span>`;
       const box = li.querySelector('.sb'), btn = (label, fn, cls) => { const b = document.createElement('button'); b.textContent = label; if (cls) b.className = cls; b.addEventListener('click', fn); box.appendChild(b); return b; };
       if (mode === 'load') {
         const l = btn('Load', () => loadSlot(i)); l.disabled = !sv;
@@ -730,6 +736,7 @@ body.combat .g-hp { display: block; position: fixed; left: max(16px, env(safe-ar
     $('#pSaves').hidden = true;
     if (window.__menu.quitChapter) window.__menu.quitChapter(true);
     primeAudio();
+    if (sv.complete && sv.chapter === 2) { applyProgress(sv); say('Chapter II is complete in this save. Chapter III is not written yet.'); items[0].focus(); return; }
     if (sv.complete) { applyProgress(sv); if (window.__menu.playChapter2 && window.__menu.playChapter2()) say('Chapter II: The Siege of Aridaxx'); else { say('Chapter I is complete in this save. Chapter II is still loading.'); items[0].focus(); } return; }
     if (window.__menu.loadState && window.__menu.loadState(sv)) say('Game loaded'); else say('Still loading. Try again in a moment.');
   }
@@ -2258,6 +2265,7 @@ M.playChapter = startChapter;
 // snapshot of the chapter for a save (only ever taken when the player picks a slot)
 M.getState = () => {
   if (!game) return null;
+  if (game.phase === 'escape') { const p = game.mover.position; return { v: 1, t: Date.now(), chapter: 2, phase: 'escape', complete: !!game.done, pos: [+p.x.toFixed(2), +p.z.toFixed(2)], yaw: +game.mover.rotation.y.toFixed(3), hp: Math.round(B.hp), check: game.check, sevZ: +rig.position.z.toFixed(2), heard: [...game.heard] }; }
   const phase = game.phase === 'toCar' || game.phase === 'drive' || game.phase === 'bastion' ? game.phase : 'site';
   const p = game.mover.position;
   return { v: 1, t: Date.now(), chapter: 1, phase, complete: !!game.done,
@@ -2269,6 +2277,7 @@ M.getState = () => {
 };
 // rebuild the chapter from a save
 M.loadState = st => {
+  if (st.chapter === 2) { if (game) return false; return startEscape(st); }
   if (!startChapter()) return false;
   game.restored = true;
   (st.heard || []).forEach(h => game.heard.add(h));
@@ -2314,6 +2323,14 @@ function endChapter() {
   G('gPause').hidden = true; G('gDone').hidden = true; recSkip.hidden = true; clearTimeout(say.t);
   try {
   scene.remove(game.mover); if (game.ghost) scene.remove(game.ghost);
+  if (game.phase === 'escape') {
+    if (runSet) runSet.g.visible = false; if (game.jakal) scene.remove(game.jakal.mover); if (game.ghostBlade) scene.remove(game.ghostBlade); (game.rings || []).forEach(x => scene.remove(x.w));
+    clearGore(); clearShards(); sevTrail.clear(); rig.rotation.order = 'XYZ'; eyeMats.forEach(m => { m.emissiveIntensity = 0; }); cineEls.red.style.opacity = 0;
+    hemi.color.set(0x4a2f72); hemi.groundColor.set(0x0a0410); bhLight.color.set(0xff8a3a); bhLight.position.set(60, 110, -300); stars.visible = false; scene.fog.color.set(0x0f0819); scene.fog.density = baseFog; camera.far = 60;
+    [hemi, key, under, rimL, rimR].forEach(l => { if (l.userData.was !== undefined) l.intensity = l.userData.was; }); rimL.position.set(-2.2, 2.8, -2.2); key.angle = Math.PI / 7; key.distance = 12; key.decay = 1.6;
+  }
+  document.body.classList.remove('run'); G('gHp').querySelector('span').textContent = 'Jakal Chompjak XVI'; G('gHud').querySelector('.g-ch').textContent = 'Chapter I · Investigation'; G('gJournalBtn').hidden = false;
+  G('gDone').querySelector('.eyebrow').textContent = 'Chapter I · Investigation'; G('gDoneNext').hidden = false;
   (game.foes || []).forEach(f => scene.remove(f.mover)); if (game.trail) game.trail.clear();
   if (bast) bast.g.visible = false; if (bastionOutside) bastionOutside.visible = false;
   if (rover) { leaveRoad(); } cineEls.black.style.opacity = 0;
@@ -2420,6 +2437,7 @@ function gameUpdate(dt, time) {
   if (game.phase === 'toCar') { toCarUpdate(dt, time); return; }
   if (game.phase === 'drive') { driveUpdate(dt, time); return; }
   if (game.phase === 'bastion') { bastionUpdate(dt, time); return; }
+  if (game.phase === 'escape') { escapeUpdate(dt, time); return; }
   game.t += dt;
   const p = game.mover.position;
   // movement relative to the camera
@@ -2838,22 +2856,22 @@ function updateBastionHud() {
 let clickStart = null;
 canvasEl.addEventListener('pointerdown', e => { clickStart = { x: e.clientX, y: e.clientY }; });
 canvasEl.addEventListener('pointerup', e => {
-  if (!game || game.phase !== 'bastion' || !clickStart) return;
+  if (!game || (game.phase !== 'bastion' && game.phase !== 'escape') || !clickStart) return;
   if (Math.hypot(e.clientX - clickStart.x, e.clientY - clickStart.y) < 6 && e.pointerType !== 'touch') attack();
   clickStart = null;
 });
 addEventListener('keydown', e => {
-  if (!game || game.phase !== 'bastion' || game.paused) return;
+  if (!game || (game.phase !== 'bastion' && game.phase !== 'escape') || game.paused) return;
   const k = e.key.toLowerCase();
   if (k === 'f' || k === 'k') attack();
   if (k === ' ') dodge();
-  if (k === 'e') useDoor();
+  if (k === 'e' && game.phase === 'bastion') useDoor();
 });
 hud.exBtn.addEventListener('click', () => { if (game && game.phase === 'toCar') game.wantDrive = true; });
 hud.exBtn.addEventListener('click', () => { if (game && game.phase === 'bastion') { if (game.cleared && nearDoor()) useDoor(); else attack(); } });
 bHud.dodge.addEventListener('click', () => dodge());
 function attack() {
-  if (!game || game.phase !== 'bastion' || game.deadT || (game.atk && game.atk.t < 0.28)) return;
+  if (!game || (game.phase !== 'bastion' && game.phase !== 'escape') || game.deadT || game.stab || game.sealedT !== undefined || (game.atk && game.atk.t < 0.28)) return;
   game.combo = (game.combo || 0) + 1;
   game.atk = { t: 0, hit: false, alt: game.combo % 2 === 0 };
   // turn toward the nearest foe in reach
@@ -2861,7 +2879,7 @@ function attack() {
   if (target && target.mover.position.distanceTo(p) < 3.2) game.mover.rotation.y = Math.atan2(target.mover.position.x - p.x, target.mover.position.z - p.z);
 }
 function dodge() {
-  if (!game || game.phase !== 'bastion' || game.deadT || game.dodge) return;
+  if (!game || (game.phase !== 'bastion' && game.phase !== 'escape') || game.deadT || game.stab || game.dodge) return;
   let mx = 0, mz = 0;
   if (keys.has('w') || keys.has('arrowup')) mz += 1; if (keys.has('s') || keys.has('arrowdown')) mz -= 1;
   if (keys.has('a') || keys.has('arrowleft')) mx -= 1; if (keys.has('d') || keys.has('arrowright')) mx += 1;
@@ -2999,7 +3017,7 @@ function swingHits() {
     whiteEl.style.opacity = 0.25; setTimeout(() => { whiteEl.style.opacity = 0; }, 60);
   });
   if (!any) return;
-  updateBastionHud();
+  if (game.phase === 'bastion') updateBastionHud();
 }
 function foeUpdate(f, dt, time) {
   const p = game.mover.position, fp = f.mover.position;
@@ -3030,8 +3048,9 @@ function foeUpdate(f, dt, time) {
         const dmg = f.herald ? 18 : 12; B.hp -= dmg; game.hurt = 0.3; game.shake = 0.25;
         game.j.spine.getWorldPosition(tmpA); tmpA.y += 0.3; spray(tmpA, tmpB.set(-dx / d, 0.4, -dz / d).normalize(), 50, 2.0, 0.8);
         cineEls.red.style.opacity = 0.45; setTimeout(() => { cineEls.red.style.opacity = 0; }, 140);
-        if (B.hp <= 0) { B.hp = 0; game.deadT = 0.001; say('Jakal Chompjak XVI', 'Not… yet…', 2.6); M.voice && M.voice.play(47); setTimeout(() => game && narrate('YOU FELL<small>The Cult of Zark endures. Try the floor again.</small>'), 600); }
-        updateBastionHud();
+        if (B.hp <= 0 && game.phase === 'escape') { B.hp = 0; runDie(); }
+        else if (B.hp <= 0) { B.hp = 0; game.deadT = 0.001; say('Jakal Chompjak XVI', 'Not… yet…', 2.6); M.voice && M.voice.play(47); setTimeout(() => game && narrate('YOU FELL<small>The Cult of Zark endures. Try the floor again.</small>'), 600); }
+        if (game.phase === 'bastion') updateBastionHud(); else updateRunHud();
       }
     }
     if (f.t > 0.3) { f.state = 'recover'; f.t = 0; f.struck = false; f.aura.material.opacity = 0.4; }
@@ -3039,7 +3058,7 @@ function foeUpdate(f, dt, time) {
     pose = mixPose('strikeDown', 'guard', Math.min(1, f.t / 0.5));
     if (f.t > 0.6) { f.state = 'approach'; f.t = 0; f.cd = (f.herald ? 0.6 : 1.1) + Math.random() * 1.2; }
   }
-  collide(fp, 0.35);
+  if (game.phase === 'escape') collideRun(fp, 0.35, game.seal >= 1); else collide(fp, 0.35);
   applyPose(f.j, addPose(pose, stepGait(f.gait, dt)));
 }
 function startFinale() {
@@ -3320,7 +3339,8 @@ function endSiege(finished) {
   subsEl.style.opacity = 0; cineEls.black.style.opacity = 0; cineEls.red.style.opacity = 0; cineEls.card.style.opacity = 0; cineEls.skip.hidden = true;
   document.body.classList.remove('cine');
   M.song && M.song.stop(); M.voice && M.voice.stop();
-  M.onSiegeEnd && M.onSiegeEnd(!!finished);
+  // straight on into the run (deferred, so the key that skipped the scene does not also pause the game)
+  setTimeout(() => { if (!startEscape()) M.onSiegeEnd && M.onSiegeEnd(!!finished); }, 0);
 }
 M.playChapter2 = startSiege;
 // test hook: run the scene forward to a given time without waiting in real time
@@ -3658,6 +3678,407 @@ function siegeCamera(T, S, time) {
   rimL.intensity = 18; rimL.position.set(sp.x - 2, 3, sp.z - 2.5);
   if (T > SG.POINT) { cineSpot.intensity = 14; cineSpot.position.set(0, 5, -7.5); cineTarget.position.copy(dh); }
 }
+
+// ======================================================================================
+// ---------- Chapter II, playable: the road to Alphinos ----------
+// You are Damix Chompjak. Run through the burning lower city to the keep and seal its gates
+// before Sevirrus reaches the Emperor. Cultists of Zark block the streets. Sevirrus walks behind
+// you the whole way. He has no health bar: strike him, or let him catch you, and he stops your heart.
+// ======================================================================================
+const RUN = { GATE_Z: -204, HALF: 6, SEV_GAP: 24, CATCH: 1.35, SEV_WALK: 3.5, SEV_SURGE: 6.2 };
+const RUN_GROUPS = [[-26, 2], [-54, 3], [-82, 3], [-112, 4], [-142, 3], [-172, 4]];
+const RUN_CHECKS = [0, -60, -120, -175];
+const RUN_TAUNTS = [   // Sevirrus, behind you (CH2SEV15..18 when recorded)
+  [-14, 'Run, cousin. I do so love a chase.'],
+  [-70, 'You can hear me, can’t you? Every step.'],
+  [-128, 'All those years you laughed at me. Laugh now.'],
+  [-186, 'Almost there. Almost.'],
+];
+const RUN_BLOCKS = [[-2.6, 2.6, -40.8, -39.2], [-6, -1.2, -96, -94.4], [1.2, 6, -131, -129.4], [-2.2, 2.2, -187, -185.6], [-6, -3.4, -60, -58.6], [3.4, 6, -150, -148.6]];
+let runSet = null;
+function buildRun() {
+  const g = new THREE.Group(); g.visible = false; scene.add(g);
+  const stone = new THREE.MeshStandardMaterial({ color: 0x3a3340, roughness: 0.92 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x221c26, roughness: 0.95 });
+  const wood = new THREE.MeshStandardMaterial({ color: 0x2e1d14, roughness: 0.9 });
+  const glowWin = new THREE.MeshBasicMaterial({ color: 0xff8a3a });
+  const add = (geo, m, x, y, z, sh = true) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = sh; o.receiveShadow = true; g.add(o); return o; };
+  const tex = stoneTex.clone(); tex.needsUpdate = true; tex.repeat.set(4, 60);
+  const ground = add(new THREE.PlaneGeometry(16, 250), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85 }), 0, 0, -100, false); ground.rotation.x = -Math.PI / 2;
+  const court = add(new THREE.PlaneGeometry(24, 14), new THREE.MeshStandardMaterial({ map: stoneTex, roughness: 0.85 }), 0, 0.002, -211, false); court.rotation.x = -Math.PI / 2;
+  // houses on both sides, some with lit windows, some burning
+  const flames = [];
+  const flameMat = new THREE.MeshBasicMaterial({ color: 0xffa040, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
+  let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  for (let z = 14; z > -200; z -= 7) for (const s of [-1, 1]) {
+    const w = 3 + rnd() * 2.5, h = 5 + rnd() * 8, d = 6 + rnd() * 1.5;
+    add(new THREE.BoxGeometry(w, h, d), rnd() < 0.5 ? stone : dark, s * (RUN.HALF + 0.4 + w / 2), h / 2, z);
+    if (rnd() < 0.55) add(new THREE.PlaneGeometry(0.7, 1.0), glowWin, s * (RUN.HALF + 0.38), 2.2 + rnd() * 2.5, z + (rnd() - 0.5) * 3, false).rotation.y = -s * Math.PI / 2;
+    if (rnd() < 0.18) { const f = add(new THREE.ConeGeometry(1.0, 2.6, 8), flameMat, s * (RUN.HALF + 1.2), h + 1.0, z, false); flames.push(f); }
+  }
+  // arches over the road
+  for (let z = -45; z > -200; z -= 50) { for (const s of [-1, 1]) add(new THREE.BoxGeometry(1.2, 8, 1.2), stone, s * (RUN.HALF + 0.2), 4, z); add(new THREE.BoxGeometry(14, 1.4, 1.2), stone, 0, 8.6, z); }
+  // barricades: wagons and rubble you have to go round
+  RUN_BLOCKS.forEach(([x0, x1, z0, z1]) => add(new THREE.BoxGeometry(x1 - x0, 1.2, z1 - z0), wood, (x0 + x1) / 2, 0.6, (z0 + z1) / 2));
+  // braziers on the road (flames only; two travelling lights stand in for their glow)
+  for (let z = -10; z > -200; z -= 30) for (const s of [-1, 1]) { add(new THREE.CylinderGeometry(0.4, 0.18, 1.0, 8), dark, s * 5.2, 0.5, z); flames.push(add(new THREE.ConeGeometry(0.34, 0.9, 8), flameMat, s * 5.2, 1.45, z, false)); }
+  // the keep: a wall across the road, its gateway, the two gate leaves and the bar
+  for (const s of [-1, 1]) add(new THREE.BoxGeometry(10, 14, 1.6), dark, s * 7, 7, RUN.GATE_Z);
+  add(new THREE.BoxGeometry(4, 6, 1.6), dark, 0, 11, RUN.GATE_Z);
+  for (const s of [-1, 1]) add(new THREE.CylinderGeometry(2.0, 2.3, 18, 10), stone, s * 4.4, 9, RUN.GATE_Z + 0.6);
+  const leafMat = new THREE.MeshStandardMaterial({ color: 0x3a2516, roughness: 0.75, metalness: 0.2 });
+  const iron = new THREE.MeshStandardMaterial({ color: 0x18161c, metalness: 0.85, roughness: 0.4 });
+  const leaf = s => { const p = new THREE.Group(); p.position.set(s * 2, 0, RUN.GATE_Z - 0.5); g.add(p); const m = new THREE.Mesh(new THREE.BoxGeometry(2, 7.6, 0.3), leafMat); m.position.set(-s, 3.8, 0); m.castShadow = true; p.add(m); for (const y of [1.4, 4, 6.4]) { const b = new THREE.Mesh(new THREE.BoxGeometry(2, 0.16, 0.34), iron); b.position.set(-s, y, 0); p.add(b); } return p; };
+  const leafL = leaf(-1), leafR = leaf(1);
+  const bar = add(new THREE.BoxGeometry(4.6, 0.3, 0.3), iron, 0, 6, RUN.GATE_Z - 0.85);
+  // inner court walls
+  for (const s of [-1, 1]) add(new THREE.BoxGeometry(1.2, 10, 14), dark, s * 12, 5, -211);
+  add(new THREE.BoxGeometry(24, 16, 1.2), dark, 0, 8, -218.4);
+  add(new THREE.PlaneGeometry(3.2, 4.4), new THREE.MeshBasicMaterial({ color: 0x9a5a2a }), 0, 2.2, -217.75, false);
+  const keepLight = new THREE.PointLight(0xffa060, 0, 14, 1.4); keepLight.position.set(0, 4.5, -209); g.add(keepLight);
+  // sky
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(55, 24, 12), new THREE.ShaderMaterial({
+    side: THREE.BackSide, depthWrite: false, fog: false,
+    vertexShader: 'varying vec3 vp; void main(){ vp = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+    fragmentShader: 'varying vec3 vp; void main(){ float h = clamp(vp.y, -0.1, 1.0); vec3 c = mix(vec3(0.45,0.12,0.07), vec3(0.16,0.05,0.14), smoothstep(0.0, 0.2, h)); c = mix(c, vec3(0.02,0.01,0.04), smoothstep(0.2, 0.7, h)); gl_FragColor = vec4(c, 1.0); }',
+  }));
+  g.add(sky);
+  const EMN = 300, emPos = new Float32Array(EMN * 3), emV = new Float32Array(EMN);
+  for (let i = 0; i < EMN; i++) { emPos[i * 3] = (Math.random() - 0.5) * 20; emPos[i * 3 + 1] = Math.random() * 10; emPos[i * 3 + 2] = (Math.random() - 0.5) * 40; emV[i] = 0.6 + Math.random() * 1.4; }
+  const emGeo = new THREE.BufferGeometry(); emGeo.setAttribute('position', new THREE.BufferAttribute(emPos, 3));
+  const embers = new THREE.Points(emGeo, new THREE.PointsMaterial({ color: 0xff9a40, size: 0.05, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
+  embers.frustumCulled = false; g.add(embers);
+  const lights = [new THREE.PointLight(0xff7a2a, 14, 16, 1.5), new THREE.PointLight(0xff6020, 12, 16, 1.5)]; lights.forEach(l => g.add(l));
+  return { g, flames, leafL, leafR, bar, sky, embers, emPos, emV, emGeo, lights, keepLight };
+}
+// Damix's own sword: steel with a cyan edge, the Federation's colours
+function giveDamixSword(j) {
+  const s = new THREE.Group(); s.position.set(0, -0.08, 0.02); s.rotation.x = -0.6; j.wristR.add(s);
+  const steel = new THREE.MeshStandardMaterial({ color: 0xc8d0dc, metalness: 0.95, roughness: 0.18 });
+  const sh = new THREE.Shape(); sh.moveTo(-0.028, 0); sh.lineTo(0.028, 0); sh.lineTo(0.022, -0.62); sh.lineTo(0, -0.78); sh.lineTo(-0.022, -0.62); sh.closePath();
+  const geo = new THREE.ExtrudeGeometry(sh, { depth: 0.008, bevelEnabled: false }); geo.translate(0, -0.1, -0.004); geo.rotateY(Math.PI / 2);
+  const m = new THREE.Mesh(geo, steel); m.castShadow = true; s.add(m);
+  const edge = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.6, 0.004), new THREE.MeshBasicMaterial({ color: 0x5ad0ff, toneMapped: false })); edge.position.set(0, -0.4, 0.029); s.add(edge);
+  const guard = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.026, 0.16), new THREE.MeshStandardMaterial({ color: 0xc9a14a, metalness: 0.85, roughness: 0.3 })); guard.position.y = -0.09; s.add(guard);
+  const hilt = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.018, 0.14, 8), new THREE.MeshStandardMaterial({ color: 0x1a2030, roughness: 0.6 })); s.add(hilt);
+  return s;
+}
+const blastBtn = (() => { const b = document.createElement('button'); b.className = 'g-ex g-blast'; b.id = 'gBlast'; b.textContent = 'Blast'; G('gHud').appendChild(b); return b; })();
+const sevHud = (() => { const d = document.createElement('div'); d.className = 'g-sev'; d.id = 'gSev'; d.innerHTML = '<span>Sevirrus</span><b id="gSevDist"></b>'; G('gHud').appendChild(d); return d; })();
+const runHelp = '<span class="h-run">WASD to move · Shift to run · click or F to strike · Q to blast · Space to dodge · hold E to seal the gates · Esc to pause</span>';
+G('gHud').querySelector('.g-help').insertAdjacentHTML('beforeend', runHelp);
+
+function spawnRunFoes(fromZ) {
+  (game.foes || []).forEach(f => scene.remove(f.mover));
+  game.foes = [];
+  RUN_GROUPS.forEach(([z, n]) => {
+    if (z > fromZ - 6) return;
+    for (let k = 0; k < n; k++) {
+      const f = makeCultist(false); f.mover.position.set(-3 + (k / Math.max(1, n - 1)) * 6 + (Math.random() - 0.5) * 0.6, 0, z - Math.random() * 3); f.mover.rotation.y = 0;
+      f.idle = true; game.foes.push(f);
+    }
+  });
+}
+function startEscape(st) {
+  if (game || !damixTpl || !sev || !jakalTpl) return false;
+  if (!runSet) runSet = buildRun();
+  runSet.g.visible = true;
+  runSet.leafL.rotation.y = -Math.PI / 2 + 0.05; runSet.leafR.rotation.y = Math.PI / 2 - 0.05; runSet.bar.visible = false;
+  const d = rigClone(damixTpl); scene.add(d.mover);
+  const check = st && st.check ? st.check : 0;
+  d.mover.position.set(0, 0, RUN_CHECKS[check]); d.mover.rotation.y = Math.PI;
+  game = { t: 0, phase: 'escape', ch: 2, mover: d.mover, j: d.j, bones: d.bones, gait: makeGait(d.mover), done: false, paused: false, heard: new Set((st && st.heard) || []), check, seal: 0, blastCd: 0 };
+  game.sword = giveDamixSword(d.j); game.trail = makeTrail(0x5ad0ff);
+  if (st && st.pos) { d.mover.position.set(st.pos[0], 0, st.pos[1]); d.mover.rotation.y = st.yaw || Math.PI; }
+  // Jakal waits in the inner court
+  const jk = rigClone(jakalTpl); jk.mover.position.set(0, 0, -214.5); scene.add(jk.mover); game.jakal = jk; applyPose(jk.j, POSES.stand);
+  // Sevirrus, behind
+  rig.visible = true; rig.rotation.order = 'YXZ'; rig.rotation.set(0, Math.PI, 0);
+  const sevZ = st && st.sevZ !== undefined ? st.sevZ : d.mover.position.z + RUN.SEV_GAP;
+  rig.position.set(0, 0, sevZ); sev.gait = makeGait(rig); setBlade(true, 1); eyeMats.forEach(m => { m.emissiveIntensity = 1.4; });
+  game.sevWait = st ? 2.0 : 4.5;
+  spawnRunFoes(d.mover.position.z);
+  B.maxHp = 100; B.hp = st && st.hp ? st.hp : 100;
+  // stage and HUD
+  setPlanet(false); floor.visible = ring1.visible = ring2.visible = ticks.visible = false; dust.visible = false; blackHole.visible = false; stars.visible = true;
+  scene.fog.color.set(0x1c0d16); scene.fog.density = 0.024; camera.far = 120; camera.fov = 50; camera.updateProjectionMatrix();
+  key.angle = Math.PI / 4; key.distance = 30; key.decay = 1.2; clearGore();
+  hemi.color.set(0x5a3a7a); hemi.groundColor.set(0x1a0806); bhLight.color.set(0xb8a0ff); bhLight.position.set(-20, 40, 30);
+  camYaw = 0; camPitch = 0.32;
+  document.body.classList.add('game', 'combat', 'run');
+  G('gHp').querySelector('span').textContent = 'Damix Chompjak';
+  G('gHud').querySelector('.g-ch').textContent = 'Chapter II · The Siege of Aridaxx';
+  hud.journal.hidden = true; G('gJournalBtn').hidden = true; bHud.boss.hidden = true;
+  hud.exBtn.disabled = false; hud.exBtn.textContent = 'Strike';
+  updateRunHud();
+  if (!st) { narrate('THE ROAD TO ALPHINOS<small>Seal the keep’s gates before he reaches the Emperor</small>', 'title'); }
+  else narrate('CHAPTER II<small>Game loaded</small>', 'title');
+  return true;
+}
+M.playEscape = startEscape;
+M._game = () => game;   // test hooks
+M._step = (n, dt = 1 / 30) => { for (let i = 0; i < n && game; i++) gameUpdate(dt, performance.now() / 1000 + i * dt); return !!game; };
+function updateRunHud() {
+  const p = game.mover.position, toGo = Math.max(0, Math.round(p.z - RUN.GATE_Z));
+  hud.obj.textContent = p.z > RUN.GATE_Z - 0.8 ? 'Reach Alphinos Keep' : 'Seal the gates';
+  hud.count.textContent = p.z > RUN.GATE_Z - 0.8 ? `${toGo} m to the gates` : 'Hold E';
+  bHud.hpFill.style.width = (B.hp / B.maxHp * 100) + '%';
+}
+function collideRun(pos, r, sealed) {
+  if (pos.z > RUN.GATE_Z - 0.9) pos.x = THREE.MathUtils.clamp(pos.x, -RUN.HALF + r, RUN.HALF - r);
+  else { pos.x = THREE.MathUtils.clamp(pos.x, -11.2 + r, 11.2 - r); pos.z = Math.max(pos.z, -217.6 + r); }
+  pos.z = Math.min(pos.z, 22);
+  // the wall across the road, with its gateway (shut once sealed)
+  if (pos.z < RUN.GATE_Z + 0.8 + r && pos.z > RUN.GATE_Z - 0.8 - r) {
+    const inGap = Math.abs(pos.x) < 2 - r && !sealed;
+    if (!inGap) pos.z = pos.z > RUN.GATE_Z ? RUN.GATE_Z + 0.8 + r : RUN.GATE_Z - 0.8 - r;
+  }
+  RUN_BLOCKS.forEach(([x0, x1, z0, z1]) => {
+    if (pos.x > x0 - r && pos.x < x1 + r && pos.z > z0 - r && pos.z < z1 + r) {
+      const dl = pos.x - (x0 - r), dr = x1 + r - pos.x, dn = pos.z - (z0 - r), df = z1 + r - pos.z, m = Math.min(dl, dr, dn, df);
+      if (m === dl) pos.x = x0 - r; else if (m === dr) pos.x = x1 + r; else if (m === dn) pos.z = z0 - r; else pos.z = z1 + r;
+    }
+  });
+}
+// any blow that lands on Sevirrus ends it
+function hitsSevirrus(reach, cone) {
+  const p = game.mover.position, fy = game.mover.rotation.y, dx = rig.position.x - p.x, dz = rig.position.z - p.z, d = Math.hypot(dx, dz);
+  return d < reach && (dx * Math.sin(fy) + dz * Math.cos(fy)) / Math.max(d, 1e-3) > cone;
+}
+function runBlast() {
+  if (!game || game.phase !== 'escape' || game.paused || game.deadT || game.stab || game.sealedT || game.blastCd > 0) return;
+  game.blastCd = 3; game.blastT = 0;
+  const p = game.mover.position, fy = game.mover.rotation.y, fx = Math.sin(fy), fz = Math.cos(fy);
+  game.j.wristR.getWorldPosition(tmpA);
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.25, 0.36, 40), new THREE.MeshBasicMaterial({ color: 0x5ad0ff, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  ring.position.copy(tmpA); ring.lookAt(tmpA.x + fx, tmpA.y, tmpA.z + fz); scene.add(ring); game.rings = (game.rings || []).concat([{ w: ring, t: 0 }]);
+  shards(tmpA.clone().add(V(fx * 0.5, 0, fz * 0.5)), 90);
+  if (hitsSevirrus(4.5, 0.5)) { startHeartStab(); return; }
+  game.foes.forEach(f => {
+    if (f.state === 'dead') return;
+    const dx = f.mover.position.x - p.x, dz = f.mover.position.z - p.z, d = Math.hypot(dx, dz);
+    if (d > 4.5 || (dx * fx + dz * fz) / Math.max(d, 1e-3) < 0.5) return;
+    f.hp -= 2; f.state = f.hp <= 0 ? 'dead' : 'stagger'; f.t = 0; f.stag = 0.8; f.idle = false;
+    f.mover.position.x += dx / d * 2.6; f.mover.position.z += dz / d * 2.6;
+    f.j.spine.getWorldPosition(tmpB); sparks(tmpB, 30, 3);
+    if (f.state === 'dead') spray(tmpB, UP, 120, 2.6, 1.2);
+  });
+  game.shake = 0.25;
+}
+addEventListener('keydown', e => { if (game && game.phase === 'escape' && !game.paused && e.key.toLowerCase() === 'q') runBlast(); });
+blastBtn.addEventListener('click', runBlast);
+// holding E (or the button) seals the gates
+let sealHeld = false;
+addEventListener('keydown', e => { if (e.key.toLowerCase() === 'e') sealHeld = true; });
+addEventListener('keyup', e => { if (e.key.toLowerCase() === 'e') sealHeld = false; });
+hud.exBtn.addEventListener('pointerdown', () => { sealHeld = true; }); addEventListener('pointerup', () => { sealHeld = false; });
+hud.exBtn.addEventListener('click', () => { if (game && game.phase === 'escape' && !nearSeal()) attack(); });
+const nearSeal = () => game && game.mover.position.z < RUN.GATE_Z - 1.0 && game.mover.position.z > RUN.GATE_Z - 6 && Math.abs(game.mover.position.x) < 4;
+
+function runRestart() {
+  const z = RUN_CHECKS[game.check];
+  game.mover.position.set(0, 0, z); game.mover.rotation.set(0, Math.PI, 0); game.deadT = 0; game.stab = null; game.seal = 0; game.atk = null; game.dodge = null; game.hurt = 0;
+  rig.position.set(0, 0, z + RUN.SEV_GAP); rig.rotation.set(0, Math.PI, 0); sev.gait = makeGait(rig); setBlade(true, 1); game.sevWait = 2.5; game.sevStop = false;
+  game.mover.traverse(o => { if (o.isMesh) o.visible = true; });
+  spawnRunFoes(z); B.hp = B.maxHp; clearBlood(); clearGore(); cineEls.black.style.opacity = 1; cineEls.red.style.opacity = 0; game.fadeIn = 1;
+  runSet.leafL.rotation.y = -Math.PI / 2 + 0.05; runSet.leafR.rotation.y = Math.PI / 2 - 0.05; runSet.bar.visible = false;
+  updateRunHud(); narrate(`THE ROAD TO ALPHINOS<small>${game.check ? 'From the last checkpoint' : 'Again'}</small>`);
+}
+function startHeartStab() {
+  if (game.stab || game.sealedT) return;
+  game.stab = { t: 0, from: rig.position.clone() }; game.atk = null; game.dodge = null; hud.prompt.style.opacity = 0;
+}
+function heartStabUpdate(dt, time) {
+  const S = game.stab, t = (S.t += dt), p = game.mover.position;
+  const dir = V(rig.position.x - p.x, 0, rig.position.z - p.z); if (dir.lengthSq() < 1e-4) dir.set(0, 0, 1); dir.normalize();
+  // he closes in, takes Damix by the shoulder, and drives the blade into his heart
+  const want = V(p.x + dir.x * 0.78, 0, p.z + dir.z * 0.78);
+  rig.position.lerp(want, Math.min(1, dt * 10));
+  rig.rotation.y = Math.atan2(p.x - rig.position.x, p.z - rig.position.z);
+  game.mover.rotation.y = Math.atan2(dir.x, dir.z);
+  let sp = t < 0.35 ? mixPose('menace', 'thrustWind', ss(0, 0.35, t)) : t < 0.55 ? mixPose('thrustWind', 'thrust', ss(0.35, 0.55, t)) : t < 2.7 ? POSES.thrust : mixPose('thrust', 'ripOut', ss(2.7, 3.0, t));
+  sp = addPose(sp, { shoulderL: [-1.3, 0, 0], elbowL: [-0.4, 0, 0], head: [0.1, 0, t > 0.9 && t < 2.6 ? 0.25 : 0] });
+  applyPose(sev.j, sp);
+  let dp = t < 0.55 ? mixPose('guard', 'damixHorror', ss(0, 0.3, t)) : t < 2.7 ? addPose(POSES.impaled, { spine: [0, 0, Math.sin(time * 30) * 0.03 * (1 - ss(0.6, 2.6, t))] }) : POSES.collapse;
+  applyPose(game.j, dp);
+  game.mover.rotation.x = t > 2.8 ? -1.45 * ss(2.8, 3.5, t) : 0;
+  if (t > 0.55 && !S.hit) {
+    S.hit = true; impactFrame(140); game.shake = 0.35; cineEls.red.style.opacity = 0.6;
+    game.j.spine.getWorldPosition(tmpA); tmpA.y += 0.2; spray(tmpA, V(-dir.x, 0.2, -dir.z).normalize(), 420, 3.6, 0.8);
+    subsWho.textContent = 'Sevirrus'; subsLine.textContent = 'Shh.'; subsEl.className = 'subs'; subsEl.style.opacity = 1; M.voice && M.voice.play(9);
+  }
+  if (t > 0.6 && t < 2.6 && Math.random() < 0.6) { game.j.spine.getWorldPosition(tmpA); tmpA.y += 0.15; spray(tmpA, V(-dir.x, -0.2, -dir.z).normalize(), 6, 1.2, 0.3); }
+  if (t > 2.5) subsEl.style.opacity = 0;
+  cineEls.red.style.opacity = Math.max(0, parseFloat(cineEls.red.style.opacity || 0) - dt * 0.6);
+  if (t > 3.2) cineEls.black.style.opacity = Math.min(1, (t - 3.2) / 1.2);
+  if (t > 3.4 && !S.card) { S.card = true; narrate('YOUR HEART STOPS<small>Sevirrus cannot be fought. Run.</small>', 'title'); }
+  // camera: in close, from the side
+  game.j.head.getWorldPosition(tmpB); sev.j.head.getWorldPosition(tmpA);
+  const mid = V((tmpA.x + tmpB.x) / 2, (tmpA.y + tmpB.y) / 2 - 0.1, (tmpA.z + tmpB.z) / 2), side = V(-dir.z, 0, dir.x), k = ss(0, 2.5, t);
+  const cp = V(mid.x + side.x * lerp(3.0, 2.3, k) - dir.x * 0.6, mid.y + 0.3, mid.z + side.z * lerp(3.0, 2.3, k) - dir.z * 0.6);
+  if (game.shake > 0) { game.shake -= dt; cp.x += (Math.random() - 0.5) * 0.06; cp.y += (Math.random() - 0.5) * 0.06; }
+  camera.position.lerp(cp, 0.3); camera.lookAt(mid);
+  if (t > 5.2) runRestart();
+}
+function runDie() {
+  game.deadT = 0.001; setTimeout(() => game && game.deadT && narrate('YOU FELL<small>Try again from the last checkpoint</small>'), 600);
+}
+function escapeUpdate(dt, time) {
+  const p = game.mover.position, r = runSet;
+  // the city burns
+  r.flames.forEach((f, i) => { f.scale.y = 0.85 + Math.sin(time * 12 + i) * 0.12 + Math.random() * 0.06; });
+  for (let i = 0; i < r.emPos.length / 3; i++) { r.emPos[i * 3 + 1] += r.emV[i] * dt; if (r.emPos[i * 3 + 1] > 10) r.emPos[i * 3 + 1] = 0; }
+  r.emGeo.attributes.position.needsUpdate = true; r.embers.position.set(p.x, 0, p.z - 6);
+  r.lights[0].position.set(p.x + 3.5, 3, p.z - 4); r.lights[1].position.set(p.x - 3.5, 3, p.z + 3);
+  r.lights[0].intensity = 12 + Math.sin(time * 9) * 3 + Math.random() * 3; r.lights[1].intensity = 10 + Math.sin(time * 7 + 2) * 3 + Math.random() * 3;
+  r.sky.position.set(p.x, 0, p.z); r.keepLight.intensity = p.z < -150 ? 22 : 0;
+  hemi.intensity = 1.0; bhLight.intensity = 1.1; under.intensity = 0; rimR.intensity = 0; cineSpot.intensity = 0;
+  key.intensity = 34; key.position.set(p.x + 2, 7, p.z + 3); keyTarget.position.set(p.x, 1, p.z);
+  rimL.intensity = 12; rimL.position.set(p.x - 2, 3, p.z - 3);
+  if (game.fadeIn > 0) { game.fadeIn = Math.max(0, game.fadeIn - dt * 1.5); cineEls.black.style.opacity = game.fadeIn; }
+  game.rings = (game.rings || []).filter(x => { x.t += dt; const k = x.t / 0.45; x.w.scale.setScalar(1 + k * 8); x.w.material.opacity = Math.max(0, 1 - k); if (k >= 1) { scene.remove(x.w); return false; } return true; });
+  updateBlood(dt); updateSparks(dt); updateShards(dt); updateGore(dt); fxTick();
+
+  if (game.stab) { heartStabUpdate(dt, time); return; }
+  if (game.sealedT !== undefined) { sealedUpdate(dt, time); return; }
+
+  // death at the cultists' hands
+  if (game.deadT) {
+    game.deadT += dt;
+    applyPose(game.j, POSES.collapse); game.mover.rotation.x = -Math.min(1.45, game.deadT * 3);
+    cineEls.black.style.opacity = Math.min(0.9, game.deadT / 1.5);
+    runCamera(dt);
+    if (game.deadT > 3.2) runRestart();
+    return;
+  }
+
+  // checkpoints
+  while (game.check < RUN_CHECKS.length - 1 && p.z < RUN_CHECKS[game.check + 1]) { game.check++; narrate('CHECKPOINT'); }
+
+  // movement (same feel as the bastion)
+  let mx = 0, mz = 0;
+  if (keys.has('w') || keys.has('arrowup')) mz += 1; if (keys.has('s') || keys.has('arrowdown')) mz -= 1;
+  if (keys.has('a') || keys.has('arrowleft')) mx -= 1; if (keys.has('d') || keys.has('arrowright')) mx += 1;
+  mx += stickVec.x; mz -= stickVec.y;
+  const len = Math.hypot(mx, mz), sealing = nearSeal() && sealHeld;
+  if (game.dodge) {
+    game.dodge.t += dt; const s = 9 * (1 - game.dodge.t / 0.28);
+    p.x += game.dodge.dx * s * dt; p.z += game.dodge.dz * s * dt;
+    if (game.dodge.t > 0.28) game.dodge = null;
+  } else if (len > 0.05 && !(game.atk && game.atk.t < 0.3) && !sealing) {
+    const run = keys.has('shift') || stickVec.length() > 0.92, speed = (run ? 4.8 : 2.8) * Math.min(1, len);
+    const fx = Math.sin(camYaw + Math.PI), fz = Math.cos(camYaw + Math.PI);
+    const dx = (fx * mz - fz * mx) / Math.max(1, len), dz = (fz * mz + fx * mx) / Math.max(1, len);
+    p.x += dx * speed * dt; p.z += dz * speed * dt;
+    const want = Math.atan2(dx, dz); let d = want - game.mover.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d));
+    game.mover.rotation.y += d * Math.min(1, dt * 12);
+  }
+  collideRun(p, 0.35, game.seal >= 1); p.y = 0;
+  game.blastCd = Math.max(0, game.blastCd - dt); blastBtn.disabled = game.blastCd > 0;
+
+  // Damix's body
+  let pose = addPose('guard', stepGait(game.gait, dt));
+  if (game.atk) {
+    const a = game.atk; a.t += dt;
+    const wind = a.alt ? 'slashBack' : 'slashWind', hit = a.alt ? 'slashFollow' : 'strikeDown';
+    pose = a.t < 0.1 ? mixPose('guard', wind, a.t / 0.1) : a.t < 0.22 ? mixPose(wind, hit, (a.t - 0.1) / 0.12) : mixPose(hit, 'guard', Math.min(1, (a.t - 0.22) / 0.25));
+    if (!a.hit && a.t >= 0.17) { a.hit = true; if (hitsSevirrus(2.0, 0.25)) { startHeartStab(); return; } swingHits(); }
+    if (a.t > 0.5) game.atk = null;
+  }
+  if (game.blastT !== undefined && game.blastT < 0.5) { game.blastT += dt; pose = mixPose(pose, 'damixBlast', 1 - ss(0.25, 0.5, game.blastT)); }
+  if (game.dodge) pose = addPose(pose, { rootY: -0.12, spine: [0.3, 0, 0] });
+  if (game.hurt > 0) { game.hurt -= dt; pose = addPose(pose, { spine: [-0.2, 0, 0], head: [-0.2, 0, 0] }); }
+  if (sealing) pose = mixPose(pose, { spine: [0.35, 0, 0], shoulderL: [-1.5, 0, 0.1], elbowL: [-0.3, 0, 0], shoulderR: [-1.5, 0, -0.1], elbowR: [-0.3, 0, 0], hipL: [-0.4, 0, 0], kneeL: [0.5, 0, 0] }, 0.85);
+  applyPose(game.j, pose);
+  game.sword.localToWorld(trB.set(0, -0.15, 0)); game.sword.localToWorld(trT.set(0, -0.92, 0)); if (game.atk) game.trail.push(trB, trT); else game.trail.clear();
+
+  // the cultists wake when you come near
+  game.foes.forEach(f => {
+    if (f.idle) {
+      const d = f.mover.position.distanceTo(p); applyPose(f.j, POSES.guard);
+      if (d < 13) f.idle = false; else return;
+    }
+    foeUpdate(f, dt, time);
+  });
+  game.foes.forEach(a => game.foes.forEach(b => { if (a === b || a.state === 'dead' || b.state === 'dead') return; const d = a.mover.position.distanceTo(b.mover.position); if (d < 0.8 && d > 0) { const push = tmpA.subVectors(a.mover.position, b.mover.position).multiplyScalar((0.8 - d) / d * 0.5); a.mover.position.add(push); } }));
+
+  // Sevirrus walks. He never runs, unless you get too far ahead.
+  if (game.sevWait > 0) game.sevWait -= dt;
+  else if (!game.sevStop) {
+    const sp = rig.position, dx = p.x - sp.x, dz = p.z - sp.z, d = Math.hypot(dx, dz);
+    const speed = d > 32 ? RUN.SEV_SURGE : RUN.SEV_WALK;
+    // he keeps to the middle of the road, going round barricades
+    let tx = p.x, tz = p.z;
+    if (d > 6) { tz = sp.z - 4; tx = lerp(sp.x, p.x, 0.25); const blk = RUN_BLOCKS.find(([x0, x1, z0, z1]) => tz > z0 - 1.5 && tz < z1 + 3 && sp.x > x0 - 0.6 && sp.x < x1 + 0.6); if (blk) tx = (blk[0] + blk[1]) / 2 > 0 ? blk[0] - 1.2 : blk[1] + 1.2; }
+    const vx = tx - sp.x, vz = tz - sp.z, vl = Math.hypot(vx, vz) || 1;
+    sp.x += vx / vl * speed * dt; sp.z += vz / vl * speed * dt;
+    collideRun(sp, 0.35, game.seal >= 1);
+    rig.rotation.y = Math.atan2(vx, vz);
+    if (d < RUN.CATCH) { startHeartStab(); return; }
+    // he walks the cultists aside
+    game.foes.forEach(f => { if (f.state === 'dead') return; const fx = f.mover.position.x - sp.x, fz = f.mover.position.z - sp.z, fd = Math.hypot(fx, fz); if (fd < 0.9 && fd > 0) { f.mover.position.x = sp.x + fx / fd * 0.9; f.mover.position.z = sp.z + fz / fd * 0.9; } });
+    // the taunts
+    RUN_TAUNTS.forEach(([z, line], i) => { if (p.z < z && !game.heard.has('taunt' + i)) { game.heard.add('taunt' + i); say('Sevirrus', line, 3.6); } });
+  }
+  applyPose(sev.j, addPose(mixPose('menace', 'idleBlade', 0.35), stepGait(sev.gait, dt)));
+  setBlade(true, 1); trailSev();
+  // how close he is: a heartbeat at the edge of the screen
+  const sd = rig.position.distanceTo(p);
+  G('gSevDist').textContent = game.sevWait > 0 ? '…' : `${Math.round(sd)} m behind`;
+  sevHud.classList.toggle('near', sd < 10);
+  const beat = Math.pow(Math.max(0, Math.sin(time * (sd < 8 ? 9 : 5))), 6);
+  cineEls.red.style.opacity = sd < 14 ? (1 - sd / 14) * 0.3 * (0.5 + beat * 0.5) : 0;
+
+  // sealing the gates
+  if (sealing) game.seal = Math.min(1, game.seal + dt / 1.8);
+  r.leafL.rotation.y = lerp(-Math.PI / 2 + 0.05, 0, ss(0, 1, game.seal)); r.leafR.rotation.y = lerp(Math.PI / 2 - 0.05, 0, ss(0, 1, game.seal));
+  const can = nearSeal();
+  hud.prompt.style.opacity = can ? 1 : 0;
+  if (can) hud.prompt.querySelector('span').textContent = game.seal > 0 ? `Sealing the gates… ${Math.round(game.seal * 100)}%` : 'Hold to seal the gates';
+  hud.exBtn.textContent = can ? 'Seal' : 'Strike';
+  if (game.seal >= 1) { r.bar.visible = true; game.sealedT = 0; game.sevStop = true; impactFrame(120); game.shake = 0.4; }
+  updateRunHud();
+  runCamera(dt);
+}
+function runCamera(dt) {
+  const p = game.mover.position, dist = 4.6, ty = p.y + 1.6;
+  const cp = V(p.x + Math.sin(camYaw) * Math.cos(camPitch) * dist, ty + Math.sin(camPitch) * dist, p.z + Math.cos(camYaw) * Math.cos(camPitch) * dist);
+  if (p.z > RUN.GATE_Z) cp.x = THREE.MathUtils.clamp(cp.x, -RUN.HALF + 0.3, RUN.HALF - 0.3); else { cp.x = THREE.MathUtils.clamp(cp.x, -11, 11); cp.z = THREE.MathUtils.clamp(cp.z, -217.5, RUN.GATE_Z - 1.2); }
+  cp.y = Math.min(cp.y, 6.5);
+  if (game.shake > 0) { game.shake -= dt; cp.x += (Math.random() - 0.5) * 0.08; cp.y += (Math.random() - 0.5) * 0.08; }
+  camera.position.lerp(cp, 0.2); camera.lookAt(p.x, ty, p.z);
+}
+// the gates hold: his blade comes through the seam, stops short, and is gone
+function sealedUpdate(dt, time) {
+  const t = (game.sealedT += dt), p = game.mover.position, r = runSet;
+  hud.prompt.style.opacity = 0; cineEls.red.style.opacity = 0;
+  if (!game.ghostBlade) { game.ghostBlade = blade.clone(); game.ghostBlade.rotation.set(-Math.PI / 2, 0, 0); game.ghostBlade.position.set(0.05, 1.7, RUN.GATE_Z + 0.4); scene.add(game.ghostBlade); game.ghostBlade.visible = false; rig.visible = false; }
+  // Damix backs away from the doors
+  if (t < 1.2) { p.z = Math.max(p.z - dt * 0.9, -211); }
+  game.mover.rotation.y = 0;
+  let dp = t < 1.3 ? mixPose('guard', 'damixFlinch', ss(0, 0.5, t)) : t < 6.5 ? mixPose('damixFlinch', 'damixHorror', ss(1.3, 1.6, t)) : mixPose('damixHorror', 'stand', ss(6.5, 7.5, t));
+  applyPose(game.j, addPose(dp, { spine: [Math.sin(time * 6) * 0.03, 0, 0] }));
+  if (t > 6.6) game.mover.rotation.y = lerp(0, Math.PI, ss(6.6, 7.4, t));
+  once2('thrust', t, 1.3, () => { game.ghostBlade.visible = true; sparks(V(0, 1.7, RUN.GATE_Z - 0.6), 80, 4); impactFrame(150); game.shake = 0.5; });
+  if (game.ghostBlade.visible) { const out = t < 1.45 ? ss(1.3, 1.45, t) : t < 3.6 ? 1 : 1 - ss(3.6, 3.9, t); game.ghostBlade.position.z = RUN.GATE_Z - 0.2 - out * 0.95; game.ghostBlade.rotation.z = t < 3.6 ? Math.sin(time * 14) * 0.03 : 0; if (t > 3.95) game.ghostBlade.visible = false; }
+  once2('l1', t, 4.4, () => say('Sevirrus', 'Doors, cousin? Doors only make it slower.', 3.6));
+  once2('l2', t, 8.4, () => say('Damix Chompjak', 'Uncle… he’s here.', 3.0));
+  if (game.jakal) { const k = ss(6.8, 8.6, t); game.jakal.mover.position.z = lerp(-214.5, -212.8, k); applyPose(game.jakal.j, addPose(POSES.stand, stepGait(game.jakal.gait || (game.jakal.gait = makeGait(game.jakal.mover)), dt))); }
+  // camera: inside the keep, on the doors and Damix; then on the two of them
+  game.j.head.getWorldPosition(tmpA);
+  let cp, cl;
+  if (t < 6.4) { cp = V(3.2, 2.1, -211.0); cl = V(0, 1.5, RUN.GATE_Z - 1.6); }
+  else { cp = V(-3.4, 2.1, -207.0); cl = V(0, 1.45, -211.6); }
+  if (game.shake > 0) { game.shake -= dt; cp.x += (Math.random() - 0.5) * 0.08; cp.y += (Math.random() - 0.5) * 0.08; }
+  camera.position.lerp(cp, 0.15); camera.lookAt(cl);
+  if (t > 11.2) cineEls.black.style.opacity = Math.min(1, (t - 11.2) / 1.2);
+  once2('end', t, 12.6, () => {
+    game.done = true; M.onChapterComplete && M.onChapterComplete();
+    narrate('CHAPTER II COMPLETE<small>The Siege of Aridaxx</small>', 'title'); hud.obj.textContent = 'Chapter complete'; hud.count.textContent = '';
+    setTimeout(() => { if (game) { game.paused = true; M.renderDoneSlots && M.renderDoneSlots(); G('gDone').querySelector('.eyebrow').textContent = 'Chapter II · The Siege of Aridaxx'; G('gDoneNext').hidden = true; G('gDone').hidden = false; G('gDoneMenu').focus(); } }, 4200);
+  });
+}
+function once2(k, t, at, fn) { game.fired2 = game.fired2 || new Set(); if (t >= at && !game.fired2.has(k)) { game.fired2.add(k); fn(); } }
 
 // ---------- Menu: pointer tracking, framing, the render loop ----------
 const look = new THREE.Vector2(0, 0), lookTarget = new THREE.Vector2(0, 0);

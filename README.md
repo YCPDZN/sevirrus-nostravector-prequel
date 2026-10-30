@@ -19,7 +19,7 @@ Open `index.html` in a modern desktop or mobile browser (internet needed the fir
   1. Examine six clues at the massacre site; a recording on the leader's wrist display reveals the killer's voice.
   2. Drive the royal rover five miles to the Bastion of Carax, to *Demons of Laniakea*.
   3. Fight up five floors of the bastion against the Cult of Zark.
-- **Chapter II: The Siege of Aridaxx** (cutscene): a month later, Sevirrus breaks the gate of Alphinos Castle, beheads the Chompy guard, holds one head up for the rest to see, cuts down ten more and demands the head of Jakal Chompjak XVI. Damix Chompjak, Hak's cousin, watches in horror, then laughs, mocks him and throws him back down the steps again and again, until Sevirrus simply rolls his neck.
+- **Chapter II: The Siege of Aridaxx** (cutscene): a month later, Sevirrus breaks the gate of Alphinos Castle, beheads the Chompy guard, holds one head up for the rest to see, cuts down ten more and demands the head of Jakal Chompjak XVI. Damix Chompjak, Hak's cousin, watches in horror, then laughs, mocks him and throws him back down the steps again and again, until Sevirrus simply rolls his neck. Then, playable, as Damix: run the burning road to Alphinos Keep, cutting through the Cult of Zark, and seal the gates before Sevirrus reaches the Emperor. Sevirrus walks behind you the whole way and has no health bar: strike him, or let him catch you, and he stops your heart.
 
 The game saves only when the player chooses to (pause menu, or at the end of a chapter). Saves are stored in the browser.
 
@@ -32,6 +32,8 @@ The game saves only when the player chooses to (pause menu, or at the end of a c
 | Examine / enter / climb | E | Examine / Drive / Climb button |
 | Strike | click or F | Strike button |
 | Dodge | Space | Dodge button |
+| Force blast (Damix) | Q | Blast button |
+| Seal the gates (Damix) | hold E | hold Seal |
 | Journal / Pause | J / Esc | buttons, top right |
 | Skip dialogue line | Enter | |
 
