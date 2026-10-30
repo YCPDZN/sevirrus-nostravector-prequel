@@ -1030,12 +1030,23 @@ new GLTFLoader().parse(bin, '', gltf => {
   });
   // crimson blade held in the right hand, hidden until the intro
   blade = new THREE.Group(); blade.position.set(0, -0.08, 0.02); blade.rotation.x = -0.6; j.wristR.add(blade);
-  const core = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.85, 0.03).translate(0, -0.47, 0), new THREE.MeshBasicMaterial({ color: 0xffd6dc }));
-  const aura = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.88, 0.075).translate(0, -0.48, 0), new THREE.MeshBasicMaterial({ color: 0xff1030, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false }));
-  const hilt = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.12, 8), new THREE.MeshStandardMaterial({ color: 0x1a1a22, metalness: 0.8, roughness: 0.3 }));
-  blade.add(core, aura, hilt);
-  bladeLight = new THREE.PointLight(0xff1030, 0, 3, 1.5); bladeLight.position.set(0, -0.45, 0); blade.add(bladeLight);
-  core.scale.y = aura.scale.y = 0.001; blade.userData.beam = [core, aura]; blade.visible = false;
+  // a forged black blade: a tapered steel shape with red-hot edges and a red fuller, a crossguard and a pommel
+  const steel = new THREE.MeshStandardMaterial({ color: 0x0b090d, metalness: 0.9, roughness: 0.22 });
+  const ember = new THREE.MeshBasicMaterial({ color: 0xff1a2e, transparent: true, opacity: 0, toneMapped: false });
+  const sh = new THREE.Shape(); sh.moveTo(-0.032, 0); sh.lineTo(0.032, 0); sh.lineTo(0.026, -0.66); sh.lineTo(0, -0.84); sh.lineTo(-0.026, -0.66); sh.closePath();
+  const bladeGeo = new THREE.ExtrudeGeometry(sh, { depth: 0.008, bevelEnabled: true, bevelThickness: 0.004, bevelSize: 0.004, bevelSegments: 1 });
+  bladeGeo.translate(0, -0.1, -0.004); bladeGeo.rotateY(Math.PI / 2);
+  const steelBlade = new THREE.Mesh(bladeGeo, steel); steelBlade.castShadow = true;
+  const edge = (z, len, y0, tilt) => { const m = new THREE.Mesh(new THREE.BoxGeometry(0.004, len, 0.004), ember); m.position.set(0, y0 - len / 2, z); m.rotation.x = tilt; return m; };
+  const edges = [edge(0.031, 0.64, -0.1, 0.009), edge(-0.031, 0.64, -0.1, -0.009), edge(0.016, 0.19, -0.75, -0.15), edge(-0.016, 0.19, -0.75, 0.15)];
+  const fuller = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.5, 0.008), ember); fuller.position.set(0, -0.38, 0);
+  const guard = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.028, 0.17), steel); guard.position.y = -0.09;
+  const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.016), ember); gem.position.set(0, -0.09, 0); gem.scale.x = 1.6;
+  const hilt = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.018, 0.14, 8), steel);
+  const pommel = new THREE.Mesh(new THREE.SphereGeometry(0.022, 10, 8), steel); pommel.position.y = 0.075;
+  blade.add(steelBlade, ...edges, fuller, guard, gem, hilt, pommel);
+  bladeLight = new THREE.PointLight(0xff1030, 0, 2.2, 1.6); bladeLight.position.set(0, -0.45, 0); blade.add(bladeLight);
+  blade.userData.ember = ember; blade.visible = false;
   sev = { j, gait: makeGait(rig) };
   applyPose(j, POSES.stand);
   rig.add(root);
@@ -1110,8 +1121,8 @@ const jakalTalking = () => subsWho.textContent === 'Jakal Chompjak XVI' && subsE
 function setBlade(on, k = 1) {
   if (!blade) return;
   blade.visible = on;
-  blade.userData.beam.forEach(m => { m.scale.y = Math.max(0.001, k); });
-  bladeLight.intensity = on ? (5 + Math.random() * 2.5) * k : 0;
+  blade.userData.ember.opacity = Math.min(1, Math.max(0, k)) * (0.85 + Math.random() * 0.15);
+  bladeLight.intensity = on ? (1.6 + Math.random() * 0.8) * k : 0;
 }
 
 let twitch = 0, twitchT = 4;
@@ -1645,7 +1656,7 @@ function makeTrail(color, n = 16) {
     clear() { hist.length = 0; mesh.visible = false; },
   };
 }
-const sevTrail = makeTrail(0xff2a48), leadTrail = makeTrail(0xbfe2ff);
+const sevTrail = makeTrail(0x7a0818), leadTrail = makeTrail(0xbfe2ff);
 const trB = new THREE.Vector3(), trT = new THREE.Vector3();
 function trailSev() { if (blade && blade.visible) { blade.localToWorld(trB.set(0, -0.15, 0)); blade.localToWorld(trT.set(0, -0.92, 0)); sevTrail.push(trB, trT); } else sevTrail.clear(); }
 let impactUntil = 0;
@@ -2580,6 +2591,8 @@ function buildBastionInterior() {
 // ---------- the Cult of Zark ----------
 const cultMetal = new THREE.MeshStandardMaterial({ color: 0x0b0a0f, metalness: 0.85, roughness: 0.3 });
 const cultSlit = new THREE.MeshBasicMaterial({ color: 0xff2a3c });
+const cultBladeGeo = (() => { const sh = new THREE.Shape(); sh.moveTo(-0.03, 0); sh.lineTo(0.03, 0); sh.lineTo(0.024, -0.62); sh.lineTo(0, -0.8); sh.lineTo(-0.024, -0.62); sh.closePath();
+  const g = new THREE.ExtrudeGeometry(sh, { depth: 0.008, bevelEnabled: false }); g.translate(0, -0.1, -0.004); g.rotateY(Math.PI / 2); return g; })();
 function makeCultist(herald = false) {
   const body = SkeletonUtils.clone(rig.children[0]);
   const mover = new THREE.Group(); mover.rotation.order = 'YXZ'; mover.add(body);
@@ -2593,8 +2606,10 @@ function makeCultist(herald = false) {
   // drop the copied Sevirrus blade; give him his own
   [...j.wristR.children].forEach(c => { if (!c.isBone) j.wristR.remove(c); });
   const blade = new THREE.Group(); blade.position.set(0, -0.08, 0.02); blade.rotation.x = -0.6; j.wristR.add(blade);
-  blade.add(new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.8, 0.026).translate(0, -0.45, 0), new THREE.MeshBasicMaterial({ color: 0xff8a95 })));
-  const aura = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.82, 0.06).translate(0, -0.46, 0), new THREE.MeshBasicMaterial({ color: 0xc0101e, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false })); blade.add(aura);
+  // a black sword like his, its fuller glowing red (it flares before a strike)
+  blade.add(new THREE.Mesh(cultBladeGeo, cultMetal), new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.022, 0.15).translate(0, -0.09, 0), cultMetal));
+  const aura = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.52, 0.008).translate(0, -0.38, 0), new THREE.MeshBasicMaterial({ color: 0xff1a2e, transparent: true, opacity: 0.4, toneMapped: false }));
+  blade.add(aura); blade.add(aura);
   // the mask: a smooth black helm with a crimson slit, and a crest of spikes like a broken crown
   const helm = new THREE.Mesh(new THREE.SphereGeometry(0.255, 20, 16), cultMetal); helm.scale.set(1, 1.12, 1.05); helm.position.set(0, 0.16, 0.0); j.head.add(helm);
   const slit = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.022, 0.03), cultSlit); slit.position.set(0, 0.17, 0.262); j.head.add(slit);
