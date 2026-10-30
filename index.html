@@ -2191,7 +2191,7 @@ function startChapter() {
   const bones = {}; jk.traverse(o => { if (o.isBone) bones[o.name] = o; if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
   const j = {}; for (const n of JOINTS) { j[n] = bones[BONE_FOR[n]]; j[n].userData.rest = j[n].position.clone(); }
   mover.position.set(0, 0, 9); mover.rotation.order = 'YXZ'; mover.rotation.y = Math.PI; hud.exBtn.textContent = 'Examine';
-  game = { t: 0, mover, j, gait: makeGait(mover), found: new Set(), reading: null, recording: null, done: false, paused: false };
+  game = { t: 0, mover, j, gait: makeGait(mover), found: new Set(), reading: null, recording: null, done: false, paused: false, heard: new Set() };
   crime.beacons.forEach(b => b.visible = true);
   CLUES.forEach((c, i) => { crime.beacons[i].visible = !c.final; });
   rig.visible = false; dust.visible = false; setPlanet(true); blackHole.visible = stars.visible = true;
@@ -2214,13 +2214,16 @@ M.getState = () => {
     found: [...game.found].filter(id => id !== 'wrist'), pos: [+p.x.toFixed(2), +p.z.toFixed(2)], yaw: +game.mover.rotation.y.toFixed(3),
     floor: game.floor > 0 ? game.floor : 0, hp: Math.round(B.hp), dist: rover && phase === 'drive' ? Math.round(rover.dist) : 0,
     car: rover && phase === 'drive' ? [+rover.g.position.x.toFixed(2), +rover.yaw.toFixed(3)] : null,
-    cleared: phase === 'bastion' ? !!game.cleared : false,
+    cleared: phase === 'bastion' ? !!game.cleared : false, heard: [...game.heard],
     foes: phase === 'bastion' && game.foes ? game.foes.map(f => f.state === 'dead' ? null : [+f.mover.position.x.toFixed(2), +f.mover.position.z.toFixed(2), +f.mover.rotation.y.toFixed(2), Math.round(f.hp), f.herald ? 1 : 0]) : null };
 };
 // rebuild the chapter from a save
 M.loadState = st => {
   if (!startChapter()) return false;
   game.restored = true;
+  (st.heard || []).forEach(h => game.heard.add(h));
+  if (st.phase === 'drive' || st.phase === 'bastion') game.heard.add('five');
+  if (st.phase === 'bastion' && (st.floor || 0) > 0) game.heard.add('climb');
   (st.found || []).forEach(id => {
     const c = CLUES.find(c => c.id === id); if (!c || c.final) return;
     game.found.add(id); crime.beacons[CLUES.indexOf(c)].visible = false;
@@ -2669,7 +2672,7 @@ function startDrive() {
   document.body.classList.add('driving');
   M.song && M.song.play();
   narrate('THE BASTION OF CARAX<small>Five miles north</small>', 'title');
-  setTimeout(() => game && game.phase === 'drive' && !game.loadedDrive && (say('Jakal XVI', 'Five miles. Let them see me coming.', 4.0), M.voice && M.voice.play(38)), 2400);
+  setTimeout(() => game && game.phase === 'drive' && !game.loadedDrive && !game.heard.has('five') && (game.heard.add('five'), say('Jakal XVI', 'Five miles. Let them see me coming.', 4.0), M.voice && M.voice.play(38)), 2400);
 }
 function driveUpdate(dt, time) {
   const r = rover; let thr = 0, steer = 0;
@@ -2878,7 +2881,7 @@ function bastionUpdate(dt, time) {
   // floor cleared
   if (!game.cleared && game.foes.every(f => f.state === 'dead')) {
     game.cleared = true; updateBastionHud();
-    if (game.floor < 4) { bast.doorGlow.material.color.set(0xa993e6); if (!game.loadedCleared) setTimeout(() => game && (say('Jakal XVI', 'Up. Keep climbing.', 3.2), M.voice && M.voice.play(46)), 900); }
+    if (game.floor < 4) { bast.doorGlow.material.color.set(0xa993e6); if (!game.loadedCleared && game.floor === 0 && !game.heard.has('climb') && game.heard.add('climb')) setTimeout(() => game && (say('Jakal XVI', 'Up. Keep climbing.', 3.2), M.voice && M.voice.play(46)), 900); }
     else startFinale();
   }
   const canDoor = game.cleared && game.floor < 4 && nearDoor();
