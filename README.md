@@ -19,6 +19,7 @@ Open `index.html` in a modern desktop or mobile browser (internet needed the fir
   1. Examine six clues at the massacre site; a recording on the leader's wrist display reveals the killer's voice.
   2. Drive the royal rover five miles to the Bastion of Carax, to *Demons of Laniakea*.
   3. Fight up five floors of the bastion against the Cult of Zark.
+- **Chapter II: The Siege of Aridaxx** (cutscene): a month later, Sevirrus breaks the gate of Alphinos Castle, beheads the Chompy guard, holds one head up for the rest to see, cuts down ten more and demands the head of Jakal Chompjak XVI, while Damix Chompjak, Hak's cousin, watches in horror.
 
 The game saves only when the player chooses to (pause menu, or at the end of a chapter). Saves are stored in the browser.
 
@@ -39,9 +40,10 @@ The game saves only when the player chooses to (pause menu, or at the end of a c
 | Path | Contents |
 |---|---|
 | `index.html` | the game |
-| `models/` | original concept models, rigged versions (18-bone armature: Hips, Spine, Neck, Head, Eye_L/R, UpperArm, LowerArm, Hand, UpperLeg, LowerLeg, Foot), and the alien settler |
+| `models/` | original concept models (Sevirrus, Jakal, Damix Chompjak, Chompy soldier), rigged versions (18-bone armature: Hips, Spine, Neck, Head, Eye_L/R, UpperArm, LowerArm, Hand, UpperLeg, LowerLeg, Foot), and the alien settler |
 | `music/fields_of_carax.mp3` | the duel score, synthesized from scratch |
 | `tools/rig_glb.py` | adds the armature and skin weights to the character models |
+| `tools/rig_hier.py` | rigs the nested exports (Damix Chompjak, Chompy soldier) and merges each into a few draw calls |
 | `tools/build_alien.py` | builds and rigs the alien settler model |
 | `tools/compose_duel.py` | renders *Fields of Carax* on the duel's beat grid |
 
