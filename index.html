@@ -2552,7 +2552,7 @@ function buildRover() {
   const add = (geo, m, x, y, z, rx = 0, ry = 0, rz = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.set(rx, ry, rz); o.castShadow = true; g.add(o); return o; };
   add(new THREE.BoxGeometry(2.0, 0.55, 4.2), paint, 0, 0.75, 0);                        // hull
   add(new THREE.BoxGeometry(1.9, 0.3, 1.4), paint, 0, 0.62, -2.2, -0.35);               // sloped nose
-  add(new THREE.BoxGeometry(1.7, 0.6, 1.9), glass, 0, 1.3, 0.2);                        // canopy
+  add(new THREE.BoxGeometry(1.7, 1.0, 1.9), glass, 0, 1.5, 0.2);                        // canopy, tall enough for a seated driver
   add(new THREE.BoxGeometry(2.04, 0.08, 4.0), crimson, 0, 0.98, 0);                     // crimson waist stripe
   add(new THREE.BoxGeometry(0.12, 0.05, 3.2), gold, 0, 1.04, 0);                        // gold spine
   add(new THREE.TorusGeometry(0.22, 0.04, 8, 20), gold, 0, 1.0, -2.35, 0, 0, 0);        // royal crest on the nose
@@ -2567,9 +2567,21 @@ function buildRover() {
     const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.38, 6), gold); hub.rotation.z = Math.PI / 2; w.add(hub);
     wheels.push(w);
   }
+  // Jakal at the wheel, seated in the canopy
+  let driver = null;
+  if (jakalTpl) {
+    const jk = SkeletonUtils.clone(jakalTpl); driver = new THREE.Group(); driver.add(jk);
+    const bones = {}; jk.traverse(o => { if (o.isBone) bones[o.name] = o; if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
+    const dj = {}; for (const n of JOINTS) { dj[n] = bones[BONE_FOR[n]]; dj[n].userData.rest = dj[n].position.clone(); }
+    applyPose(dj, { rootY: -0.02, hipL: [-1.45, 0, 0.08], hipR: [-1.45, 0, -0.08], kneeL: [1.35, 0, 0], kneeR: [1.35, 0, 0], ankleL: [-0.1, 0, 0], ankleR: [-0.1, 0, 0],
+      spine: [-0.08, 0, 0], shoulderL: [-0.95, 0, 0.12], shoulderR: [-0.95, 0, -0.12], elbowL: [-0.75, 0, 0], elbowR: [-0.75, 0, 0] });
+    driver.position.set(-0.35, 0.18, 0.45); driver.rotation.y = Math.PI; g.add(driver);
+    const wheel = add(new THREE.TorusGeometry(0.17, 0.025, 8, 20), gold, -0.35, 1.25, -0.2, -0.9); wheel.castShadow = false;
+  }
   const lamp = new THREE.SpotLight(0xfff2d6, 0, 60, Math.PI / 6, 0.5, 1.2); lamp.position.set(0, 1.0, -2.2); g.add(lamp); lamp.target.position.set(0, 0, -20); g.add(lamp.target);
   scene.add(g);
-  return { g, wheels, lamp, speed: 0, yaw: 0, dist: 0 };
+  if (driver) driver.visible = false;
+  return { g, wheels, lamp, driver, speed: 0, yaw: 0, dist: 0 };
 }
 // the road: a ribbon of chunks recycled ahead of the rover
 function buildRoad() {
@@ -2626,7 +2638,7 @@ function toCarUpdate(dt, time) {
   game.wantDrive = false;
 }
 function startDrive() {
-  game.phase = 'drive'; game.mover.visible = false; keys.delete('e');
+  game.phase = 'drive'; game.mover.visible = false; if (rover && rover.driver) rover.driver.visible = true; keys.delete('e');
   if (!roadChunks) roadChunks = buildRoad();
   if (!driveBastion) driveBastion = buildBastionExteriorAt(0, 0, -ROUTE - 70);
   driveBastion.visible = true;
@@ -2689,12 +2701,13 @@ function driveUpdate(dt, time) {
 function leaveRoad() {
   M.song && M.song.stop();
   setRoadVisible(false); planetGroundVisible(true); if (driveBastion) driveBastion.visible = false;
-  rover.g.visible = false; rover.lamp.intensity = 0;
+  rover.g.visible = false; rover.lamp.intensity = 0; if (rover.driver) rover.driver.visible = false;
   blackHole.position.set(60, 110, -300); stars.position.set(0, 0, 0); planet.children.forEach(o => { if (o.material && o.material.side === THREE.BackSide) o.position.set(0, 0, 0); });
   document.body.classList.remove('driving'); camera.fov = 32; camera.updateProjectionMatrix();
 }
 
 function startBastion() {
+  if (rover && rover.driver) rover.driver.visible = false;
   game.phase = 'bastion'; game.floor = -1; game.mover.visible = true;
   if (bastionOutside) bastionOutside.visible = false; if (crime) crime.g.visible = false;
   setPlanet(false); blackHole.visible = stars.visible = false; floor.visible = ring1.visible = ring2.visible = ticks.visible = false;
