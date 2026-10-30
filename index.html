@@ -414,7 +414,7 @@ body.combat .g-hp { display: block; position: fixed; left: max(16px, env(safe-ar
     <div class="row"><label for="musicSw">Battle music</label><button class="switch" id="musicSw" role="switch" aria-checked="true" aria-label="Battle music"></button></div>
     <div class="row"><label for="motion">Camera drift</label><button class="switch" id="motion" role="switch" aria-checked="true" aria-label="Camera drift"></button></div>
     <div class="row"><label for="quality">Render quality</label>
-      <select id="quality"><option value="low">Low</option><option value="med" selected>Medium</option><option value="high">High</option></select></div>
+      <select id="quality"><option value="auto" selected>Auto (adapts to your device)</option><option value="low">Low</option><option value="med">Medium</option><option value="high">High</option></select></div>
     <button class="close" data-close>Return</button>
   </div>
 </div>
@@ -534,7 +534,8 @@ body.combat .g-hp { display: block; position: fixed; left: max(16px, env(safe-ar
   const status = $('#status');
   const say = t => { status.textContent = t; };
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  window.__menu = { drift: !reduce, quality: 'med' };
+  let savedQ = 'auto'; try { savedQ = localStorage.getItem('sevirrus.quality') || 'auto'; } catch (e) {}
+  window.__menu = { drift: !reduce, quality: savedQ };
 
   // 1790 chronometer: today's date and time in 1790
   const chrono = $('#chrono');
@@ -748,7 +749,8 @@ body.combat .g-hp { display: block; position: fixed; left: max(16px, env(safe-ar
   sw('#motion', v => { window.__menu.drift = v; });
   sw('#musicSw', v => { musicOn = v; if (!v) window.__menu.music.stop(); });
   if (reduce) $('#motion').setAttribute('aria-checked', 'false');
-  $('#quality').addEventListener('change', e => { window.__menu.quality = e.target.value; window.__menu.setQuality && window.__menu.setQuality(); });
+  $('#quality').value = window.__menu.quality;
+  $('#quality').addEventListener('change', e => { window.__menu.quality = e.target.value; try { localStorage.setItem('sevirrus.quality', e.target.value); } catch (err) {} window.__menu.setQuality && window.__menu.setQuality(); });
 })();
 </script>
 
@@ -764,13 +766,15 @@ const loadingEl = document.getElementById('loading');
 
 let renderer;
 try {
-  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+  // phones and high-density screens skip MSAA: the pixel density already smooths edges, and it is the costliest pass there
+  const mobile = matchMedia('(pointer: coarse)').matches || devicePixelRatio > 1.8;
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: !mobile && M.quality !== 'low', powerPreference: 'high-performance' });
 } catch (e) { loadingEl.textContent = 'Subject feed unavailable on this device'; throw e; }
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = M.quality === 'high' ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
 renderer.setClearColor(0x0a0612, 1);
 
 const scene = new THREE.Scene();
@@ -2999,15 +3003,26 @@ addEventListener('pointermove', e => { lookTarget.set((e.clientX / innerWidth) *
 
 // model right of centre on wide screens, centred and smaller on phones
 let frame = { y: 1.15, dist: 5.2, side: -0.55 };
+let baseDpr = 1, dynScale = 1, frameAvg = 1 / 60, adaptT = 0, shadowsSet = false;
 function resize() {
-  const w = innerWidth, h = innerHeight, dpr = { low: 1, med: Math.min(devicePixelRatio, 1.5), high: Math.min(devicePixelRatio, 2) }[M.quality];
-  renderer.setPixelRatio(dpr); renderer.setSize(w, h, false);
+  const w = innerWidth, h = innerHeight;
+  baseDpr = { auto: Math.min(devicePixelRatio, 1.5), low: Math.min(devicePixelRatio, 1) * 0.75, med: Math.min(devicePixelRatio, 1.5), high: Math.min(devicePixelRatio, 2) }[M.quality] || 1;
+  if (M.quality !== 'auto') dynScale = 1;
+  renderer.setPixelRatio(baseDpr * dynScale); renderer.setSize(w, h, false);
+  renderer.shadowMap.type = M.quality === 'high' ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
+  key.shadow.mapSize.set(M.quality === 'high' ? 1024 : 512, M.quality === 'high' ? 1024 : 512); if (key.shadow.map) { key.shadow.map.dispose(); key.shadow.map = null; }
   camera.aspect = w / h; camera.updateProjectionMatrix();
   if (w < 820) frame = { side: 0, y: h < 700 ? 1.25 : 1.1, dist: Math.max(5.6, 7.2 * (0.62 / Math.min(camera.aspect, 0.62))) * (h < 700 ? 0.92 : 1) };
   else frame = { side: -0.6 * Math.min(1.4, camera.aspect / 1.6), y: 1.1, dist: 5.4 };
-  key.castShadow = M.quality !== 'low';
+  setShadows(M.quality !== 'low' && !(M.quality === 'auto' && dynScale < 0.75));
 }
-M.setQuality = resize;
+// shadows are the heaviest thing in the scene: on Low (or when Auto has to scale right down) no light casts them
+function setShadows(on) {
+  if (renderer.shadowMap.enabled === on && shadowsSet) return; shadowsSet = true;
+  renderer.shadowMap.enabled = on; key.castShadow = on;
+  scene.traverse(o => { if (o.isMaterial) return; if (o.material) o.material.needsUpdate = true; });
+}
+M.setQuality = () => { shadowsSet = false; resize(); };
 addEventListener('resize', resize); resize();
 
 let flickerT = 0, flickerLevel = 1;
@@ -3069,8 +3084,19 @@ function menuUpdate(dt, t) {
   ring2.rotation.z = t * 0.12; ticks.rotation.y = -t * 0.02;
 }
 
+// Auto quality: watch the frame time and trade resolution for smoothness
+function adapt(raw) {
+  if (M.quality !== 'auto' || document.hidden) return;
+  frameAvg += (Math.min(raw, 0.1) - frameAvg) * 0.05; adaptT += raw;
+  if (adaptT < 1.5) return; adaptT = 0;
+  let next = dynScale;
+  if (frameAvg > 1 / 45) next = Math.max(0.5, dynScale - 0.1);
+  else if (frameAvg < 1 / 57) next = Math.min(1, dynScale + 0.05);
+  if (next !== dynScale) { dynScale = +next.toFixed(2); resize(); }
+}
 function loop() {
-  const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
+  const raw = clock.getDelta(), dt = Math.min(raw, 0.05), t = clock.elapsedTime; adapt(raw);
+  if (document.hidden) { requestAnimationFrame(loop); return; }
   if (cine) cineUpdate(dt, t); else if (game) gameUpdate(dt, t); else menuUpdate(dt, t);
 
   // eyes dart independently of the head
