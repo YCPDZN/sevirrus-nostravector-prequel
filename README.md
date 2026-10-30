@@ -19,7 +19,7 @@ Open `index.html` in a modern desktop or mobile browser (internet needed the fir
   1. Examine six clues at the massacre site; a recording on the leader's wrist display reveals the killer's voice.
   2. Drive the royal rover five miles to the Bastion of Carax, to *Demons of Laniakea*.
   3. Fight up five floors of the bastion against the Cult of Zark.
-- **Chapter II: The Siege of Aridaxx** (cutscene): a month later, Sevirrus breaks the gate of Alphinos Castle, beheads the Chompy guard, holds one head up for the rest to see, cuts down ten more and demands the head of Jakal Chompjak XVI, while Damix Chompjak, Hak's cousin, watches in horror.
+- **Chapter II: The Siege of Aridaxx** (cutscene): a month later, Sevirrus breaks the gate of Alphinos Castle, beheads the Chompy guard, holds one head up for the rest to see, cuts down ten more and demands the head of Jakal Chompjak XVI. Damix Chompjak, Hak's cousin, watches in horror, then laughs, mocks him and throws him back down the steps again and again, until Sevirrus simply rolls his neck.
 
 The game saves only when the player chooses to (pause menu, or at the end of a chapter). Saves are stored in the browser.
 
