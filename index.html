@@ -3223,6 +3223,23 @@ const SIEGE_LINES = [
   [63.6, 3.6, 'Damix Chompjak', 'I can do it, over and over…', 57],
   [67.6, 4.2, 'Damix Chompjak', '…over and over, over again, cousin!', 58],
 ];
+// after the neck roll: he climbs to Damix very slowly, one line at a time (CH2SEV5..14 when recorded)
+const ADV_LINES = [
+  'Over and over. Is that really all your little trick does?',
+  'Do you hear that, cousin? That’s your heart. It’s begging you to run.',
+  'Go on. Run. I like it so much better when they run.',
+  'The guards didn’t last very long. I wonder how long you’ll scream.',
+  'Every step I take, you’ll remember. Every night. For as long as you have left.',
+  'Don’t look away, Damix. I want to see the moment you understand.',
+  'There it is. That little tremble. I’ve waited years for that.',
+  'When I’m done, I’ll send what’s left of you to my father. Piece by piece.',
+  'No one is coming. No guards. No Emperor. Just you, and me, and the dark.',
+  'Smile for me, cousin. You were laughing a moment ago.',
+];
+SG.ADV = SG.NECK + 2.4; SG.ADVL = [];
+{ let t = SG.ADV + 0.6; ADV_LINES.forEach(l => { const d = Math.max(2.6, l.split(' ').length / 2.3 + 1.0); SIEGE_LINES.push([t, d, 'Sevirrus', l]); SG.ADVL.push([t, d]); t += d + 1.0; }); SG.ADVEND = t; }
+SG.FADE = SG.ADVEND + 0.6; SG.TITLE = SG.FADE + 1.6; SG.END = SG.TITLE + 5.7;
+const stairY = z => z > -5.99 ? 0 : Math.min(1.6, 0.2 * (Math.floor((-5.99 - z) / 0.42) + 1));
 const SLOWMO = [[SG.K2[9] - 0.45, SG.K2[9] + 0.9, 0.28], [SG.CATCH - 0.25, SG.CATCH + 0.35, 0.4]];
 
 function startSiege() {
@@ -3312,7 +3329,9 @@ function sevPlace(T, S) {
     const a = V(last.x + dir.x * 0.95, 0, last.z + dir.z * 0.95), b = V(0, 0, -5.4);
     P.lerpVectors(a, b, ss(SG.K2[9] + 2.2, SG.POINT - 0.3, T)); face = T > SG.K2[9] + 2.2 ? V(0, 0, -1) : V(last.x - a.x, 0, last.z - a.z);
     // Damix's blasts throw him back; he walks the last of it back in
-    P.z += 3.4 * ss(SG.B[0], SG.B[0] + 0.55, T) + 1.5 * ss(SG.B[1], SG.B[1] + 0.4, T) + 0.7 * ss(SG.B[2], SG.B[2] + 0.3, T) - 0.9 * ss(SG.NECK + 1.8, SG.NECK + 3.0, T);
+    P.z += 3.4 * ss(SG.B[0], SG.B[0] + 0.55, T) + 1.5 * ss(SG.B[1], SG.B[1] + 0.4, T) + 0.7 * ss(SG.B[2], SG.B[2] + 0.3, T);
+    // then, slowly, up the stairs to him
+    if (T > SG.ADV) P.z = lerp(P.z, -10.5, THREE.MathUtils.clamp((T - SG.ADV) / (SG.ADVEND - SG.ADV), 0, 1));
   }
   return { P, face };
 }
@@ -3352,6 +3371,7 @@ function sevPose(T, S) {
   if (T < SG.B[2]) return POSES.guard;
   if (T < SG.NECK) return mixPose('braced', 'guard', ss(SG.B[2] + 0.7, SG.B[2] + 1.5, T));
   // unhurt, he rolls his neck
+  if (T > SG.ADV) return addPose(mixPose('menace', 'idleBlade', 0.35), { head: [0.08, Math.sin(T * 0.5) * 0.12, 0.18 + Math.sin(T * 0.7) * 0.08], neck: [0.06, 0, 0] });
   const u = T - SG.NECK, k = THREE.MathUtils.clamp(u / 1.8, 0, 1);
   return addPose(mixPose('guard', 'menace', ss(0, 0.6, u)), { neck: [0.12 * Math.sin(k * Math.PI), 0, 0.22 * Math.sin(k * Math.PI * 2)], head: [0.2 * Math.sin(k * Math.PI), 0, 0.42 * Math.sin(k * Math.PI * 2)] });
 }
@@ -3437,10 +3457,10 @@ function siegeUpdate(dt, time) {
 
   // Sevirrus
   const { P, face } = sevPlace(T, S);
-  rig.position.copy(P);
+  rig.position.copy(P); rig.position.y = T > SG.ADV ? lerp(S.sy || 0, stairY(P.z), Math.min(1, sdt * 10)) : 0; S.sy = rig.position.y;
   rig.rotation.x = -1.4 * ss(SG.B[0], SG.B[0] + 0.45, T) * (1 - ss(SG.B[0] + 1.7, SG.B[0] + 2.6, T));
   if (face && face.lengthSq() > 1e-5) { const want = Math.atan2(face.x, face.z); let d = want - rig.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d)); rig.rotation.y += d * Math.min(1, sdt * 14); }
-  const moving = T > 9.2 && T < SG.DASH;
+  const moving = (T > 9.2 && T < SG.DASH) || (T > SG.ADV && T < SG.ADVEND);
   let pose = sevPose(T, S);
   if (moving) pose = addPose(pose, stepGait(sev.gait, sdt)); else { sev.gait.prev.copy(rig.position); }
   applyPose(sev.j, pose);
@@ -3508,10 +3528,11 @@ function siegeUpdate(dt, time) {
   if (T > SG.D2 - 0.4) dp = mixPose(dp, 'damixTaunt', ss(SG.D2 - 0.4, SG.D2 + 0.4, T));
   SG.B.forEach(b => { if (T > b - 0.4 && T < b + 0.9) dp = mixPose(dp, 'damixBlast', ss(b - 0.4, b - 0.15, T) * (1 - ss(b + 0.4, b + 0.9, T))); });
   if (T > SG.NECK + 0.6) dp = mixPose(dp, 'damixFlinch', ss(SG.NECK + 0.6, SG.NECK + 1.6, T) * 0.7);
+  if (T > SG.ADV) dp = mixPose(dp, 'damixHorror', ss(SG.ADV, SG.ADV + 2, T));
   if (T > SG.LAUGH && T < SG.D2 - 0.6) dp = addPose(dp, { spine: [Math.sin(time * 16) * 0.05, 0, 0], head: [Math.sin(time * 16 + 1) * 0.06, 0, 0], shoulderL: [0, 0, Math.sin(time * 16) * 0.05], shoulderR: [0, 0, -Math.sin(time * 16) * 0.05] });
-  const tremble = T > SG.CATCH && T < SG.LAUGH ? 0.012 + ss(SG.POINT, SG.DAMIX + 1, T) * 0.02 : T > SG.NECK + 0.6 ? 0.018 : 0;
+  const tremble = T > SG.CATCH && T < SG.LAUGH ? 0.012 + ss(SG.POINT, SG.DAMIX + 1, T) * 0.02 : T > SG.NECK + 0.6 ? 0.018 + ss(SG.ADV, SG.ADVEND, T) * 0.02 : 0;
   applyPose(d.j, addPose(dp, { head: [Math.sin(time * 23) * tremble, Math.sin(time * 0.6) * 0.1 * (T < SG.BOOM ? 1 : 0), 0], spine: [Math.sin(time * 19) * tremble * 0.5, 0, 0] }));
-  d.mover.position.z = -10.4 - ss(SG.POINT + 2.5, SG.DAMIX, T) * 0.35 + 1.0 * ss(SG.LAUGH + 0.4, SG.LAUGH + 2.2, T);
+  d.mover.position.z = -10.4 - ss(SG.POINT + 2.5, SG.DAMIX, T) * 0.35 + 1.0 * ss(SG.LAUGH + 0.4, SG.LAUGH + 2.2, T) - 2.5 * ss(SG.ADV + 1, SG.ADVEND - 2, T);
   const relax = 1 - ss(SG.LAUGH, SG.LAUGH + 1, T);
   const pin = 1 - 0.35 * Math.max(ss(SG.CATCH, SG.CATCH + 1, T) * 0.5 * relax, ss(SG.POINT + 2.5, SG.DAMIX, T) * relax, ss(SG.NECK + 0.6, SG.NECK + 1.6, T));
   [d.bones.Eye_L, d.bones.Eye_R].forEach(e => e && e.scale.set(pin, pin, 1));
@@ -3592,8 +3613,17 @@ function siegeCamera(T, S, time) {
   else if (T < SG.B[0] - 0.4) { cp = V(dh.x - 1.7, dh.y + 0.1, dh.z + 3.3); cl = V(dh.x, dh.y, dh.z); fov = 38; }
   else if (T < SG.NECK) { const mz = lerp(sp.z, dh.z, 0.4); cp = V(6.4, 3.2, sp.z + 3.2); cl = V(sp.x * 0.5, 1.2, mz); fov = 48; shake = SG.B.some(b => T > b && T < b + 0.3) ? 0.18 : 0; }
   else if (T < SG.NECK + 2.0) { const r = rig.rotation.y, f = V(Math.sin(r), 0, Math.cos(r)); cp = V(sh.x + f.x * 1.3, sh.y + 0.08, sh.z + f.z * 1.3); cl = V(sh.x, sh.y + 0.02, sh.z); fov = 34; }
-  else if (T < SG.FADE - 0.3) { cp = V(dh.x + 0.2, dh.y + 0.24, dh.z + 1.5); cl = V(dh.x, dh.y + 0.2, dh.z); fov = 32; }
-  else { const k = ss(SG.FADE - 0.3, SG.FADE + 1.2, T); cp = V(0, lerp(4.5, 5.5, k), lerp(-13.5, -14, k)); cl = V(0, 0.6, -3); fov = 40; }
+  else if (T < SG.ADV) { cp = V(dh.x + 0.2, dh.y + 0.24, dh.z + 1.5); cl = V(dh.x, dh.y + 0.2, dh.z); fov = 32; }
+  else if (T < SG.FADE) {
+    // one shot per line: him coming, Damix waiting, the two of them; the last line in tight on his face
+    let i = SG.ADVL.findIndex(([t, d]) => T < t + d + 1.0); if (i < 0) i = 9;
+    const r = rig.rotation.y, f = V(Math.sin(r), 0, Math.cos(r)), rt = V(Math.cos(r), 0, -Math.sin(r)), mid = V((sh.x + dh.x) / 2, (sh.y + dh.y) / 2, (sh.z + dh.z) / 2);
+    if (i === 9) { cp = V(sh.x + f.x * 1.3 + rt.x * 0.25, sh.y + 0.14, sh.z + f.z * 1.3 + rt.z * 0.25); cl = V(sh.x, sh.y + 0.1, sh.z); fov = 30; }
+    else if (i % 3 === 0) { const cz = sh.z + f.z * 2.2; cp = V(sh.x + f.x * 2.2 - rt.x * 0.5, Math.max(sh.y - 0.6, stairY(cz) + 0.55), cz - rt.z * 0.5); cl = V(sh.x, sh.y + 0.05, sh.z); fov = 38; }
+    else if (i % 3 === 1) { cp = V(dh.x + 0.3, dh.y + 0.24, dh.z + 1.45); cl = V(dh.x, dh.y + 0.2, dh.z); fov = 32; }
+    else { cp = V(6.8, Math.max(sh.y, dh.y) + 1.2, mid.z + 2.2); cl = V(mid.x, mid.y - 0.2, mid.z); fov = 46; }
+  }
+  else { const k = ss(SG.FADE, SG.FADE + 1.6, T); cp = V(lerp(5.0, 5.6, k), 3.2, -8.6); cl = V(0, 1.9, -11.2); fov = 40; }
   if (shake > 0) { cp.x += (Math.random() - 0.5) * shake; cp.y += (Math.random() - 0.5) * shake; }
   camera.position.copy(cp); camera.lookAt(cl);
   if (Math.abs(camera.fov - fov) > 0.05) { camera.fov = fov; camera.updateProjectionMatrix(); }
