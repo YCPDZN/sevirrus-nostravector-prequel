@@ -32,6 +32,7 @@ The game saves only when the player chooses to (pause menu, or at the end of a c
 | Strike | click or F | Strike button |
 | Dodge | Space | Dodge button |
 | Journal / Pause | J / Esc | buttons, top right |
+| Skip dialogue line | Enter | |
 
 ## Repository
 

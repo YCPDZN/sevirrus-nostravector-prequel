@@ -1572,7 +1572,7 @@ function showSubs(b) {
     if (i >= 0) M.voice && M.voice.play(i);
     if (i >= 0) { const [, , who, line, style] = LINES[i]; subsWho.textContent = who; subsLine.textContent = line; subsEl.className = 'subs' + (who === LEAD ? ' lead' : '') + (style ? ' ' + style : ''); }
   }
-  subsEl.style.opacity = i >= 0 ? 1 : 0;
+  subsEl.style.opacity = i >= 0 && subsEl.dataset.skip != i ? 1 : 0;
 }
 
 // ---------- blade trails: a fading ribbon behind each blade ----------
@@ -2249,6 +2249,21 @@ function say(who, line, secs = 3.5) {
   subsWho.textContent = who; subsLine.textContent = line; subsEl.className = 'subs' + (who === 'Sevirrus' ? '' : ' lead'); subsEl.style.opacity = 1;
   clearTimeout(say.t); say.t = setTimeout(() => { subsEl.style.opacity = 0; }, secs * 1000);
 }
+// Enter skips the current line of dialogue in any scene
+addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || e.repeat) return;
+  const ae = document.activeElement; if (ae && /INPUT|TEXTAREA|SELECT|BUTTON/.test(ae.tagName)) return;
+  if (cine && cine.speech) {
+    const t = cine.speech.t, li = SPEECH.findIndex(l => t >= l[3] && t < l[3] + l[1] + 0.3);
+    if (li >= 0) { M.voice && M.voice.stop(); cine.speech.t = Math.min(SPEECH_END - 0.01, SPEECH[li][3] + SPEECH[li][1] + 0.31); const nx = SPEECH[li + 1]; if (nx && nx[3] > cine.speech.t) cine.speech.t = nx[3]; e.preventDefault(); }
+    return;
+  }
+  if (cine && subsCur >= 0) { M.voice && M.voice.stop(); subsEl.style.opacity = 0; subsEl.dataset.skip = subsCur; e.preventDefault(); return; }
+  if (!game) return;
+  if (game.reading) { M.voice && M.voice.stop(); game.reading.t = 1e9; e.preventDefault(); return; }
+  if (game.recording) { const rc = game.recording; M.voice && M.voice.stop(); clearTimeout(say.t); subsEl.style.opacity = 0; if (rc.next < RECORD.length) rc.t = Math.max(rc.t, RECORD[rc.next][0]); e.preventDefault(); return; }
+  if (subsEl.style.opacity !== '0') { M.voice && M.voice.stop(); clearTimeout(say.t); subsEl.style.opacity = 0; e.preventDefault(); }
+});
 function updateObjective() {
   const n = CLUES.filter(c => !c.final && game.found.has(c.id)).length, total = CLUES.length - 1;
   if (game.done) { hud.obj.textContent = 'Chapter complete'; hud.count.textContent = ''; return; }
