@@ -711,7 +711,7 @@ body.combat .g-hp { display: block; position: fixed; left: max(16px, env(safe-ar
   window.__menu.renderPauseSlots = () => renderSlots($('#pauseSlots'), 'save');
   window.__menu.renderDoneSlots = () => renderSlots($('#doneSlots'), 'save');
   window.__menu.onChapterComplete = () => {};
-  window.__menu.onChapterEnd = () => { refreshMenu(); say('Chapter II is not written yet.'); items[0].focus(); };
+  window.__menu.onChapterEnd = done => { refreshMenu(); if (done) say('Chapter II is not written yet.'); items[0].focus(); };
   window.__menu.onIntroEnd = () => { say('Chapter I is not written yet. He is waiting.'); items[0].focus(); };
   items.forEach(b => {
     b.addEventListener('pointerenter', () => scramble(b.querySelector('.lbl')));
@@ -2260,12 +2260,17 @@ function jumpToJourney() { if (startChapter()) { CLUES.forEach(c => game.found.a
 addEventListener('keydown', e => { if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'j' && !game && !cine) { e.preventDefault(); jumpToJourney(); } });
 function endChapter() {
   if (!game) return;
+  const wasDone = game.done;
+  G('gPause').hidden = true; G('gDone').hidden = true; recSkip.hidden = true; clearTimeout(say.t);
+  try {
   scene.remove(game.mover); if (game.ghost) scene.remove(game.ghost);
   (game.foes || []).forEach(f => scene.remove(f.mover)); if (game.trail) game.trail.clear();
   if (bast) bast.g.visible = false; if (bastionOutside) bastionOutside.visible = false;
   if (rover) { leaveRoad(); } cineEls.black.style.opacity = 0;
   document.body.classList.remove('combat'); clearBlood(); clearSparks(); cineEls.red.style.opacity = 0; whiteEl.style.opacity = 0; hud.exBtn.textContent = 'Examine';
+  } catch (err) { console.error(err); }
   game = null; keys.clear();
+  try {
   if (crime) crime.g.visible = false;
   setPlanet(false); blackHole.visible = stars.visible = false; rig.visible = true; dust.visible = true; bhLight.intensity = 0;
   key.position.set(0.9, 4.2, 2.6); keyTarget.position.set(0, 1.2, 0); under.position.set(0, 0.15, 0.9); cineSpot.intensity = 0;
@@ -2274,7 +2279,9 @@ function endChapter() {
   subsEl.style.opacity = 0; cineEls.card.style.opacity = 0; cineEls.black.style.opacity = 0;
   M.voice && M.voice.stop(); speak(null);
   camera.fov = 32; camera.updateProjectionMatrix();
-  M.onChapterEnd && M.onChapterEnd();
+  } catch (err) { console.error(err); }
+  document.body.classList.remove('game', 'driving', 'combat'); hud.pause.hidden = true;
+  M.onChapterEnd && M.onChapterEnd(wasDone);
 }
 function narrate(html, cls = '') {
   cineEls.card.dataset.html = html; cineEls.card.innerHTML = html; cineEls.card.className = 'cine-card ' + cls; cineEls.card.style.opacity = 1;
@@ -2640,7 +2647,7 @@ function buildRoad() {
   }
   return { chunks, CH, N };
 }
-function setRoadVisible(on) { roadChunks.chunks.forEach(c => { c.visible = on; }); }
+function setRoadVisible(on) { roadChunks && roadChunks.chunks.forEach(c => { c.visible = on; }); }
 function planetGroundVisible(on) { planet.children.forEach(o => { if (!(o.material && o.material.side === THREE.BackSide)) o.visible = on; }); }
 
 function startTravel() {
