@@ -2249,10 +2249,22 @@ function say(who, line, secs = 3.5) {
   subsWho.textContent = who; subsLine.textContent = line; subsEl.className = 'subs' + (who === 'Sevirrus' ? '' : ' lead'); subsEl.style.opacity = 1;
   clearTimeout(say.t); say.t = setTimeout(() => { subsEl.style.opacity = 0; }, secs * 1000);
 }
+// skip one line of the wrist-display recording (Enter or the on-screen button)
+function skipRecLine() {
+  const rc = game && game.recording; if (!rc) return;
+  M.voice && M.voice.stop(); clearTimeout(say.t); subsEl.style.opacity = 0;
+  rc.t = rc.next < RECORD.length ? Math.max(rc.t, RECORD[rc.next][0]) : Math.max(rc.t, 48.3);
+}
+const recSkip = document.createElement('button');
+recSkip.textContent = 'Skip line ▸ Enter'; recSkip.hidden = true;
+recSkip.style.cssText = 'position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:60;padding:10px 14px;border:1px solid rgba(180,120,255,.5);background:rgba(20,8,36,.75);color:#d9c6ff;font:600 12px/1 system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;border-radius:6px;cursor:pointer';
+recSkip.addEventListener('click', e => { e.stopPropagation(); skipRecLine(); recSkip.blur(); });
+document.body.appendChild(recSkip);
 // Enter skips the current line of dialogue in any scene
 addEventListener('keydown', e => {
   if (e.key !== 'Enter' || e.repeat) return;
-  const ae = document.activeElement; if (ae && /INPUT|TEXTAREA|SELECT|BUTTON/.test(ae.tagName)) return;
+  const ae = document.activeElement; if (ae && /INPUT|TEXTAREA|SELECT/.test(ae.tagName)) return;
+  if (ae && ae.tagName === 'BUTTON') ae.blur();
   if (cine && cine.speech) {
     const t = cine.speech.t, li = SPEECH.findIndex(l => t >= l[3] && t < l[3] + l[1] + 0.3);
     if (li >= 0) { M.voice && M.voice.stop(); cine.speech.t = Math.min(SPEECH_END - 0.01, SPEECH[li][3] + SPEECH[li][1] + 0.31); const nx = SPEECH[li + 1]; if (nx && nx[3] > cine.speech.t) cine.speech.t = nx[3]; e.preventDefault(); }
@@ -2261,7 +2273,7 @@ addEventListener('keydown', e => {
   if (cine && subsCur >= 0) { M.voice && M.voice.stop(); subsEl.style.opacity = 0; subsEl.dataset.skip = subsCur; e.preventDefault(); return; }
   if (!game) return;
   if (game.reading) { M.voice && M.voice.stop(); game.reading.t = 1e9; e.preventDefault(); return; }
-  if (game.recording) { const rc = game.recording; M.voice && M.voice.stop(); clearTimeout(say.t); subsEl.style.opacity = 0; if (rc.next < RECORD.length) rc.t = Math.max(rc.t, RECORD[rc.next][0]); e.preventDefault(); return; }
+  if (game.recording) { const rc = game.recording; M.voice && M.voice.stop(); clearTimeout(say.t); subsEl.style.opacity = 0; skipRecLine(); e.preventDefault(); return; }
   if (subsEl.style.opacity !== '0') { M.voice && M.voice.stop(); clearTimeout(say.t); subsEl.style.opacity = 0; e.preventDefault(); }
 });
 function updateObjective() {
@@ -2351,7 +2363,7 @@ function gameUpdate(dt, time) {
   }
   // the recording
   if (game.recording) {
-    const rc = game.recording; rc.t += dt;
+    const rc = game.recording; rc.t += dt; recSkip.hidden = false;
     while (rc.next < RECORD.length && rc.t >= RECORD[rc.next][0]) {
       const [, kind, vo, who, line, secs] = RECORD[rc.next++];
       if (kind === 'vo') M.voice && M.voice.play(vo);
@@ -2363,7 +2375,7 @@ function gameUpdate(dt, time) {
       if (rc.t > 27.9) game.ghost.visible = Math.random() > 0.15;
     }
     if (rc.t > 37.2 && game.ghost) game.ghost.visible = false;
-    if (rc.t > 48.3) { game.recording = null; startTravel(); return; }
+    if (rc.t > 48.3) { recSkip.hidden = true; game.recording = null; startTravel(); return; }
   }
   // prompt
   const c = nearestClue();
