@@ -2227,7 +2227,8 @@ M.loadState = st => {
   if (st.phase === 'toCar' || st.phase === 'drive' || st.phase === 'bastion') { game.found.add('wrist'); crime.beacons.forEach(b => b.visible = false); startTravel(); }
   if (st.phase === 'toCar' && st.pos) { game.mover.position.set(st.pos[0], 0, st.pos[1]); game.mover.rotation.y = st.yaw || 0; camYaw = (st.yaw || 0) + Math.PI; }
   if (st.phase === 'drive') {
-    startDrive(); rover.dist = st.dist || 0; rover.g.position.z = -rover.dist;
+    game.loadedDrive = true; startDrive(); rover.dist = st.dist || 0;
+    game.saidHalf = rover.dist > ROUTE * 0.5; game.saidNear = rover.dist > ROUTE * 0.9; rover.g.position.z = -rover.dist;
     const base = Math.round(rover.g.position.z / roadChunks.CH) * roadChunks.CH;
     roadChunks.chunks.forEach((c, k) => { c.position.z = base + roadChunks.CH - k * roadChunks.CH; });
   }
@@ -2239,6 +2240,7 @@ M.loadState = st => {
       const keep = [];
       game.foes.forEach((f, k) => { const d = st.foes[k]; if (!d) { scene.remove(f.mover); return; } f.mover.position.set(d[0], 0, d[1]); f.mover.rotation.y = d[2]; f.hp = Math.min(f.maxHp || d[3], d[3]); keep.push(f); });
       game.foes = keep;
+      if (!keep.length && game.floor < 4) game.loadedCleared = true;
     }
     updateBastionHud();
   }
@@ -2662,7 +2664,7 @@ function startDrive() {
   document.body.classList.add('driving');
   M.song && M.song.play();
   narrate('THE BASTION OF CARAX<small>Five miles north</small>', 'title');
-  setTimeout(() => game && game.phase === 'drive' && (say('Jakal XVI', 'Five miles. Let them see me coming.', 4.0), M.voice && M.voice.play(38)), 2400);
+  setTimeout(() => game && game.phase === 'drive' && !game.loadedDrive && (say('Jakal XVI', 'Five miles. Let them see me coming.', 4.0), M.voice && M.voice.play(38)), 2400);
 }
 function driveUpdate(dt, time) {
   const r = rover; let thr = 0, steer = 0;
@@ -2745,7 +2747,7 @@ function enterFloor(i) {
   if (F.herald) game.foes.push(makeCultist(true));
   game.foes.forEach((f, k) => { f.mover.position.set(-4 + (k % 4) * 2.7 + Math.random() * 0.6, 0, -4.5 - Math.floor(k / 4) * 1.6 + Math.random()); f.mover.rotation.y = 0; if (f.herald) f.mover.position.set(0, 0, -6.8); });
   game.mover.position.set(0, 0, 7.5); game.mover.rotation.y = Math.PI; camYaw = 0; camPitch = 0.38;
-  game.atk = null; game.dodge = null; game.hurt = 0; game.cleared = false; game.deadT = 0;
+  game.atk = null; game.dodge = null; game.hurt = 0; game.cleared = false; game.deadT = 0; game.loadedCleared = false;
   B.hp = B.maxHp;
   bast.altar.visible = i === 2; bast.bones.visible = i === 3; bast.racks.visible = i === 1;
   bast.doorGlow.material.color.set(0x2a1030);
@@ -2870,7 +2872,7 @@ function bastionUpdate(dt, time) {
   // floor cleared
   if (!game.cleared && game.foes.every(f => f.state === 'dead')) {
     game.cleared = true; updateBastionHud();
-    if (game.floor < 4) { bast.doorGlow.material.color.set(0xa993e6); setTimeout(() => game && (say('Jakal XVI', 'Up. Keep climbing.', 3.2), M.voice && M.voice.play(46)), 900); }
+    if (game.floor < 4) { bast.doorGlow.material.color.set(0xa993e6); if (!game.loadedCleared) setTimeout(() => game && (say('Jakal XVI', 'Up. Keep climbing.', 3.2), M.voice && M.voice.play(46)), 900); }
     else startFinale();
   }
   const canDoor = game.cleared && game.floor < 4 && nearDoor();
