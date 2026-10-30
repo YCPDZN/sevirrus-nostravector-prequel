@@ -332,7 +332,7 @@ body.combat .g-hp { display: block; position: fixed; left: max(16px, env(safe-ar
   <div class="g-btns"><button id="gJournalBtn">Journal</button><button id="gPauseBtn">Pause</button></div>
   <div class="g-prompt" id="gPrompt"><kbd>E</kbd><span></span></div>
   <div class="g-help"><span class="h-site">WASD to walk · Shift to run · drag to look · E to examine · J for journal · Esc to pause</span><span class="h-combat">WASD to move · click or F to strike · Space to dodge · E to climb · drag to look · Esc to pause</span></div>
-  <div class="g-hp" id="gHp"><span>Jakal XVI</span><div class="g-bar"><i id="gHpFill"></i></div></div>
+  <div class="g-hp" id="gHp"><span>Jakal Chompjak XVI</span><div class="g-bar"><i id="gHpFill"></i></div></div>
   <div class="g-boss" id="gBoss" hidden><span id="gBossName">Herald of Zark</span><div class="g-bar"><i id="gBossFill"></i></div></div>
   <button class="g-ex g-dodge" id="gDodge">Dodge</button>
   <div class="g-stick" id="gStick" aria-label="Move"><div class="g-knob" id="gKnob"></div></div>
@@ -439,8 +439,8 @@ body.combat .g-hp { display: block; position: fixed; left: max(16px, env(safe-ar
       <li><span class="when">1 billion BC</span><div><b>The Fall of the Republic</b><p>Shakhak, a descendant of Chompjak, overthrew Arihak Jakizak, president of the Chompy Republic.</p></div></li>
       <li><span class="when">200 million BC</span><div><b>The Fields of Steca</b><p>Shakhak defeated the alien warlord Javek over the fields of Steca, a planet in the Steca Prime system. Steca lies close to Aridaxx, the terraformed world that had become the Chompy's new capital, in orbit around Sagittarius A*.</p></div></li>
       <li><span class="when">After Steca</span><div><b>The Bastion of Carax</b><p>Javek fell, but his remnants held on. They still hold Carax, a bastion planet on the rim of Sagittarius A*, within reach of the Chompy capital.</p></div></li>
-      <li><span class="when">1220–1240 AD</span><div><b>The Chompjak Civil War</b><p>The house of Chompjak split against itself. Its Janira Prime branch, rooted on the old homeworld, revolted against the Aridaxx branch that ruled from the capital.</p><p>The war lasted twenty years. It ended in 1240 AD, when Jakal XV of the Janira Prime branch, father of Jakal XVI, united the throne and forced his cousin Hakal of Aridaxx to resign.</p></div></li>
-      <li><span class="when">1750 AD</span><div><b>An Heir Is Born</b><p>Hak Chompjak, son of Jakal XVI, is born. He will become Sevirrus. His birth solves his father's lack of an heir.</p></div></li>
+      <li><span class="when">1220–1240 AD</span><div><b>The Chompjak Civil War</b><p>The house of Chompjak split against itself. Its Janira Prime branch, rooted on the old homeworld, revolted against the Aridaxx branch that ruled from the capital.</p><p>The war lasted twenty years. It ended in 1240 AD, when Jakal XV of the Janira Prime branch, father of Jakal Chompjak XVI, united the throne and forced his cousin Hakal of Aridaxx to resign.</p></div></li>
+      <li><span class="when">1750 AD</span><div><b>An Heir Is Born</b><p>Hak Chompjak, son of Jakal Chompjak XVI, is born. He will become Sevirrus. His birth solves his father's lack of an heir.</p></div></li>
       <li><span class="when">1790 AD</span><div><b>Before the Throne</b><p>On Aridaxx, Sevirrus, born Hak Chompjak, stands one step below a throne he has already decided is his.</p></div></li>
     </ol>
     <div class="eyebrow">Archive · Lore article 02</div>
@@ -1077,7 +1077,7 @@ function speak(who) {          // who is speaking right now: drive their mouth, 
 let jMouth = null;
 function jakalMouth() { if (!jMouth && jakalTpl) jMouth = makeMouth(jakalTpl, /^(Jaw|Lower lip|Mouth interior|Beard mouth inset|Beard chin|Beard carved strand)/, 1.57); return jMouth; }
 // during the chapter: is Jakal the one on the subtitle right now?
-const jakalTalking = () => subsWho.textContent === 'Jakal XVI' && subsEl.style.opacity !== '0';
+const jakalTalking = () => subsWho.textContent === 'Jakal Chompjak XVI' && subsEl.style.opacity !== '0';
 
 function setBlade(on, k = 1) {
   if (!blade) return;
@@ -1794,7 +1794,7 @@ function startCine() {
   cineEls.skip.hidden = false; skipCastle.hidden = false; cineEls.skip.focus();
   return true;
 }
-// ---------- After the intro: Jakal XVI addresses Aridaxx from Alphinos Castle ----------
+// ---------- After the intro: Jakal Chompjak XVI addresses Aridaxx from Alphinos Castle ----------
 const SPEECH = [
   [13, 15.31, "Citizens of Aridaxx. Last night, on Carax, five families knelt in the dust, and a creature calling itself Sevirrus took their heads. They were not soldiers. They were farmers. Fathers."],
   [14, 15.96, "I have ruled for five centuries, and I have never… I have never seen cruelty that wore a smile. Whatever Sevirrus is, he was not born of Chompy blood. No child of ours could do this."],
@@ -1853,7 +1853,7 @@ function buildHall() {
   }
   const spot = new THREE.SpotLight(0xffe8d0, 40, 14, Math.PI / 9, 0.5, 1.4); spot.position.set(0, 9, 4); spot.target.position.set(0, 1.8, -0.2); spot.castShadow = true; g.add(spot, spot.target);
   const amb = new THREE.HemisphereLight(0x6a4a9a, 0x0a0410, 0.35); g.add(amb);
-  // Jakal XVI
+  // Jakal Chompjak XVI
   const jk = SkeletonUtils.clone(jakalTpl); const jmover = new THREE.Group(); jmover.add(jk); jmover.position.set(0, 0.6, -0.55); g.add(jmover);
   const bones = {}; jk.traverse(o => { if (o.isBone) bones[o.name] = o; if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
   const j = {}; for (const n of JOINTS) { j[n] = bones[BONE_FOR[n]]; j[n].userData.rest = j[n].position.clone(); }
@@ -1900,7 +1900,7 @@ function speechUpdate(dt, time) {
   const li = SPEECH.findIndex(l => t >= l[3] && t < l[3] + l[1] + 0.3);
   if (li !== S.line) {
     S.line = li;
-    if (li >= 0) { M.voice && M.voice.play(SPEECH[li][0]); subsWho.textContent = 'Jakal XVI'; subsLine.textContent = SPEECH[li][2]; subsEl.className = 'subs lead'; }
+    if (li >= 0) { M.voice && M.voice.play(SPEECH[li][0]); subsWho.textContent = 'Jakal Chompjak XVI'; subsLine.textContent = SPEECH[li][2]; subsEl.className = 'subs lead'; }
   }
   subsEl.style.opacity = li >= 0 ? 1 : 0;
   speak(li >= 0 ? 'jakal' : null);
@@ -2051,7 +2051,7 @@ function cineUpdate(dt, time) {
 }
 
 // =====================================================================================
-// CHAPTER I: INVESTIGATION. Jakal XVI walks the massacre site on Carax and pieces together
+// CHAPTER I: INVESTIGATION. Jakal Chompjak XVI walks the massacre site on Carax and pieces together
 // what happened. Third-person, keyboard + mouse or touch. Seven clues; the last is a recording.
 // =====================================================================================
 const CLUES = [
@@ -2083,11 +2083,11 @@ const RECORD = [   // the recording plays Sevirrus's own voice, then Jakal react
   [16.0, 'vo', 10, 'Sevirrus', 'Stay with me. I want you to hear your people scream.', 5.0],
   [21.3, 'vo', 11, 'Sevirrus', 'Pity. You were the fun one.', 3.2],
   [24.8, 'vo', 12, 'Sevirrus', 'Bring me the rest.', 2.6],
-  [27.9, 'vo', 32, 'Jakal XVI', 'Play it again.', 1.6],
-  [30.1, 'vo', 33, 'Jakal XVI', '…That voice.', 1.6],
-  [32.3, 'vo', 34, 'Jakal XVI', 'No. No, it cannot be.', 4.9],
-  [37.7, 'vo', 35, 'Jakal XVI', '…Hak.', 1.9],
-  [40.1, 'vo', 36, 'Jakal XVI', 'The Bastion of Carax. Five miles north. If my son has friends on this world, they are there.', 7.8],
+  [27.9, 'vo', 32, 'Jakal Chompjak XVI', 'Play it again.', 1.6],
+  [30.1, 'vo', 33, 'Jakal Chompjak XVI', '…That voice.', 1.6],
+  [32.3, 'vo', 34, 'Jakal Chompjak XVI', 'No. No, it cannot be.', 4.9],
+  [37.7, 'vo', 35, 'Jakal Chompjak XVI', '…Hak.', 1.9],
+  [40.1, 'vo', 36, 'Jakal Chompjak XVI', 'The Bastion of Carax. Five miles north. If my son has friends on this world, they are there.', 7.8],
 ];
 // recorded clue lines: voice 19 onward, one per line in the order of CLUES
 const CLUE_DUR = [4.83, 6.03, 5.15, 4.75, 4.6, 4.6, 4.6, 7.55, 4.52, 5.41, 5.8, 5.41, 3.79];
@@ -2205,7 +2205,7 @@ function startChapter() {
   updateObjective();
   narrate('CHAPTER I<small>Investigation</small>', 'title');
   setTimeout(() => game && !game.restored && narrate('CARAX<small>Two days after the massacre</small>'), 2600);
-  setTimeout(() => { if (game && !game.restored) { M.voice && M.voice.play(18); say('Jakal XVI', 'Show me where it happened.', 2.6); } }, 5400);
+  setTimeout(() => { if (game && !game.restored) { M.voice && M.voice.play(18); say('Jakal Chompjak XVI', 'Show me where it happened.', 2.6); } }, 5400);
   return true;
 }
 M.playChapter = startChapter;
@@ -2346,7 +2346,7 @@ function tryExamine() {
   game.found.add(c.id); crime.beacons[CLUES.indexOf(c)].visible = false;
   if (c.final) { startRecording(); return; }
   game.reading = { c, i: 0, t: 0 };
-  M.voice && M.voice.play(c.vo[0]); say('Jakal XVI', c.lines[0], lineDur(c.vo[0]));
+  M.voice && M.voice.play(c.vo[0]); say('Jakal Chompjak XVI', c.lines[0], lineDur(c.vo[0]));
   const li = document.createElement('li'); li.innerHTML = `<b>${c.label[0].toUpperCase() + c.label.slice(1)}</b>${c.lines.join(' ')}`; hud.jlist.appendChild(li);
   updateObjective();
   if (CLUES.filter(o => !o.final).every(o => game.found.has(o.id))) {
@@ -2405,7 +2405,7 @@ function gameUpdate(dt, time) {
   // reading a clue: his observations, one after another
   if (game.reading) {
     const R0 = game.reading; R0.t += dt;
-    if (R0.t > lineDur(R0.c.vo[R0.i])) { R0.i++; R0.t = 0; if (R0.i < R0.c.lines.length) { M.voice && M.voice.play(R0.c.vo[R0.i]); say('Jakal XVI', R0.c.lines[R0.i], lineDur(R0.c.vo[R0.i])); } else { game.reading = null; if (game.sayWrist) { game.sayWrist = false; setTimeout(() => { if (game && !game.recording) { M.voice && M.voice.play(37); say('Jakal XVI', 'His wrist display. It may have recorded something.', 3.9); } }, 700); } } }
+    if (R0.t > lineDur(R0.c.vo[R0.i])) { R0.i++; R0.t = 0; if (R0.i < R0.c.lines.length) { M.voice && M.voice.play(R0.c.vo[R0.i]); say('Jakal Chompjak XVI', R0.c.lines[R0.i], lineDur(R0.c.vo[R0.i])); } else { game.reading = null; if (game.sayWrist) { game.sayWrist = false; setTimeout(() => { if (game && !game.recording) { M.voice && M.voice.play(37); say('Jakal Chompjak XVI', 'His wrist display. It may have recorded something.', 3.9); } }, 700); } } }
   }
   // the recording
   if (game.recording) {
@@ -2457,9 +2457,9 @@ function gameUpdate(dt, time) {
 // fighting the Cult of Zark — masked fanatics in armour cut like Sevirrus's own.
 // =====================================================================================
 const FLOORS = [
-  { name: 'The Gate Hall', dur: 5.9, foes: 2, line: ['Jakal XVI', 'Masks. His armour, his colours. They dress as him.'] },
+  { name: 'The Gate Hall', dur: 5.9, foes: 2, line: ['Jakal Chompjak XVI', 'Masks. His armour, his colours. They dress as him.'] },
   { name: 'The Armoury', dur: 3.7, foes: 3, line: ['Cultist', 'Zark sees you, old king.'] },
-  { name: 'The Shrine of Zark', dur: 6.3, foes: 3, line: ['Jakal XVI', 'An altar. They are not following him. They are worshipping him.'] },
+  { name: 'The Shrine of Zark', dur: 6.3, foes: 3, line: ['Jakal Chompjak XVI', 'An altar. They are not following him. They are worshipping him.'] },
   { name: 'The Ossuary', dur: 4.9, foes: 4, line: ['Cultist', 'Turn back. The Prince of Zark does not forgive.'] },
   { name: 'The Summit', dur: 5.8, foes: 3, herald: true, line: ['Herald of Zark', 'You are too late, Emperor. Your son belongs to Zark now.'] },
 ];
@@ -2683,7 +2683,7 @@ function startDrive() {
   document.body.classList.add('driving');
   M.song && M.song.play();
   narrate('THE BASTION OF CARAX<small>Five miles north</small>', 'title');
-  setTimeout(() => game && game.phase === 'drive' && !game.loadedDrive && !game.heard.has('five') && (game.heard.add('five'), say('Jakal XVI', 'Five miles. Let them see me coming.', 4.0), M.voice && M.voice.play(38)), 2400);
+  setTimeout(() => game && game.phase === 'drive' && !game.loadedDrive && !game.heard.has('five') && (game.heard.add('five'), say('Jakal Chompjak XVI', 'Five miles. Let them see me coming.', 4.0), M.voice && M.voice.play(38)), 2400);
 }
 function driveUpdate(dt, time) {
   const r = rover; let thr = 0, steer = 0;
@@ -2712,8 +2712,8 @@ function driveUpdate(dt, time) {
   // instruments
   const miles = Math.max(0, 5 * (1 - r.dist / ROUTE));
   hud.obj.textContent = 'Drive to the Bastion of Carax'; hud.count.textContent = `${miles.toFixed(2)} miles · ${Math.round(Math.abs(r.speed) * 2.237)} mph`;
-  if (r.dist > ROUTE * 0.5 && !game.saidHalf) { game.saidHalf = true; say('Jakal XVI', 'Halfway. Hold on, Hak. Whatever they have done to you, hold on.', 7.5), M.voice && M.voice.play(39); }
-  if (r.dist > ROUTE * 0.9 && !game.saidNear) { game.saidNear = true; say('Jakal XVI', 'There. The bastion.', 3.2), M.voice && M.voice.play(40); }
+  if (r.dist > ROUTE * 0.5 && !game.saidHalf) { game.saidHalf = true; say('Jakal Chompjak XVI', 'Halfway. Hold on, Hak. Whatever they have done to you, hold on.', 7.5), M.voice && M.voice.play(39); }
+  if (r.dist > ROUTE * 0.9 && !game.saidNear) { game.saidNear = true; say('Jakal Chompjak XVI', 'There. The bastion.', 3.2), M.voice && M.voice.play(40); }
   // arrival at the gate
   if (r.dist >= ROUTE - 10) { r.speed *= 0.9; if (!game.arriving) { game.arriving = { t: 0 }; } }
   if (game.arriving) {
@@ -2892,7 +2892,7 @@ function bastionUpdate(dt, time) {
   // floor cleared
   if (!game.cleared && game.foes.every(f => f.state === 'dead')) {
     game.cleared = true; updateBastionHud();
-    if (game.floor < 4) { bast.doorGlow.material.color.set(0xa993e6); if (!game.loadedCleared && game.floor === 0 && !game.heard.has('climb') && game.heard.add('climb')) setTimeout(() => game && (say('Jakal XVI', 'Up. Keep climbing.', 3.2), M.voice && M.voice.play(46)), 900); }
+    if (game.floor < 4) { bast.doorGlow.material.color.set(0xa993e6); if (!game.loadedCleared && game.floor === 0 && !game.heard.has('climb') && game.heard.add('climb')) setTimeout(() => game && (say('Jakal Chompjak XVI', 'Up. Keep climbing.', 3.2), M.voice && M.voice.play(46)), 900); }
     else startFinale();
   }
   const canDoor = game.cleared && game.floor < 4 && nearDoor();
@@ -2979,7 +2979,7 @@ function foeUpdate(f, dt, time) {
         const dmg = f.herald ? 18 : 12; B.hp -= dmg; game.hurt = 0.3; game.shake = 0.25;
         game.j.spine.getWorldPosition(tmpA); tmpA.y += 0.3; spray(tmpA, tmpB.set(-dx / d, 0.4, -dz / d).normalize(), 50, 2.0, 0.8);
         cineEls.red.style.opacity = 0.45; setTimeout(() => { cineEls.red.style.opacity = 0; }, 140);
-        if (B.hp <= 0) { B.hp = 0; game.deadT = 0.001; say('Jakal XVI', 'Not… yet…', 2.6); M.voice && M.voice.play(47); setTimeout(() => game && narrate('YOU FELL<small>The Cult of Zark endures. Try the floor again.</small>'), 600); }
+        if (B.hp <= 0) { B.hp = 0; game.deadT = 0.001; say('Jakal Chompjak XVI', 'Not… yet…', 2.6); M.voice && M.voice.play(47); setTimeout(() => game && narrate('YOU FELL<small>The Cult of Zark endures. Try the floor again.</small>'), 600); }
         updateBastionHud();
       }
     }
@@ -2993,8 +2993,8 @@ function foeUpdate(f, dt, time) {
 }
 function startFinale() {
   game.finale = { t: 0 };
-  setTimeout(() => game && (say('Jakal XVI', 'Zark. A name, a mask, a rabble in my son\'s colours.', 7.3), M.voice && M.voice.play(48)), 1200);
-  setTimeout(() => game && (say('Jakal XVI', 'Then I will tear Zark down, stone by stone, until he has nowhere left to hide.', 5.9), M.voice && M.voice.play(49)), 8800);
+  setTimeout(() => game && (say('Jakal Chompjak XVI', 'Zark. A name, a mask, a rabble in my son\'s colours.', 7.3), M.voice && M.voice.play(48)), 1200);
+  setTimeout(() => game && (say('Jakal Chompjak XVI', 'Then I will tear Zark down, stone by stone, until he has nowhere left to hide.', 5.9), M.voice && M.voice.play(49)), 8800);
 }
 
 // ---------- Menu: pointer tracking, framing, the render loop ----------
