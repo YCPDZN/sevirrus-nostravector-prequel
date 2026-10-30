@@ -2195,7 +2195,10 @@ M.getState = () => {
   const p = game.mover.position;
   return { v: 1, t: Date.now(), chapter: 1, phase, complete: !!game.done,
     found: [...game.found].filter(id => id !== 'wrist'), pos: [+p.x.toFixed(2), +p.z.toFixed(2)], yaw: +game.mover.rotation.y.toFixed(3),
-    floor: game.floor > 0 ? game.floor : 0, hp: Math.round(B.hp), dist: rover && phase === 'drive' ? Math.round(rover.dist) : 0 };
+    floor: game.floor > 0 ? game.floor : 0, hp: Math.round(B.hp), dist: rover && phase === 'drive' ? Math.round(rover.dist) : 0,
+    car: rover && phase === 'drive' ? [+rover.g.position.x.toFixed(2), +rover.yaw.toFixed(3)] : null,
+    cleared: phase === 'bastion' ? !!game.cleared : false,
+    foes: phase === 'bastion' && game.foes ? game.foes.map(f => f.state === 'dead' ? null : [+f.mover.position.x.toFixed(2), +f.mover.position.z.toFixed(2), +f.mover.rotation.y.toFixed(2), Math.round(f.hp), f.herald ? 1 : 0]) : null };
 };
 // rebuild the chapter from a save
 M.loadState = st => {
@@ -2216,7 +2219,17 @@ M.loadState = st => {
     const base = Math.round(rover.g.position.z / roadChunks.CH) * roadChunks.CH;
     roadChunks.chunks.forEach((c, k) => { c.position.z = base + roadChunks.CH - k * roadChunks.CH; });
   }
-  if (st.phase === 'bastion') { startBastion(); enterFloor(Math.min(4, st.floor || 0)); B.hp = st.hp || B.maxHp; updateBastionHud(); }
+  if (st.phase === 'drive' && st.car) { rover.g.position.x = st.car[0]; rover.yaw = rover.g.rotation.y = st.car[1]; }
+  if (st.phase === 'bastion') {
+    startBastion(); enterFloor(Math.min(4, st.floor || 0)); B.hp = st.hp || B.maxHp;
+    if (st.pos) { game.mover.position.set(st.pos[0], 0, st.pos[1]); game.mover.rotation.y = st.yaw || 0; camYaw = (st.yaw || 0) - Math.PI; }
+    if (st.foes) {
+      const keep = [];
+      game.foes.forEach((f, k) => { const d = st.foes[k]; if (!d) { scene.remove(f.mover); return; } f.mover.position.set(d[0], 0, d[1]); f.mover.rotation.y = d[2]; f.hp = Math.min(f.maxHp || d[3], d[3]); keep.push(f); });
+      game.foes = keep;
+    }
+    updateBastionHud();
+  }
   narrate('CHAPTER I<small>Game loaded</small>', 'title');
   return true;
 };
