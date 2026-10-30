@@ -1067,8 +1067,13 @@ function speak(who) {          // who is speaking right now: drive their mouth, 
   const v = M.voice && M.voice.level ? M.voice.level() : 0;
   sevMouth && sevMouth.set(who === 'sev' ? v : 0);
   cine && cine.battle && cine.battle.mouth && cine.battle.mouth.set(who === 'lead' ? v : 0);
-  hall && hall.mouth && hall.mouth.set(who === 'jakal' ? v : 0);
+  const jm = (hall && hall.mouth) || jakalMouth(); jm && jm.set(who === 'jakal' ? v : 0);
 }
+// Jakal's mouth: every clone of his model shares the template's geometry, so one mouth drives them all
+let jMouth = null;
+function jakalMouth() { if (!jMouth && jakalTpl) jMouth = makeMouth(jakalTpl, /^(Jaw|Lower lip|Mouth interior|Beard mouth inset|Beard chin|Beard carved strand)/, 1.57); return jMouth; }
+// during the chapter: is Jakal the one on the subtitle right now?
+const jakalTalking = () => subsWho.textContent === 'Jakal XVI' && subsEl.style.opacity !== '0';
 
 function setBlade(on, k = 1) {
   if (!blade) return;
@@ -2430,7 +2435,7 @@ function gameUpdate(dt, time) {
     cl = V(p.x, ty, p.z);
   }
   camera.position.lerp(cp, game.recording ? 0.08 : 0.2); camera.lookAt(cl);
-  speak(null);
+  speak(jakalTalking() ? 'jakal' : null);
 }
 
 // =====================================================================================
@@ -2710,7 +2715,7 @@ function driveUpdate(dt, time) {
   const back = 7 + r.speed * 0.08, cp = V(p.x + Math.sin(r.yaw) * back, 2.6 + r.speed * 0.02, p.z + Math.cos(r.yaw) * back);
   camera.position.lerp(cp, 0.12); camera.lookAt(p.x - Math.sin(r.yaw) * 10, 1.2, p.z - Math.cos(r.yaw) * 10);
   const fov = 50 + Math.max(0, r.speed - 20) * 0.5; if (Math.abs(camera.fov - fov) > 0.1) { camera.fov = fov; camera.updateProjectionMatrix(); }
-  speak(null);
+  speak(jakalTalking() ? 'jakal' : null);
 }
 function leaveRoad() {
   M.song && M.song.stop();
@@ -2810,6 +2815,7 @@ function useDoor() {
 
 // ---------- the fight ----------
 function bastionUpdate(dt, time) {
+  speak(jakalTalking() ? 'jakal' : null);
   const p = game.mover.position;
   // climbing to the next floor: a short fade
   if (game.climbing) {
