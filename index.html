@@ -661,6 +661,7 @@ body.run .g-sev.near b { color: var(--crimson); }
 <script type="application/octet-stream" id="vo93" data-src="assets/vo93.mp3"></script>
 <script type="application/octet-stream" id="songDrive" data-src="assets/songDrive.mp3"></script>
 <script type="application/octet-stream" id="songKesh" data-src="assets/songKesh.mp3"></script>
+<script type="application/octet-stream" id="songAridaxx" data-src="assets/songAridaxx.mp3"></script>
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -731,7 +732,7 @@ body.run .g-sev.near b { color: var(--crimson); }
     }
   }
   // 'Demons of Laniakea' plays on the rover while you drive; it loops and ducks under Jakal's voice
-  // songs by tag: 'songDrive' (Demons of Laniakea, the rover) and 'songKesh' (Siege of Kesh, the battle)
+  // songs by tag: 'songDrive' (Demons of Laniakea, the rover), 'songAridaxx' (Siege of Aridaxx, Chapter II), 'songKesh' (Siege of Kesh, the battle)
   const songBufs = {}, songLoading = {};
   let songSrc = null, songGain = null, songNow = null;
   window.__menu.song = {
@@ -2508,7 +2509,7 @@ function endChapter() {
   scene.remove(game.mover); if (game.ghost) scene.remove(game.ghost);
   if (game.phase === 'escape') {
     if (runSet) runSet.g.visible = false; if (game.jakal) scene.remove(game.jakal.mover); if (game.ghostBlade) scene.remove(game.ghostBlade); (game.rings || []).forEach(x => scene.remove(x.w));
-    clearGore(); clearShards(); sevTrail.clear(); rig.rotation.order = 'XYZ'; eyeMats.forEach(m => { m.emissiveIntensity = 0; }); cineEls.red.style.opacity = 0;
+    M.song && M.song.stop(); clearGore(); clearShards(); sevTrail.clear(); rig.rotation.order = 'XYZ'; eyeMats.forEach(m => { m.emissiveIntensity = 0; }); cineEls.red.style.opacity = 0;
     hemi.color.set(0x4a2f72); hemi.groundColor.set(0x0a0410); bhLight.color.set(0xff8a3a); bhLight.position.set(60, 110, -300); stars.visible = false; scene.fog.color.set(0x0f0819); scene.fog.density = baseFog; camera.far = 60;
     [hemi, key, under, rimL, rimR].forEach(l => { if (l.userData.was !== undefined) l.intensity = l.userData.was; }); rimL.position.set(-2.2, 2.8, -2.2); key.angle = Math.PI / 7; key.distance = 12; key.decay = 1.6;
   }
@@ -3502,7 +3503,7 @@ function startSiege() {
   camera.far = 120; camera.fov = 36; camera.updateProjectionMatrix();
   cineEls.red.dataset.hit = -9;
   document.body.classList.add('cine'); cineEls.skip.hidden = false; cineEls.skip.focus();
-  M.song && M.song.play();
+  M.song && M.song.play('songAridaxx');
   return true;
 }
 function endSiege(finished) {
@@ -3524,9 +3525,9 @@ function endSiege(finished) {
   camera.far = 60; camera.fov = 32; camera.updateProjectionMatrix();
   subsEl.style.opacity = 0; cineEls.black.style.opacity = 0; cineEls.red.style.opacity = 0; cineEls.card.style.opacity = 0; cineEls.skip.hidden = true;
   document.body.classList.remove('cine');
-  M.song && M.song.stop(); M.voice && M.voice.stop();
+  M.voice && M.voice.stop();   // the Siege of Aridaxx keeps playing into the run
   // straight on into the run (deferred, so the key that skipped the scene does not also pause the game)
-  setTimeout(() => { if (!startEscape()) M.onSiegeEnd && M.onSiegeEnd(!!finished); }, 0);
+  setTimeout(() => { if (!startEscape()) { M.song && M.song.stop(); M.onSiegeEnd && M.onSiegeEnd(!!finished); } }, 0);
 }
 M.playChapter2 = startSiege;
 // test hook: run the scene forward to a given time without waiting in real time
@@ -3998,6 +3999,7 @@ function startEscape(st) {
   hud.journal.hidden = true; G('gJournalBtn').hidden = true; bHud.boss.hidden = true;
   hud.exBtn.disabled = false; hud.exBtn.textContent = 'Strike';
   updateRunHud();
+  M.song && M.song.play('songAridaxx');
   if (!st) { narrate('THE ROAD TO ALPHINOS<small>Seal the keep’s gates before he reaches the Emperor</small>', 'title'); }
   else narrate('CHAPTER II<small>Game loaded</small>', 'title');
   return true;
