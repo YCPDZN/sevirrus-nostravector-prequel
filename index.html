@@ -749,6 +749,13 @@ body.run .g-sev.near b { color: var(--crimson); }
 <script type="application/octet-stream" id="vo117" data-src="assets/vo117.mp3"></script>
 <script type="application/octet-stream" id="vo118" data-src="assets/vo118.mp3"></script>
 <script type="application/octet-stream" id="vo119" data-src="assets/vo119.mp3"></script>
+<script type="application/octet-stream" id="vo120" data-src="assets/vo120.mp3"></script>
+<script type="application/octet-stream" id="vo121" data-src="assets/vo121.mp3"></script>
+<script type="application/octet-stream" id="vo122" data-src="assets/vo122.mp3"></script>
+<script type="application/octet-stream" id="vo123" data-src="assets/vo123.mp3"></script>
+<script type="application/octet-stream" id="vo124" data-src="assets/vo124.mp3"></script>
+<script type="application/octet-stream" id="vo125" data-src="assets/vo125.mp3"></script>
+<script type="application/octet-stream" id="vo126" data-src="assets/vo126.mp3"></script>
 <script type="application/octet-stream" id="songDrive" data-src="assets/songDrive.mp3"></script>
 <script type="application/octet-stream" id="songKesh" data-src="assets/songKesh.mp3"></script>
 <script type="application/octet-stream" id="songAridaxx" data-src="assets/songAridaxx.mp3"></script>
@@ -5258,12 +5265,12 @@ function jazUpdate(dt, time) {
 // 1826 AD. Hak Chompjak V, free and in black and blue, returns to the Bastion of Carax and the Shrine of Zark.
 // [who, line, voice clip]   (CH6PRIEST1-4 / CH6HAK1-3 go in vo120..vo126 when recorded)
 const ZK = {
-  intro: [[3.8, 5.0, 'High Priest of Destruction', 'The Prince of Zark comes home. Kneel, and we will crown you again.', 119], [9.4, 4.0, HAK_NAME, 'I already wore one crown. I came to break yours.', 120]],
-  half: ['High Priest of Destruction', 'We made you! Every drop of blood you spilled was a prayer to Zark!', 121, 4.6],
-  shield: ['High Priest of Destruction', 'Children of Zark, rise. Shield your father.', 122, 3.6],
-  dying: ['High Priest of Destruction', 'Zark… will remember… what you were…', 123, 4.0],
-  last: [HAK_NAME, 'Let him remember. I never will again.', 124, 4.0],
-  win: [HAK_NAME, 'For Damix. For my father. For all of them.', 125, 4.0],
+  intro: [[3.8, 6.3, 'High Priest of Destruction', 'The Prince of Zark comes home. Kneel, and we will crown you again.', 119], [10.6, 4.3, HAK_NAME, 'I already wore one crown. I came to break yours.', 120]],
+  half: ['High Priest of Destruction', 'We made you! Every drop of blood you spilled was a prayer to Zark!', 121, 6.5],
+  shield: ['High Priest of Destruction', 'Children of Zark, rise. Shield your father.', 122, 5.1],
+  dying: ['High Priest of Destruction', 'Zark… will remember… what you were…', 123, 4.5],
+  last: [HAK_NAME, 'Let him remember. I never will again.', 124, 3.3],
+  win: [HAK_NAME, 'For Damix. For my father. For all of them.', 125, 3.9],
 };
 // the High Priest of Destruction: hooded, crowned, in black and crimson vestments; a book in one hand, the other raised
 function buildPriest() {
@@ -5330,7 +5337,7 @@ function startCh6() {
   hakLook(true); setBlade(true, 1);
   const P = buildPriest(); scene.add(P.g); P.g.position.set(0, 0.15, -4.6);
   game = { phase: 'zark', ch: 6, t: 0, mover: rig, j: sev.j, gait: makeGait(rig), foes: [], heard: new Set(), paused: false, done: false, lock: true, intro: 0, orbs: [], sigils: [], novas: [], pillars: [],
-    boss: Object.assign(P, { hp: 36, max: 36, state: 'idle', st: 0, cd: 2.5, summoned: 0, dead: false }) };
+    boss: Object.assign(P, { hp: 24, max: 24, state: 'idle', st: 0, cd: 2.5, summoned: 0, dead: false }) };
   B.maxHp = 100; B.hp = 100; camYaw = 0; camPitch = 0.38;
   document.body.classList.add('game', 'combat');
   G('gHp').querySelector('span').textContent = HAK_NAME; G('gHud').querySelector('.g-ch').textContent = 'Chapter VI · The Cult of Zark';
@@ -5399,12 +5406,12 @@ function zarkUpdate(dt, time) {
     p.z = lerp(8.4, 4.6, ss(1.5, 8.5, T)); rig.rotation.y = Math.PI;
     applyPose(sev.j, addPose(mixPose('stand', 'idleBlade', 0.8), T > 1.5 && T < 8.5 ? stepGait(game.gait, dt) : (game.gait.prev.copy(p), {})));
     priestPose(dt, time, T < 9 ? 0.3 : 0);
-    if (T < 9.4) { key.color.set(0xd8d4ff); key.intensity = 26; key.position.set(pp.x + 2.2, 4.5, pp.z + 4); keyTarget.position.set(pp.x, 1.4, pp.z); } else key.color.set(0xffffff);
-    const k = ss(2.4, 9.4, T);
-    if (T < 9.4) { camera.position.set(lerp(3.6, 1.2, k), lerp(2.6, 2.0, k), lerp(1.6, -0.6, k)); camera.lookAt(pp.x, lerp(1.5, 2.0, k), pp.z); if (camera.fov !== 40) { camera.fov = 40; camera.updateProjectionMatrix(); } }
+    if (T < 10.6) { key.color.set(0xd8d4ff); key.intensity = 26; key.position.set(pp.x + 2.2, 4.5, pp.z + 4); keyTarget.position.set(pp.x, 1.4, pp.z); } else key.color.set(0xffffff);
+    const k = ss(2.4, 10.6, T);
+    if (T < 10.6) { camera.position.set(lerp(3.6, 1.2, k), lerp(2.6, 2.0, k), lerp(1.6, -0.6, k)); camera.lookAt(pp.x, lerp(1.5, 2.0, k), pp.z); if (camera.fov !== 40) { camera.fov = 40; camera.updateProjectionMatrix(); } }
     else { sev.j.head.getWorldPosition(tmpA); camera.position.set(tmpA.x - 0.4, tmpA.y + 0.05, tmpA.z - 1.2); camera.lookAt(tmpA.x, tmpA.y + 0.1, tmpA.z); }
     speak(sevTalking() ? 'sev' : null, !(M.voice && M.voice.busy && M.voice.busy()));
-    if (T > 13.6) { game.lock = false; camYaw = 0; narrate('FIGHT<small>Defeat the High Priest of Destruction</small>', 'title'); updateZarkHud(); }
+    if (T > 15.6) { game.lock = false; camYaw = 0; narrate('FIGHT<small>Defeat the High Priest of Destruction</small>', 'title'); updateZarkHud(); }
     return;
   }
   // ---------- victory: he falls, the book burns, Hak has the last word
@@ -5413,7 +5420,7 @@ function zarkUpdate(dt, time) {
     P.g.position.y = 0.15 - ss(0.4, 3, W.t) * 0.5; P.body.rotation.x = -0.9 * ss(0.6, 2.4, W.t); P.eyeM.emissiveIntensity = 2.4 * (1 - ss(0.5, 2.5, W.t)); P.glow.intensity = 2.5 * (1 - ss(0.5, 2.5, W.t));
     if (W.t < 2.5 && Math.random() < 0.6) { P.book.getWorldPosition(tmpA); sparks(tmpA, 6, 2); }
     if (W.t > 0.5 && !game.heard.has('dying')) { game.heard.add('dying'); zarkLine(...ZK.dying.slice(0, 3), ZK.dying[3]); }
-    if (W.t > 5.2 && !game.heard.has('last')) { game.heard.add('last'); zarkLine(...ZK.last.slice(0, 3), ZK.last[3]); }
+    if (W.t > 5.6 && !game.heard.has('last')) { game.heard.add('last'); zarkLine(...ZK.last.slice(0, 3), ZK.last[3]); }
     if (W.t > 9.6 && !game.heard.has('win')) { game.heard.add('win'); zarkLine(...ZK.win.slice(0, 3), ZK.win[3]); }
     applyPose(sev.j, mixPose('guard', 'stand', ss(0.5, 2, W.t)));
     game.foes.forEach(f => foeUpdate(f, dt, time));
@@ -5491,7 +5498,7 @@ function priestPose(dt, time, cast) {
   P.shield.material.opacity = Math.max(shielded ? 0.12 + Math.sin(time * 5) * 0.05 : 0, P.shield.material.opacity - dt);
 }
 function priestAI(dt, time) {
-  const P = game.boss, pp = P.g.position, p = rig.position, d = Math.hypot(p.x - pp.x, p.z - pp.z), fast = P.half ? 0.65 : 1;
+  const P = game.boss, pp = P.g.position, p = rig.position, d = Math.hypot(p.x - pp.x, p.z - pp.z), fast = (P.half ? 0.8 : 1) * 1.35;
   P.st += dt; let cast = 0;
   if (P.state === 'idle') {
     P.cd -= dt;
@@ -5505,12 +5512,12 @@ function priestAI(dt, time) {
     }
   } else if (P.state === 'bolts') {           // a volley of red bolts from the raised hand
     cast = Math.min(1, P.st / 0.6);
-    const n = P.half ? 5 : 3;
+    const n = P.half ? 4 : 3;
     if (P.st > 0.6 && P.shots < n && P.st > 0.6 + P.shots * 0.2) {
       P.shots++; P.armL.updateMatrixWorld(true); P.armL.children[1].getWorldPosition(tmpA);
       const m = new THREE.Mesh(zarkOrbG, zarkOrbM); m.position.copy(tmpA); scene.add(m);
       const aim = tmpB.set(p.x - tmpA.x, 1.0 - tmpA.y, p.z - tmpA.z).normalize(); aim.x += (Math.random() - 0.5) * 0.12; aim.z += (Math.random() - 0.5) * 0.12; aim.normalize();
-      game.orbs.push({ m, v: aim.multiplyScalar(P.half ? 10 : 8), life: 3 });
+      game.orbs.push({ m, v: aim.multiplyScalar(P.half ? 8 : 6.5), life: 3.5 });
     }
     if (P.st > 0.8 + n * 0.2) { P.state = 'idle'; P.cd = (1.6 + Math.random()) * fast; }
   } else if (P.state === 'sigil') {           // the floor under you burns
@@ -5532,7 +5539,7 @@ function priestAI(dt, time) {
     cast = 1;
     if (P.st > 1.0 && !P.raised) {
       P.raised = true; zarkLine(...ZK.shield.slice(0, 3), ZK.shield[3]);
-      for (let k = 0; k < 3; k++) { const f = makeCultist(false); const a = k / 3 * Math.PI * 2; f.mover.position.set(THREE.MathUtils.clamp(pp.x + Math.cos(a) * 2.2, -8, 8), 0, THREE.MathUtils.clamp(pp.z + Math.sin(a) * 2.2, -8, 8)); game.foes.push(f); kickDust(f.mover.position.clone().setY(0.2), 50, 2); }
+      for (let k = 0; k < 2; k++) { const f = makeCultist(false); const a = k / 2 * Math.PI * 2 + 0.8; f.mover.position.set(THREE.MathUtils.clamp(pp.x + Math.cos(a) * 2.2, -8, 8), 0, THREE.MathUtils.clamp(pp.z + Math.sin(a) * 2.2, -8, 8)); game.foes.push(f); kickDust(f.mover.position.clone().setY(0.2), 50, 2); }
     }
     if (P.st > 1.6) { P.state = 'idle'; P.raised = false; P.cd = 2.5 * fast; }
   }
@@ -5543,25 +5550,25 @@ function zarkFx(dt, time) {
   game.orbs = game.orbs.filter(o => {
     o.life -= dt; o.m.position.addScaledVector(o.v, dt);
     const hitMe = o.m.position.distanceTo(tmpA.set(p.x, 1.0, p.z)) < 0.55;
-    if (hitMe && hitPlayer(9, o.m.position)) { sparks(o.m.position, 30, 3); scene.remove(o.m); return false; }
+    if (hitMe && hitPlayer(6, o.m.position)) { sparks(o.m.position, 30, 3); scene.remove(o.m); return false; }
     if (o.life <= 0 || Math.abs(o.m.position.x) > 9.3 || Math.abs(o.m.position.z) > 9.3 || o.m.position.y < 0) { scene.remove(o.m); return false; }
     return true;
   });
   game.sigils = game.sigils.filter(sg => {
     sg.t += dt; sg.m.material.opacity = 0.35 + Math.abs(Math.sin(time * 14)) * 0.4; sg.m.scale.setScalar(1 - sg.t * 0.25);
-    if (sg.t > 1.1 && !sg.burst) {
+    if (sg.t > 1.4 && !sg.burst) {
       sg.burst = true; const c = sg.m.position; sparks(V(c.x, 0.2, c.z), 160, 6); impactFrame(60);
       const pil = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.4, 6, 24, 1, true), new THREE.MeshBasicMaterial({ color: 0xff2030, transparent: true, opacity: 0.6, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending }));
       pil.position.set(c.x, 3, c.z); scene.add(pil); game.pillars.push({ m: pil, t: 0 });
-      if (Math.hypot(p.x - c.x, p.z - c.z) < 1.75) hitPlayer(20, c);
+      if (Math.hypot(p.x - c.x, p.z - c.z) < 1.6) hitPlayer(12, c);
     }
-    if (sg.t > 1.25) { scene.remove(sg.m); return false; }
+    if (sg.t > 1.55) { scene.remove(sg.m); return false; }
     return true;
   });
   game.pillars = game.pillars.filter(pl => { pl.t += dt; pl.m.material.opacity = 0.6 * (1 - pl.t / 0.5); if (pl.t > 0.5) { scene.remove(pl.m); return false; } return true; });
   game.novas = game.novas.filter(n => {
     n.t += dt; const r = n.t * 7, dd = Math.hypot(p.x - n.x, p.z - n.z);
-    if (!n.hit && Math.abs(dd - r) < 0.6) { if (hitPlayer(14, V(n.x, 1, n.z))) { n.hit = true; const k = 1.6 / Math.max(dd, 0.1); p.x += (p.x - n.x) * k * 0.6; p.z += (p.z - n.z) * k * 0.6; } }
+    if (!n.hit && Math.abs(dd - r) < 0.6) { if (hitPlayer(9, V(n.x, 1, n.z))) { n.hit = true; const k = 1.6 / Math.max(dd, 0.1); p.x += (p.x - n.x) * k * 0.6; p.z += (p.z - n.z) * k * 0.6; } }
     return n.t < 0.8;
   });
 }
