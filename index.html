@@ -5158,7 +5158,8 @@ function updateTarget() {
   const isOfficer = t.alive !== undefined, officer = isOfficer ? t : t.officer, lead = officer.side === 'E' ? 'Sevirrus' : 'Arixal Chompjak';
   el.hidden = false; el.className = 'c4-target ' + (officer.side === 'E' ? 'foe' : 'ally');
   G('c4TLead').textContent = lead.toUpperCase();
-  G('c4TName').textContent = officer.leader ? officer.name.toUpperCase() : (isOfficer ? officer.name : officer.name).toUpperCase();
+  // an officer shows his own name; a rank-and-file soldier is just a trooper of his side
+  G('c4TName').textContent = isOfficer ? officer.name.toUpperCase() : 'TROOPER';
   G('c4THp').style.width = (isOfficer ? Math.max(0, t.hp) : Math.max(0, t.hp / 3 * 100)) + '%';
 }
 function battleCamera(dt) {
