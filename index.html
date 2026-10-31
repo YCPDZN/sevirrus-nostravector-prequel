@@ -995,7 +995,7 @@ body.run .g-sev.near b { color: var(--crimson); }
   window.__menu.renderDoneSlots = () => renderSlots($('#doneSlots'), 'save');
   window.__menu.onChapterComplete = () => {};
   window.__menu.onChapterEnd = done => { refreshMenu(); items[0].focus(); };
-  window.__menu.onCh5End = done => { refreshMenu(); say(done ? 'The siege itself is still being written.' : 'Awaiting your choice'); items[0].focus(); };
+  window.__menu.onCh5End = done => { refreshMenu(); say(done ? 'Sevirrus will return in NOSTRAVECTOR.' : 'Awaiting your choice'); items[0].focus(); };
   window.__menu.onCh4End = () => { refreshMenu(); say('Awaiting your choice'); items[0].focus(); };
   window.__menu.onAssaEnd = done => { refreshMenu(); say(done ? 'The Emperor is dead.' : 'Awaiting your choice'); items[0].focus(); };
   window.__menu.onSiegeEnd = done => { refreshMenu(); say(done ? 'Chapter III is not written yet.' : 'Awaiting your choice'); items[0].focus(); };
@@ -2236,6 +2236,7 @@ function endCine() {
   if (!cine) return;
   if (cine.siege) { endSiege(false); return; }
   if (cine.assa) { endAssassination(false); return; }
+  if (cine.end) { finishEnding(); return; }
   if (cine.jaz) { endJaz(false); return; }
   if (cine.ch5) { endCh5Intro(true); return; }
   if (cine.ch4) { endCh4Intro(true); return; }
@@ -2278,6 +2279,7 @@ function execPose(T) {
 }
 
 function cineUpdate(dt, time) {
+  if (cine.end) { endingUpdate(dt, time); return; }
   if (cine.jaz) { jazUpdate(dt, time); return; }
   if (cine.ch5) { ch5Update(dt, time); return; }
   if (cine.ch4) { ch4IntroUpdate(dt, time); return; }
@@ -2458,6 +2460,7 @@ let quietEnd = false;
 G('gJClose').addEventListener('click', () => toggleJournal());
 G('gDoneMenu').addEventListener('click', () => {
   G('gDone').hidden = true;
+  if (!game && M.endSave) { M.endSave = false; G('gDone').querySelector('.eyebrow').textContent = 'Chapter I · Investigation'; G('gDoneNext').hidden = false; M.onCh5End && M.onCh5End(true); return; }
   if (!game && M.ch3Save) { M.ch3Save = false; G('gDone').querySelector('.eyebrow').textContent = 'Chapter I · Investigation'; G('gDoneNext').hidden = false; M.onAssaEnd && M.onAssaEnd(true); return; }
   endChapter();
 });
@@ -2541,6 +2544,7 @@ M.playChapter = startChapter;
 // snapshot of the chapter for a save (only ever taken when the player picks a slot)
 M.getState = () => {
   if (game && game.bt) return game.done ? { v: 1, t: Date.now(), chapter: STAGE.ch, stage: STAGE.id, phase: 'prebattle', complete: true } : battleState();
+  if (!game && M.endSave) return { v: 1, t: Date.now(), chapter: 5, stage: 'alphinos', complete: true };
   if (!game) return M.ch3Save ? { v: 1, t: Date.now(), chapter: 3, complete: true } : null;
   if (game.phase === 'escape') { const p = game.mover.position; return { v: 1, t: Date.now(), chapter: 2, phase: 'escape', complete: !!game.done, pos: [+p.x.toFixed(2), +p.z.toFixed(2)], yaw: +game.mover.rotation.y.toFixed(3), hp: Math.round(B.hp), check: game.check, sevZ: +rig.position.z.toFixed(2), heard: [...game.heard] }; }
   const phase = game.phase === 'toCar' || game.phase === 'drive' || game.phase === 'bastion' ? game.phase : 'site';
@@ -2655,6 +2659,7 @@ addEventListener('keydown', e => {
   // a button in a menu or panel (save slots, pause menu, chapter cards, Begin…) is pressed with Enter as usual;
   // only a stray focus (the cutscene's Skip button) is dropped, so Enter skips a line rather than the whole scene
   if (ae && ae.tagName === 'BUTTON') { if (ae.closest('.panel, .panel-wrap, .gwrap, #menu, .c4hud, .menu')) return; ae.blur(); }
+  if (cine && cine.end) { const S = cine.end; if (S.line >= 0) { (S.skipped = S.skipped || new Set()).add(S.line); M.voice && M.voice.stop(); subsEl.style.opacity = 0; } e.preventDefault(); return; }
   if (cine && cine.jaz) { const S = cine.jaz; if (S.line >= 0) { (S.skipped = S.skipped || new Set()).add(S.line); M.voice && M.voice.stop(); subsEl.style.opacity = 0; } e.preventDefault(); return; }
   if (cine && cine.ch5) { const S = cine.ch5; if (S.line >= 0) { (S.skipped = S.skipped || new Set()).add(S.line); M.voice && M.voice.stop(); subsEl.style.opacity = 0; } e.preventDefault(); return; }
   if (cine && cine.ch4) { const S = cine.ch4; if (S.line >= 0) { (S.skipped = S.skipped || new Set()).add(S.line); M.voice && M.voice.stop(); subsEl.style.opacity = 0; } e.preventDefault(); return; }
@@ -4105,7 +4110,7 @@ function startEscape(st) {
 }
 M.playEscape = startEscape;
 M._game = () => game;   // test hooks
-M._stage = id => { STAGE = STAGES[id]; return !!STAGE; }; M._camYaw = y => { camYaw = y; }; M._unit = id => game && game.units.find(u => u.id === id); M._stageId = () => STAGE && STAGE.id; M._sevHit = () => STAGE.sevHit;
+M._stage = id => { STAGE = STAGES[id]; return !!STAGE; }; M._camYaw = y => { camYaw = y; }; M._wristGap = (pose) => { rig.visible = true; applyPose(sev.j, pose); rig.updateMatrixWorld(true); const a = new THREE.Vector3(), b = new THREE.Vector3(), h = new THREE.Vector3(); sev.j.wristL.getWorldPosition(a); sev.j.wristR.getWorldPosition(b); sev.j.spine.getWorldPosition(h); return { gap: +a.distanceTo(b).toFixed(3), fwd: +(((a.z + b.z) / 2) - h.z).toFixed(3), y: +(((a.y + b.y) / 2) - h.y).toFixed(3) }; }; M._unit = id => game && game.units.find(u => u.id === id); M._stageId = () => STAGE && STAGE.id; M._sevHit = () => STAGE.sevHit;
 M._setHp = v => { B.hp = v; }; M._dropTest = (x, z) => { dropItem(V(x, 0, z), 'rock', true); dropItem(V(x + 1.4, 0, z - 0.6), 'great', true); }; M._down = u => officerDown(u, game.me); M._sim = t => simulate(t); M._reinforce = () => game && game.bases.forEach(b => reinforce(b));
 M._poses = POSES; M._fit = f => { fit = lastFit = f; fitT = 0; fitNext = 99; };
 M._step = (n, dt = 1 / 30) => { for (let i = 0; i < n && game; i++) gameUpdate(dt, performance.now() / 1000 + i * dt); return !!game; };
@@ -5224,6 +5229,140 @@ function jazUpdate(dt, time) {
   camera.position.copy(cp); camera.lookAt(cl); if (Math.abs(camera.fov - fov) > 0.05) { camera.fov = fov; camera.updateProjectionMatrix(); }
   if (T >= JZ.END) endJaz(true);
 }
+// ============================================================ THE END: Sevirrus in chains ==========
+// [start, seconds, line, voice clip, his calm name]   (CH5END1..7 go in vo113..vo119 when recorded)
+const END_LINES = [
+  [4.2, 5.4, 'Go on, then. Look at me. This is what the Emperor of Aridaxx comes to.', 112],
+  [10.4, 4.0, 'You want to know why. All of you want to know why.', 113],
+  [15.6, 5.6, 'The Cult of Zark. They found me years ago. They called me their Prince.', 114, 'hak'],
+  [22.2, 7.2, 'Every word I spoke was theirs. Carax. My father. Damix. They told me what to do, and I did it.', 115, 'hak'],
+  [30.4, 5.8, 'I’m not asking you to forgive me. I don’t deserve it, and I wouldn’t want it.', 116, 'hak'],
+  [37.2, 6.0, 'Let me do the time. Lock me in the deepest cell in Alphinos. I won’t fight you.', 117, 'hak'],
+  [44.4, 7.2, 'And when I come out… I will find the Cult of Zark, and I will stop them. Every last one.', 118, 'hak'],
+];
+const ENDT = { LEAD: 53, OUT: 60.5, CARD1: 62, CARD2: 67, END: 73 };
+Object.assign(POSES, {
+  cuffs: { shoulderL: [-0.3, -0.6, -0.6], elbowL: [-0.6, 0, 0], shoulderR: [-0.3, 0.6, 0.6], elbowR: [-0.6, 0, 0] },
+  armHold: { shoulderL: [-0.35, 0, 0.12], elbowL: [-0.55, 0, 0], shoulderR: [-0.35, 0, -0.12], elbowR: [-0.55, 0, 0] },
+  coverMouth: { shoulderR: [-1.6, 0, 0.35], elbowR: [-2.2, 0, 0], head: [0.15, 0, 0] },
+});
+function startEnding(stats) {
+  if (cine || !sev || !jakalTpl || !chompyTpl || !arixalTpl) { G('gDone').querySelector('.eyebrow').textContent = stats; M.endSave = true; M.renderDoneSlots && M.renderDoneSlots(); G('gDoneNext').hidden = true; G('gDone').hidden = false; return false; }
+  cine = { end: { t: 0, line: -1, stats }, t: 0, fired: new Set() };
+  const E = cine.end;
+  if (!hall) hall = buildHall();
+  hall.g.visible = true; hall.jmover.visible = false; hall.extras.forEach(o => { o.visible = false; });
+  // the throne he broke is still broken
+  hall.throne.visible = false; hall.throneCrown.visible = true; hall.throneCrown.position.set(-1.1, 0.66, -1.3); hall.throneCrown.rotation.set(Math.PI / 2, 0, 0.4);
+  const tm = hall.throne.material;
+  E.tLow = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.5, 0.5), tm); E.tLow.position.set(0, 1.35, -3.2);
+  E.tTop = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.7, 0.5), tm); E.tTop.position.set(0.6, 0.85, -2.1); E.tTop.rotation.set(-1.4, 0, 0.3);
+  scene.add(E.tLow, E.tTop);
+  // Sevirrus on his knees, no crown, no blade, his wrists in irons
+  rig.visible = true; rig.rotation.order = 'YXZ'; rig.position.set(0, 0, 2.2); rig.rotation.set(0, 0, 0); setBlade(false); sev.gait = makeGait(rig);
+  const iron = new THREE.MeshStandardMaterial({ color: 0x8a8c94, metalness: 0.9, roughness: 0.35 });
+  E.cuffs = [sev.j.wristL, sev.j.wristR].map(w => { const c = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.014, 8, 20), iron); c.rotation.x = Math.PI / 2; c.position.set(0, -0.03, 0); w.add(c); return c; });
+  E.chain = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.007, 1, 6), iron); scene.add(E.chain);
+  // Arixal over him with the crown in his hand; Hanaxa and Aniz watching; Arixal's soldiers holding him
+  const ax = rigClone(arixalTpl); ax.mover.position.set(0, 0, 4.7); ax.mover.rotation.y = Math.PI; scene.add(ax.mover); ax.sword = giveDamixSword(ax.j); E.ax = ax;
+  E.crown = makeCrown(); ax.j.wristL.add(E.crown); E.crown.position.set(0, -0.14, 0.08); E.crown.rotation.set(0.3, 0, 0);
+  const hx = rigClone(hanaxaTpl); hx.mover.position.set(-2.3, 0, 4.1); hx.mover.rotation.y = Math.PI * 0.72; scene.add(hx.mover); E.hx = hx;
+  const az = rigClone(anizTpl); az.mover.position.set(-2.95, 0, 3.55); az.mover.rotation.y = Math.PI * 0.68; scene.add(az.mover); E.az = az;
+  const mats = factionMats('A');
+  E.guards = [[-0.75, 1.6], [0.75, 1.6], [-3.6, 1.2], [3.6, 1.2], [-3.6, 5.5], [3.6, 5.5]].map(([x, z], i) => {
+    const g = rigClone(chompyTpl); let k = 0; g.mover.traverse(o => { if (o.isMesh) o.material = mats[k++ % mats.length]; });
+    g.mover.position.set(x, 0, z); g.mover.rotation.y = i < 2 ? 0 : x < 0 ? Math.PI / 2 : -Math.PI / 2; g.gait = makeGait(g.mover); g.home = g.mover.position.clone(); scene.add(g.mover); return g; });
+  floor.visible = ring1.visible = ring2.visible = ticks.visible = false; dust.visible = false; blackHole.visible = stars.visible = false; setPlanet(false);
+  [hemi, key, under, rimL, rimR, cineSpot, bhLight].forEach(l => { l.userData.was = l.intensity; l.intensity = 0; });
+  scene.fog.color.set(0x0c0812); scene.fog.density = 0.035; camera.far = 120; camera.updateProjectionMatrix();
+  eyeMats.forEach(m => { m.emissiveIntensity = 0.4; });
+  document.body.classList.add('cine'); cineEls.skip.hidden = false; cineEls.skip.focus();
+  return true;
+}
+function finishEnding() {
+  const E = cine && cine.end; if (!E) return;
+  cine = null;
+  E.cuffs.forEach(c => c.removeFromParent()); scene.remove(E.chain, E.tLow, E.tTop, E.ax.mover, E.hx.mover, E.az.mover); E.guards.forEach(g => scene.remove(g.mover)); E.crown.removeFromParent();
+  hall.throne.visible = true; hall.throneCrown.visible = true; hall.throneCrown.position.set(0, 3.9, -3.15); hall.throneCrown.rotation.set(0, 0, 0);
+  hall.g.visible = false; hall.jmover.visible = true; hall.extras.forEach(o => { o.visible = true; });
+  [hemi, key, under, rimL, rimR, cineSpot].forEach(l => { if (l.userData.was !== undefined) l.intensity = l.userData.was; });
+  key.position.set(0.9, 4.2, 2.6); keyTarget.position.set(0, 1.2, 0); key.color.set(0xffffff); cineSpot.color.set(0xffffff);
+  scene.fog.color.set(0x0f0819); scene.fog.density = baseFog; camera.far = 60; camera.fov = 32; camera.updateProjectionMatrix();
+  floor.visible = ring1.visible = ring2.visible = ticks.visible = true; dust.visible = true;
+  rig.position.set(0, 0, 0); rig.rotation.set(0, 0, 0); rig.rotation.order = 'XYZ'; applyPose(sev.j, POSES.stand); eyeMats.forEach(m => { m.emissiveIntensity = 0; });
+  subsEl.style.opacity = 0; subsEl.className = 'subs'; subsWho.classList.remove('flip'); cineEls.black.style.opacity = 0; cineEls.card.style.opacity = 0; cineEls.skip.hidden = true;
+  document.body.classList.remove('cine'); M.voice && M.voice.stop(); speak(null);
+  // the game is won: offer a save, then back to the menu
+  M.endSave = true; M.renderDoneSlots && M.renderDoneSlots();
+  G('gDone').querySelector('.eyebrow').textContent = E.stats || 'Chapter V · The Siege of Alphinos'; G('gDoneNext').hidden = true; G('gDone').hidden = false; G('gDoneMenu').focus();
+}
+function endingUpdate(dt, time) {
+  const E = cine.end, T = (E.t += dt);
+  [hemi, key, under, rimL, rimR, cineSpot, bhLight].forEach(l => { l.intensity = 0; });
+  hemi.intensity = 0.45; hall.lights.forEach((f, i) => { f.intensity = 8 + Math.sin(time * 7 + i * 2) * 1.5 + Math.random(); });
+  key.color.set(0xffd8b0); key.intensity = 14; key.position.set(2.5, 6, 6); keyTarget.position.set(0, 1, 2.5);
+  cineSpot.color.set(0xc8d8ff); cineSpot.intensity = 9; cineSpot.position.set(0, 7, 3.2); cineTarget.position.copy(rig.position).setY(0.8);
+  // Sevirrus: knelt in irons; at the last line he lifts his head; then they take him out
+  const lead = ss(ENDT.LEAD, ENDT.LEAD + 1.4, T);
+  // he looks up at Arixal, bows his head through the worst of it, and lifts it again for the vow
+  const bow = ss(21.6, 22.6, T) * (1 - ss(35.8, 36.8, T)), up = (1 - bow) * (1 + 0.25 * ss(44.4, 46, T));
+  let pose = addPose(mk(POSES.kneel, POSES.cuffs), { spine: [Math.sin(time * 1.4) * 0.015 - 0.12 * up, 0, 0], neck: [-0.25 * up, 0, 0], head: [-0.6 * up + 0.1 * bow, 0, 0] });
+  if (lead > 0) {
+    rig.position.z = 2.2 + Math.max(0, T - ENDT.LEAD - 1.4) * 1.1;
+    pose = mixPose(pose, addPose(mk(POSES.stand, POSES.cuffs), T > ENDT.LEAD + 1.4 ? stepGait(sev.gait, dt) : {}), lead);
+  }
+  applyPose(sev.j, pose);
+  const calm = E.line >= 0 && END_LINES[E.line][4] === 'hak';
+  eyeMats.forEach(m => { m.emissiveIntensity = T > 47 && T < 51.5 ? 1.2 : calm ? 0.08 : 0.4; });   // one last flicker when he swears to end them
+  // the chain between his wrists
+  sev.j.wristL.getWorldPosition(tmpA); sev.j.wristR.getWorldPosition(tmpB);
+  E.chain.position.lerpVectors(tmpA, tmpB, 0.5); E.chain.position.y -= 0.03; E.chain.scale.y = Math.max(0.02, tmpA.distanceTo(tmpB)); E.chain.lookAt(tmpB.x, tmpB.y - 0.03, tmpB.z); E.chain.rotateX(Math.PI / 2);
+  // the others
+  applyPose(E.ax.j, addPose(POSES.stand, { spine: [Math.sin(time * 1.2) * 0.012, 0, 0], head: [0.12, 0, 0] }));
+  applyPose(E.hx.j, T > 23 && T < 30 ? mixPose('stand', 'coverMouth', ss(23, 24, T) * (1 - ss(29, 30, T))) : POSES.stand);
+  applyPose(E.az.j, addPose(POSES.stand, { head: [T > 44 ? 0.3 * ss(44, 46, T) : 0, T > 26 && T < 31 ? -0.5 : 0, 0] }));
+  E.guards.forEach((g, i) => {
+    if (i < 2 && lead > 0) { g.mover.position.z = g.home.z + Math.max(0, T - ENDT.LEAD - 1.4) * 1.1; applyPose(g.j, addPose(POSES.armHold, T > ENDT.LEAD + 1.4 ? stepGait(g.gait, dt) : {})); }
+    else applyPose(g.j, i < 2 ? POSES.armHold : POSES.rifleRest);
+  });
+  // subtitles: Sevirrus, until he tells the truth; then Hak Chompjak V
+  const li = END_LINES.findIndex(l => T >= l[0] && T < l[0] + l[1]);
+  if (li !== E.line) { E.line = li; if (li >= 0 && !(E.skipped && E.skipped.has(li))) {
+    const [, , line, vo, alt] = END_LINES[li], name = alt === 'hak' ? HAK_NAME : 'Sevirrus';
+    if (E.name && name !== E.name) E.flip = { from: E.name, to: name, t: 0 };
+    E.name = name; subsWho.textContent = name; subsLine.textContent = line; subsEl.className = 'subs' + (alt === 'hak' ? ' hak' : '');
+    if (vo !== undefined) M.voice && M.voice.play(vo); } }
+  if (E.flip) { E.flip.t += dt; const f = E.flip, done = f.t > 0.75; subsWho.textContent = done ? f.to : (Math.floor(f.t / 0.07) % 3 === 0 ? f.to : f.from); subsWho.classList.toggle('flip', !done); subsEl.classList.toggle('hak', done ? f.to === HAK_NAME : subsWho.textContent === HAK_NAME); if (done) E.flip = null; }
+  const showing = li >= 0 && !(E.skipped && E.skipped.has(li));
+  subsEl.style.opacity = showing ? 1 : 0;
+  speak(showing ? 'sev' : null, showing && !(M.voice && M.voice.has && M.voice.has(END_LINES[li][3])));
+  // fades and the last cards
+  let black = T < 1.8 ? 1 - T / 1.8 : 0; if (T > ENDT.OUT) black = Math.min(1, (T - ENDT.OUT) / 1.4);
+  cineEls.black.style.opacity = black; cineEls.red.style.opacity = 0;
+  let card = '', cls = 'cine-card';
+  if (T > 0.6 && T < 3.6) card = 'ALPHINOS<small>1800 AD · The throne hall, after the siege</small>';
+  if (T > ENDT.CARD1 && T < ENDT.CARD2 - 0.4) card = 'Hak Chompjak V was locked in the deepest cell beneath Alphinos.<small>He did not fight them.</small>';
+  if (T > ENDT.CARD2 && T < ENDT.END - 0.6) { card = 'SEVIRRUS<small>will return in NOSTRAVECTOR</small>'; cls = 'cine-card title'; }
+  if (card && cineEls.card.dataset.html !== card) { cineEls.card.dataset.html = card; cineEls.card.innerHTML = card; cineEls.card.className = cls; }
+  cineEls.card.style.opacity = card ? 1 : 0;
+  // camera
+  sev.j.head.getWorldPosition(tmpA); const sh = tmpA.clone();
+  let cp, cl, fov = 36;
+  if (T < 4.2) { const k = ss(0, 4.2, T); cp = V(lerp(5, 3.6, k), lerp(3.4, 2.4, k), lerp(7.5, 6.2, k)); cl = V(0, 1, 3); fov = 42; }
+  else if (T < 10.4) { cp = V(sh.x + 0.35, sh.y + 0.1, sh.z + 1.45); cl = V(sh.x, sh.y + 0.04, sh.z); fov = 32; }
+  else if (T < 15.6) { cp = V(0.55, 1.95, 5.6); cl = V(sh.x, sh.y - 0.1, sh.z); fov = 34; }
+  else if (T < 22.2) { const k = ss(15.6, 22, T); cp = V(sh.x - 0.15, sh.y + 0.02, sh.z + lerp(1.4, 0.95, k)); cl = sh; fov = 32; }
+  else if (T < 26.4) { cp = V(sh.x - 0.4, sh.y + 0.05, sh.z + 1.1); cl = sh; fov = 32; }
+  else if (T < 30.4) { cp = V(-0.6, 1.6, 2.6); cl = V(-2.6, 1.5, 3.8); fov = 38; }
+  else if (T < 37.2) { cp = V(2.2, 1.2, 2.6); cl = V(sh.x, sh.y, sh.z + 0.4); fov = 36; }
+  else if (T < 44.4) { cp = V(sh.x + 0.3, sh.y + 0.14, sh.z + 1.35); cl = V(sh.x, sh.y + 0.12, sh.z); fov = 32; }
+  else if (T < ENDT.LEAD) { const k = ss(44.4, 51.5, T); cp = V(sh.x, sh.y + 0.2, sh.z + lerp(1.5, 0.95, k)); cl = V(sh.x, sh.y + 0.2, sh.z); fov = 30; }
+  else { cp = V(1.4, 1.7, 9.2); cl = V(rig.position.x, 1.1, rig.position.z); fov = 40; }
+  camera.position.copy(cp); camera.lookAt(cl); if (Math.abs(camera.fov - fov) > 0.05) { camera.fov = fov; camera.updateProjectionMatrix(); }
+  if (T >= ENDT.END) finishEnding();
+}
+M._endStart = () => startEnding('test');
+M._endTo = t => { let n = 0; while (cine && cine.end && cine.end.t < t && n++ < 8000) endingUpdate(1 / 30, cine.end.t); return cine && cine.end ? cine.end.t : null; };
 M._jazTo = t => { let n = 0; while (cine && cine.jaz && jzOld(cine.jaz.t) < t && n++ < 8000) jazUpdate(1 / 30, cine.jaz.t); return cine && cine.jaz ? cine.jaz.t : null; };
 M._jazStart = () => startJaz();
 M._c5Crown = () => { const c = cine && cine.ch5 && cine.ch5.crown; if (!c) return null; const w = c.getWorldPosition(new THREE.Vector3()); return { parent: c.parent && (c.parent.name || c.parent.type), w: [w.x, w.y, w.z].map(v => +v.toFixed(2)), vis: c.visible }; };
@@ -6392,6 +6531,13 @@ function overUpdate(dt, time) {
   battleCamera(dt);
   if (o.t > 4.2 && !o.shown) {
     o.shown = true;
+    if (o.won && STAGE.id === 'alphinos') {
+      // the war is over: Sevirrus in chains, and the truth
+      const stats = `${STAGE.title} · ${game.ko} KO · ${Math.floor(game.t / 60)}:${String(Math.floor(game.t % 60)).padStart(2, '0')}`;
+      M.markCleared && M.markCleared(5);
+      setTimeout(() => { M.quitChapter(true); startEnding(stats); }, 0);
+      return;
+    }
     if (o.won) {
       game.done = true; M.markCleared && M.markCleared(STAGE.ch); M.onChapterComplete && M.onChapterComplete();
       game.paused = true; M.renderDoneSlots && M.renderDoneSlots();
