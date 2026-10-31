@@ -5591,7 +5591,7 @@ const END_LINES = [
   [37.2, 6.0, 'Let me do the time. Lock me in the deepest cell in Alphinos. I won’t fight you.', 117, 'hak'],
   [44.4, 7.2, 'And when I come out… I will find the Cult of Zark, and I will stop them. Every last one.', 118, 'hak'],
 ];
-const END_CLIP = [5.64, 4.44, 5.88, 6.35, 2.77, 6.03, 7.47];   // CH6SEVIRRUS1-7
+const END_CLIP = [5.64, 4.44, 5.88, 6.35, 5.49, 6.03, 7.47];   // CH6SEVIRRUS1-7
 const ENDL = [], ENDW = [[0, 0]];
 { let oP = 0, nP = 0; END_LINES.forEach((l, i) => { const s0 = nP + (l[0] - oP), d = END_CLIP[i] + 0.3; ENDL.push({ s: s0, d }); ENDW.push([l[0], s0], [l[0] + l[1], s0 + d]); oP = l[0] + l[1]; nP = s0 + d; }); ENDW.push([73, nP + (73 - oP)]); }
 function endOld(t) { for (let i = 1; i < ENDW.length; i++) { const [o0, n0] = ENDW[i - 1], [o1, n1] = ENDW[i]; if (t <= n1) return n1 > n0 ? o0 + (o1 - o0) * (t - n0) / (n1 - n0) : o1; } const [o, n] = ENDW[ENDW.length - 1]; return o + (t - n); }
