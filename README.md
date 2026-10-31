@@ -14,7 +14,7 @@ A browser game built with [three.js](https://threejs.org). The whole game is one
 
 ## What's in it
 
-- **Main menu**: Sevirrus as a live, rigged 3D model; subject file (Neutral Evil); lore archive; Save / Load with three slots and Continue.
+- **Main menu**: Sevirrus as a live, rigged 3D model; subject file (Chaotic Evil); a chapter box with pictures, where each chapter unlocks when the one before it is cleared; lore archive; Save / Load with three slots and Continue.
 - **Intro cutscene** (Begin): a duel with the settlers' leader on Carax, scored to *Fields of Carax* and fully voiced, then the executions under Sagittarius A*.
 - **Alphinos Castle**: Jakal Chompjak XVI's speech to Aridaxx, voiced, with lip sync.
 - **Chapter I: Investigation** (playable):
@@ -22,6 +22,7 @@ A browser game built with [three.js](https://threejs.org). The whole game is one
   2. Drive the royal rover five miles to the Bastion of Carax, to *Demons of Laniakea*.
   3. Fight up five floors of the bastion against the Cult of Zark.
 - **Chapter II: The Siege of Aridaxx** (cutscene): a month later, Sevirrus breaks the gate of Alphinos Castle, beheads the Chompy guard, holds one head up for the rest to see, cuts down ten more and demands the head of Jakal Chompjak XVI. Damix Chompjak, Hak's cousin, watches in horror, then laughs, mocks him and throws him back down the steps again and again, until Sevirrus simply rolls his neck. Then, playable, as Damix: run the burning road to Alphinos Keep, cutting through the Cult of Zark, and seal the gates before Sevirrus reaches the Emperor. Sevirrus walks behind you the whole way and has no health bar: strike him, or let him catch you, and he stops your heart.
+- **Chapter III: Assassination** (cutscene): the throne hall of Alphinos Keep. Sevirrus kills Damix, then his father, Emperor Jakal Chompjak XVI, and takes the crown. After it, the main menu belongs to the Emperor.
 
 The game saves only when the player chooses to (pause menu, or at the end of a chapter). Saves are stored in the browser.
 
