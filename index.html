@@ -591,7 +591,7 @@ body.run .g-sev.near b { color: var(--crimson); }
       <li><span class="when">1750 AD</span><div><b>An Heir Is Born</b><p>Hak Chompjak, son of Jakal Chompjak XVI, is born. He will become Sevirrus. His birth solves his father's lack of an heir.</p></div></li>
       <li><span class="when">1790 AD</span><div><b>Before the Throne</b><p>On Aridaxx, Sevirrus, born Hak Chompjak, stands one step below a throne he has already decided is his.</p></div></li>
           <li id="archAssa" hidden><span class="when">1790 AD</span><div><b>The Assassination</b><p>In the throne hall of Alphinos Keep, Sevirrus murders Damix Chompjak and Emperor Jakal Chompjak XVI, and takes the crown.</p></div></li>
-          <li id="archSiege" hidden><span class="when">1800 AD</span><div><b>The Siege of Alphinos</b><p>Driven from the plain of Kesh, the Emperor shuts himself inside Alphinos. Arixal’s army marches on it, and Jazmak Chompjak, brother of Jakal XVI, camps his own host outside its walls, sworn to neither side.</p></div></li>
+          <li id="archSiege" hidden><span class="when">1800 AD</span><div><b>The Siege of Alphinos</b><p>Driven from the plain of Kesh, the Emperor shuts himself inside Alphinos. Arixal’s army marches on it, and Jazmak Chompjak, brother of Jakal XVI and father of Arixal and Damix, camps his own host outside its walls, sworn to neither side, not even his son’s.</p></div></li>
     </ol>
     <div class="eyebrow">Archive · Lore article 02</div>
     <h3>Carax: A Chompy Mining Site</h3>
@@ -5680,12 +5680,12 @@ STAGES.alphinos = { id: 'alphinos', ch: 5, title: 'Chapter V · The Siege of Alp
   win: 'Jazmak Chompjak and Sevirrus are both defeated', lose: 'Arixal Chompjak is defeated', lost: 'Arixal Chompjak has fallen. Alphinos stands, and Aridaxx burns.',
   winMsg: '<b class="a">Arixal Chompjak</b> has taken Alphinos!',
   startMsg: '<b class="a">Arixal Chompjak</b> has begun battle with <b class="e">Sevirrus</b> and <b class="t">Jazmak Chompjak</b>!',
-  near: [{ id: 'sevirrus', text: '<b class="e">Sevirrus</b>: You came all this way, cousin. Stay a while.' }, { id: 'jazmak', text: '<b class="t">Jazmak Chompjak</b>: Out of my way, boy. The rat is mine.' }],
+  near: [{ id: 'sevirrus', text: '<b class="e">Sevirrus</b>: You came all this way, cousin. Stay a while.' }, { id: 'jazmak', text: '<b class="t">Jazmak Chompjak</b>: Out of my way, son. The rat who killed your brother is mine.' }],
   pre: [{ cls: 'ally', h: 'Allies', rows: [['Leader', 'Arixal Chompjak', 2], ['Officers', 'Zamik Chompjak · Marshal Haplok · Xanok · Danix · Tritujak'], ['Leader', 'Hanaxa Chompjak', 2], ['Sub officer', 'Aniz Chompjak']], note: 'Officers advance on their own. Aniz stays at Hanaxa’s side.' },
         { cls: 'foe', h: 'Enemies', rows: [['Leader', 'Sevirrus', 7], ['Officers', 'Zarkam · Almak · Tamix · Kraxis · Vorlag · Darkmar']] },
-        { cls: 'third', h: 'Third party · hostile to both', rows: [['Leader', 'Jazmak Chompjak', 8], ['Officers', 'Tajak Chompjak · Jamak · Qajak · Gakal · Inonzak · Gakam · Talmis']] }],
+        { cls: 'third', h: 'Third party · hostile to both', rows: [['Leader', 'Jazmak Chompjak', 8], ['Officers', 'Tajak Chompjak · Jamak · Qajak · Gakal · Inonzak · Gakam · Talmis']], note: 'Father of Arixal, Aniz and the late Damix. He wants Sevirrus’s head for his own, and will cut through his son to get it.' }],
   gateNote: 'No new officers come here, but a fallen officer returns from his main camp while its gate captain lives.',
-  tips: ['Jazmak Chompjak answers to no one. His yellow army will fight Sevirrus and you alike.', 'Defeat a leader and his whole army breaks. Victory needs both Jazmak and Sevirrus.', 'Fallen officers return from their main camp. Kill its gate captain and they stay down.', 'Let Sevirrus and Jazmak bleed each other. Strike whichever is weaker.', 'Press M to see every army’s morale, officers and forts.', 'Press 1 to 4 to order your officers: follow me, advance, hold, or fall back.', 'Break supply crates for space rocks. A great space rock restores all your health.'],
+  tips: ['Jazmak Chompjak answers to no one, not even his own son. His yellow army will fight Sevirrus and you alike.', 'Defeat a leader and his whole army breaks. Victory needs both Jazmak and Sevirrus.', 'Fallen officers return from their main camp. Kill its gate captain and they stay down.', 'Let Sevirrus and Jazmak bleed each other. Strike whichever is weaker.', 'Press M to see every army’s morale, officers and forts.', 'Press 1 to 4 to order your officers: follow me, advance, hold, or fall back.', 'Break supply crates for space rocks. A great space rock restores all your health.'],
   env() {
     scene.fog.color.set(0x150c26); scene.fog.density = 0.011; camera.far = 220; camera.fov = 55; camera.updateProjectionMatrix();
     hemi.color.set(0x8a7ac0); hemi.groundColor.set(0x1a1030); key.angle = Math.PI / 4; key.distance = 40; key.decay = 1.0;
