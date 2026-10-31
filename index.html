@@ -1027,7 +1027,9 @@ new GLTFLoader().parse(bin, '', gltf => {
   const root = gltf.scene;
   root.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; } });
   fixNames(root);
-  makeGrin(root);   // no lip sync on Sevirrus
+  makeGrin(root);
+  // lip sync: only the jaw, lower lip and tongue drop with his voice; the rest of the face is untouched
+  sevMouth = makeMouth(root, /^(Jaw|Lower lip|Tongue)$/, 1.584, 0.034);
   const bones = {}; root.traverse(o => { if (o.isBone) bones[o.name] = o; });
   const j = {};
   for (const n of JOINTS) { j[n] = bones[BONE_FOR[n]]; j[n].userData.rest = j[n].position.clone(); }
@@ -1129,6 +1131,7 @@ function speak(who) {          // who is speaking right now: drive their mouth, 
 let jMouth = null;
 function jakalMouth() { if (!jMouth && jakalTpl) jMouth = makeMouth(jakalTpl, /^(Jaw|Lower lip|Mouth interior|Beard mouth inset|Beard chin|Beard carved strand)/, 1.57); return jMouth; }
 // during the chapter: is Jakal the one on the subtitle right now?
+const sevTalking = () => subsWho.textContent === 'Sevirrus' && subsEl.style.opacity !== '0';
 const jakalTalking = () => subsWho.textContent === 'Jakal Chompjak XVI' && subsEl.style.opacity !== '0';
 
 function setBlade(on, k = 1) {
@@ -3633,6 +3636,7 @@ function siegeUpdate(dt, time) {
   }
   subsEl.style.opacity = li >= 0 && !(S.skipped && S.skipped.has(li)) ? 1 : 0;
 
+  speak(sevTalking() ? 'sev' : null);
   // the camera
   siegeCamera(T, S, time);
   if (T >= SG.END) endSiege(true);
@@ -3945,6 +3949,7 @@ function escapeUpdate(dt, time) {
   game.rings = (game.rings || []).filter(x => { x.t += dt; const k = x.t / 0.45; x.w.scale.setScalar(1 + k * 8); x.w.material.opacity = Math.max(0, 1 - k); if (k >= 1) { scene.remove(x.w); return false; } return true; });
   updateBlood(dt); updateSparks(dt); updateShards(dt); updateGore(dt); fxTick();
 
+  speak(sevTalking() ? 'sev' : null);
   if (game.stab) { heartStabUpdate(dt, time); return; }
   if (game.sealedT !== undefined) { sealedUpdate(dt, time); return; }
 
