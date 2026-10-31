@@ -756,6 +756,7 @@ body.run .g-sev.near b { color: var(--crimson); }
 <script type="application/octet-stream" id="vo124" data-src="assets/vo124.mp3"></script>
 <script type="application/octet-stream" id="vo125" data-src="assets/vo125.mp3"></script>
 <script type="application/octet-stream" id="vo126" data-src="assets/vo126.mp3"></script>
+<script type="application/octet-stream" id="vo127" data-src="assets/vo127.mp3"></script>
 <script type="application/octet-stream" id="songDrive" data-src="assets/songDrive.mp3"></script>
 <script type="application/octet-stream" id="songKesh" data-src="assets/songKesh.mp3"></script>
 <script type="application/octet-stream" id="songAridaxx" data-src="assets/songAridaxx.mp3"></script>
@@ -5356,7 +5357,7 @@ function updateZarkHud() {
   hud.count.textContent = left ? `${left} of his children stand · his shield holds` : P.dead ? '' : 'Strike him down';
 }
 function zarkLine(who, line, vo, secs) { say(who, line, secs); game.voLast = vo; if (vo !== undefined) M.voice && M.voice.play(vo); }
-function zarkDie() { if (game.deadT) return; game.deadT = 0.001; say(HAK_NAME, 'Not… here…', 2.4); setTimeout(() => game && game.phase === 'zark' && narrate('YOU FELL<small>The Cult of Zark endures. Try again.</small>'), 600); }
+function zarkDie() { if (game.deadT) return; game.deadT = 0.001; say(HAK_NAME, 'Not… here…', 2.3); M.voice && M.voice.play(126); setTimeout(() => game && game.phase === 'zark' && narrate('YOU FELL<small>The Cult of Zark endures. Try again.</small>'), 600); }
 function zarkReset() {
   const P = game.boss;
   game.foes.forEach(f => scene.remove(f.mover)); game.foes = [];
