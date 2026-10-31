@@ -3,6 +3,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <style>[hidden]{display:none!important} body{margin:0}</style>
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>[hidden]{display:none!important} body{margin:0}</style>
 <title>Sevirrus</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -214,6 +219,9 @@ body.c4screen #menu, body.c4screen .left, body.c4screen .right, body.c4screen he
 body.post3 .fx-vignette, body.post3 .vignette { box-shadow: inset 0 0 220px rgba(140,0,20,.55); }
 body.post3 h1, body.post3 #title { color: #e9c9cf; text-shadow: 0 0 28px rgba(179,18,42,.7); }
 body.post3 .tagline { color: #e6b3bb; }
+.crack { position: fixed; inset: 0; pointer-events: none; z-index: 4; clip-path: circle(160% at var(--cx) var(--cy)); transition: clip-path .8s cubic-bezier(.6,0,.4,1); background: radial-gradient(circle at var(--cx) var(--cy), rgba(255,255,255,.18), transparent 22%); }
+.crack svg { position: absolute; inset: 0; } .crack path { fill: none; stroke: rgba(235,240,255,.85); stroke-width: 1.4; filter: drop-shadow(0 0 2px rgba(0,0,0,.9)); }
+.crack.heal { clip-path: circle(0% at var(--cx) var(--cy)); }
 body.post3:not(.game):not(.cine):not(.c4screen)::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 1; background: radial-gradient(ellipse at 70% 40%, transparent 35%, rgba(110,0,16,.35) 100%); animation: bloodPulse 4.5s ease-in-out infinite; }
 @keyframes bloodPulse { 0%, 100% { opacity: .6; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { body.post3::after { animation: none; } }
@@ -4014,6 +4022,7 @@ function startEscape(st) {
 }
 M.playEscape = startEscape;
 M._game = () => game;   // test hooks
+M._poses = POSES; M._fit = f => { fit = lastFit = f; fitT = 0; fitNext = 99; };
 M._step = (n, dt = 1 / 30) => { for (let i = 0; i < n && game; i++) gameUpdate(dt, performance.now() / 1000 + i * dt); return !!game; };
 function updateRunHud() {
   const p = game.mover.position, toGo = Math.max(0, Math.round(p.z - RUN.GATE_Z));
@@ -5387,9 +5396,68 @@ function endBattleCleanup() {
 
 // ---------- after Chapter III the menu belongs to the Emperor: crown, drawn blade, blood ----------
 let menuCrown = null, menuPool = null;
+// ---------- Emperor Hak's menu moves ----------
+Object.assign(POSES, {
+  handsBack: { spine: [-0.06, 0, 0], neck: [-0.04, 0, 0], shoulderL: [0.45, 0, 0.35], elbowL: [0, 0, -1.5], wristL: [0, 0, -0.3], shoulderR: [0.45, 0, -0.35], elbowR: [0, 0, 1.5], wristR: [0, 0, 0.3] },
+  throwOut: mk(STANCE, { spine: [0.3, -0.35, 0], shoulderR: [-1.55, 0, -0.1], elbowR: [-0.05, 0, 0], wristR: [0.2, 0, 0], shoulderL: [-0.2, 0, 0.5], elbowL: [-0.4, 0, 0] }),
+  holdCrown: { spine: [0.05, 0, 0], shoulderL: [-1.15, 0, 0.05], elbowL: [-1.05, 0, 0], wristL: [-0.2, 0, 0] },
+});
+let lastFit = null, bladeGone = false;
+const empFx = {};
+function empTidy() {
+  if (menuCrown && head && menuCrown.parent !== head) { head.add(menuCrown); menuCrown.position.set(0, 0.37, -0.02); menuCrown.rotation.set(0, 0, 0); }
+  bladeGone = false;
+  if (empFx.fly) scene.remove(empFx.fly);
+  if (empFx.crack) empFx.crack.remove();
+  (empFx.spit || []).forEach(d => d.m.removeFromParent());
+  for (const k in empFx) delete empFx[k];
+}
+function empThrow() {
+  if (!blade) return;
+  const fly = blade.clone(); blade.getWorldPosition(tmpA); blade.getWorldQuaternion(fly.quaternion); fly.position.copy(tmpA); scene.add(fly);
+  empFx.fly = fly; empFx.flying = true; empFx.thrown = true; empFx.from = tmpA.clone(); empFx.ft = 0; bladeGone = true;
+}
+function empFlyUpdate(dt) {
+  if (!empFx.flying) return;
+  empFx.ft += dt; const k = Math.min(1, empFx.ft / 0.22);
+  const to = camera.position.clone().add(camera.getWorldDirection(tmpB).multiplyScalar(0.35));   // straight at the lens
+  empFx.fly.position.lerpVectors(empFx.from, to, k); empFx.fly.rotateX(dt * 40);
+  if (k >= 1) {
+    empFx.flying = false; scene.remove(empFx.fly); empFx.fly = null;
+    impactFrame(160);
+    const c = document.createElement('div'); c.className = 'crack'; const cx = innerWidth * (0.45 + Math.random() * 0.1), cy = innerHeight * (0.4 + Math.random() * 0.1);
+    c.style.setProperty('--cx', cx + 'px'); c.style.setProperty('--cy', cy + 'px');
+    let paths = '';
+    for (let i = 0; i < 16; i++) { let a = (i / 16) * Math.PI * 2 + Math.random() * 0.3, x = cx, y = cy, d = 'M' + x + ' ' + y; const len = 120 + Math.random() * Math.max(innerWidth, innerHeight) * 0.6;
+      for (let r = 0; r < len; r += 30 + Math.random() * 40) { a += (Math.random() - 0.5) * 0.5; x += Math.cos(a) * 40; y += Math.sin(a) * 40; d += ' L' + x.toFixed(0) + ' ' + y.toFixed(0); }
+      paths += `<path d="${d}"/>`; }
+    for (let r = 1; r <= 3; r++) { let d = ''; for (let i = 0; i <= 12; i++) { const a = i / 12 * Math.PI * 2, rr = r * 34 + Math.random() * 14; d += (i ? ' L' : 'M') + (cx + Math.cos(a) * rr).toFixed(0) + ' ' + (cy + Math.sin(a) * rr).toFixed(0); } paths += `<path d="${d}"/>`; }
+    c.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 ${innerWidth} ${innerHeight}" preserveAspectRatio="none">${paths}</svg>`;
+    document.body.appendChild(c); empFx.crack = c;
+  }
+}
+function empSpit() {   // from his mouth, straight onto the crown, where it stays
+  head.getWorldPosition(tmpA); tmpA.y += 0.12;
+  if (menuCrown) menuCrown.getWorldPosition(tmpB); else tmpB.copy(tmpA).add(V(0.3, -0.1, 0.2));
+  empFx.spit = [];
+  for (let i = 0; i < 10; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.008 + Math.random() * 0.008, 6, 4), new THREE.MeshBasicMaterial({ color: 0xe6eef5, transparent: true, opacity: 0.9 }));
+    m.position.copy(tmpA); scene.add(m);
+    const to = tmpB.clone().add(V((Math.random() - 0.5) * 0.08, 0.02 + Math.random() * 0.04, (Math.random() - 0.5) * 0.08));
+    empFx.spit.push({ m, from: tmpA.clone(), to, t: -i * 0.012, dur: 0.18 + Math.random() * 0.06, stuck: false }); }
+}
+function empSpitUpdate(dt) {
+  if (!empFx.spit) return;
+  for (const d of empFx.spit) {
+    if (d.stuck) continue;
+    d.t += dt; const k = Math.max(0, Math.min(1, d.t / d.dur));
+    d.m.position.lerpVectors(d.from, d.to, k); d.m.position.y += Math.sin(k * Math.PI) * 0.05;
+    if (k >= 1) { d.stuck = true; if (menuCrown) menuCrown.attach(d.m); d.m.scale.set(1.3, 0.5, 1.3); }
+  }
+}
 // every frame, in every mode: the crown, the pool and the red light belong to the menu only
 function menuPost3Visibility() {
   const on = !!M.post3 && !cine && !game;
+  if (!on && (empFx.crack || empFx.thrown || (menuCrown && head && menuCrown.parent !== head))) { empTidy(); fit = null; }
   if (menuCrown) menuCrown.visible = on;
   if (menuPool) menuPool.visible = on;
   rimL.color.set(on ? 0xb3122a : 0x8f6ae0); ring1.material.color.set(on ? 0xb3122a : 0xa993e6); dust.material.color.set(on ? 0xff3040 : 0xffffff);
@@ -5399,7 +5467,7 @@ function menuPost3(dt, t) {
   if (on && !menuCrown && jakalTpl && head) { menuCrown = makeCrown(); head.add(menuCrown); menuCrown.position.set(0, 0.37, -0.02);
     menuPool = new THREE.Mesh(new THREE.CircleGeometry(1.4, 40), poolMat); menuPool.rotation.x = -Math.PI / 2; menuPool.position.set(0.15, 0.004, 0.35); scene.add(menuPool); }
   if (!on) return;
-  setBlade(true, 1);
+  if (bladeGone) { if (blade) blade.visible = false; } else setBlade(true, 1);
   // blood runs off the blade
   if (blade && Math.random() < 0.35) { blade.localToWorld(tmpA.set(0, -0.86, 0)); spray(tmpA, V(0, -1, 0), 1, 0.3, 0.05); }
   updateBlood(dt);
@@ -5448,13 +5516,20 @@ function menuUpdate(dt, t) {
     if (twitchT <= 0) { twitchT = 1.5 + Math.random() * 3; twitch = (Math.random() < .5 ? -1 : 1) * (0.14 + Math.random() * 0.14); if (Math.random() < .5) warp(); }
     twitch *= 0.84;
     fitNext -= dt;
-    if (!fit && fitNext <= 0) { fit = ['tilt', 'shiver', 'laugh'][Math.floor(Math.random() * 3)]; fitT = 0; if (fit !== 'tilt') warp(); }
+    if (!fit && fitNext <= 0) {
+      const set = M.post3 ? ['tilt', 'hands', 'throw', 'crown'] : ['tilt', 'shiver', 'laugh'];
+      let f; do { f = set[Math.floor(Math.random() * set.length)]; } while (f === lastFit && set.length > 1);
+      fit = lastFit = f; fitT = 0; if (fit === 'shiver' || fit === 'laugh') warp();
+    }
+    // tidy up after the Emperor's moves: crown on his head, blade in his hand, the screen whole
+    if (!fit) empTidy();
     const add = {
       spine: [Math.sin(t * 1.1) * 0.012, look.x * 0.08, 0],                                   // breathing, turning toward you
       neck: [look.y * 0.1, look.x * 0.18, 0],
       head: [look.y * 0.14 - 0.04, look.x * 0.25, twitch + Math.sin(t * 0.5) * 0.05],
       shoulderL: [0, 0, Math.sin(t * 1.1) * 0.01], shoulderR: [0, 0, -Math.sin(t * 1.1) * 0.01],
     };
+    let base = M.post3 ? mixPose('stand', 'idleBlade', 0.8) : POSES.stand;
     if (fit) {
       fitT += dt;
       if (fit === 'tilt') {           // head creeps over to a sickening angle, holds, then snaps back
@@ -5472,10 +5547,36 @@ function menuUpdate(dt, t) {
         add.shoulderL[2] -= Math.abs(w) * 0.12 * env; add.shoulderR[2] += Math.abs(w) * 0.12 * env;
         add.head[0] += (w * 0.07 - 0.08) * env;
         if (fitT >= 1.8) fit = null;
+      } else if (fit === 'hands') {   // hands clasped behind his back, surveying what is his
+        const k = ss(0, 0.9, fitT) * (1 - ss(4.6, 5.4, fitT));
+        base = mixPose(base, POSES.handsBack, k); add.head[0] -= 0.06 * k;
+        if (fitT >= 5.4) fit = null;
+      } else if (fit === 'throw') {   // he throws the blade at you; the screen breaks, then mends itself
+        const T = fitT;
+        if (T < 0.75) base = mixPose(base, 'overhead', ss(0, 0.7, T));
+        else if (T < 1.6) base = mixPose('overhead', 'throwOut', ss(0.75, 0.88, T));
+        else base = mixPose('throwOut', base, ss(1.6, 2.4, T));
+        if (T >= 0.82 && !empFx.thrown) empThrow();
+        empFlyUpdate(dt);
+        if (T >= 3.0 && empFx.thrown && !empFx.back) { empFx.back = true; bladeGone = false; }
+        if (T >= 2.4 && empFx.crack && !empFx.healing) { empFx.healing = true; empFx.crack.classList.add('heal'); }
+        if (T >= 3.6) fit = null;
+      } else if (fit === 'crown') {   // he takes the crown off, spits on it, and puts it back on
+        const T = fitT;
+        if (T < 0.9) base = mixPose(base, 'crownSelf', ss(0, 0.8, T));
+        else if (T < 2.6) { base = mixPose('crownSelf', 'holdCrown', ss(0.9, 1.6, T)); const lk = ss(1.0, 1.6, T); add.head[0] += 0.22 * lk; add.head[1] += 0.45 * lk; }
+        else if (T < 3.4) base = mixPose('holdCrown', 'crownSelf', ss(2.6, 3.2, T));
+        else base = mixPose('crownSelf', base, ss(3.4, 4.1, T));
+        if (T >= 0.9 && T < 3.25 && menuCrown && menuCrown.parent === head) { sev.j.wristL.add(menuCrown); menuCrown.position.set(0, -0.14, 0.08); menuCrown.rotation.set(0.3, 0, 0); }
+        if (T >= 2.05 && !empFx.spat) { empFx.spat = true; empSpit(); }
+        if (T >= 1.95 && T < 2.15) add.head[0] += 0.18;
+        if (T >= 3.25 && menuCrown && menuCrown.parent !== head) { head.add(menuCrown); menuCrown.position.set(0, 0.37, -0.02); menuCrown.rotation.set(0, 0, 0); }
+        if (T >= 4.1) fit = null;
       }
+      empSpitUpdate(dt); fxTick();
       if (!fit) fitNext = 3 + Math.random() * 4;
     }
-    applyPose(sev.j, addPose(M.post3 ? mixPose('stand', 'idleBlade', 0.8) : 'stand', add));
+    applyPose(sev.j, addPose(base, add));
   }
   const glow = 0.6 + Math.max(0, Math.sin(t * 0.7)) * 0.6;
   eyeMats.forEach(m => { m.emissiveIntensity += (glow - m.emissiveIntensity) * 0.08; });
