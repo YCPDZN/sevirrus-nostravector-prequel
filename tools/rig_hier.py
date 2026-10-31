@@ -72,6 +72,15 @@ def main(src, dst, height=1.8):
     walk(root_i, np.eye(4), "")
     for p in parts:
         if p["group"] == N[root_i].get("name"): p["group"] = ""
+    # flat exports (no body/limb groups): read the group from the part's name instead
+    known = {"body", "leftLeg", "rightLeg", "leftArm", "rightArm", "head", "jaw", "eyes"}
+    for p in parts:
+        if p["group"] not in known: p["group"] = ""
+        if p["group"]: continue
+        m = re.search(r"(leftLeg|rightLeg|leftArm|rightArm)", p["name"])
+        if m: p["group"] = m.group(1)
+        elif re.match(r"^(Face|Jaw|Nose|Eye|Iris|Pupil|Ear|Brow|Eyebrow|Mouth|Tongue|Nostril|Hair|Long hair|Parted fringe|Beard|Moustache|Lip|Teeth|Cheek|Forehead|Scar|War paint|Crest|Helm)", p["name"], re.I):
+            p["group"] = "eyes" if re.match(r"^(Iris|Pupil)", p["name"]) else "head"
 
     # stand on the ground, centred, scaled to height
     allv = np.vstack([p["v"] for p in parts]); lo, hi = allv.min(0), allv.max(0)

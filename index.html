@@ -4774,7 +4774,7 @@ function buildField() {
   const pos = geo.attributes.position, col = new Float32Array(pos.count * 3), cA = new THREE.Color(0x2a1f3a), cB = new THREE.Color(0x1b3a3e), cC = new THREE.Color(0x3a2440), tc = new THREE.Color();
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i), z = pos.getZ(i), edge = Math.max(0, Math.abs(x) - K4.W + 10);
-    pos.setY(i, edge * 0.35 + Math.sin(x * 0.03 + z * 0.011) * 0.25 + Math.sin(z * 0.02) * 0.2);
+    pos.setY(i, edge * 0.35);   // flat where anyone walks (everyone stands at y = 0); it only rises at the far edges
     const n = (Math.sin(x * 0.09) + Math.sin(z * 0.05 + x * 0.02)) * 0.25 + 0.5;
     tc.copy(cA).lerp(cB, n).lerp(cC, Math.min(1, edge / 30)); col.set([tc.r, tc.g, tc.b], i * 3);
   }
