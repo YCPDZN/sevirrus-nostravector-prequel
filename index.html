@@ -145,6 +145,8 @@ nav { display: flex; flex-direction: column; gap: 4px; }
 .grid9 span { height: 22px; display: grid; place-items: center; font-size: 8px; letter-spacing: .05em; color: var(--dim); border: 1px solid var(--line); }
 .ch-panel { width: min(860px, 100%); }
 .c4-panel { width: min(780px, 100%); }
+#c4Pre .panel.c4-panel { width: min(960px, 100%); max-width: 960px; }
+#c4Pre.three .c4-info { gap: 10px; } #c4Pre.three .c4-row { margin: 2px 0; } #c4Pre.three .c4-note { font-size: 11.5px; }
 .c4load { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 60%, #14202a 0%, #07040c 70%); }
 .c4load-in { width: min(480px, 86vw); text-align: center; }
 .c4load h2 { margin: 10px 0 22px; font-family: var(--font-display); font-size: clamp(22px, 5vw, 36px); letter-spacing: .1em; color: var(--bone); }
@@ -174,7 +176,8 @@ body.c4screen #menu, body.c4screen .left, body.c4screen .right, body.c4screen he
 .c4-bar.ally i { background: #5ad0ff; } .c4-bar.foe i { background: #ff3048; } .c4-bar.musou { height: 5px; } .c4-bar.musou i { background: #ffd23a; }
 .mu-ready .c4-bar.musou i { box-shadow: 0 0 10px #ffd23a; }
 .c4-mor { margin-top: 8px; } .c4-mor span { font-size: 9px; letter-spacing: .3em; text-transform: uppercase; color: var(--dim); }
-.c4-mbar { height: 6px; margin-top: 4px; background: #ff3048; border: 1px solid var(--line); } .c4-mbar i { display: block; height: 100%; width: 50%; background: #5ad0ff; transition: width .4s; border-right: 2px solid #fff; }
+.c4-mbar { height: 6px; margin-top: 4px; display: flex; border: 1px solid var(--line); background: rgba(255,255,255,.06); } .c4-mbar i { display: block; height: 100%; width: 0; transition: width .4s; }
+#c4MA { background: #5ad0ff; width: 50%; } #c4ME { background: #ff3048; width: 50%; } #c4MT { background: #ffd23a; } .c4-mbar i + i { border-left: 2px solid #fff; }
 .c4-me .ko { display: block; margin-top: 6px; font-size: 10px; letter-spacing: .25em; color: var(--dim); }
 .c4-me .ko b { font-family: var(--font-display); font-size: 20px; color: var(--bone); margin-right: 4px; letter-spacing: .05em; }
 .c4-target { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 18px); transform: translateX(-50%); width: min(340px, 56vw); text-align: center; z-index: 8; }
@@ -184,11 +187,13 @@ body.c4screen #menu, body.c4screen .left, body.c4screen .right, body.c4screen he
 .c4-feed { position: fixed; left: max(16px, env(safe-area-inset-left, 0px)); top: calc(env(safe-area-inset-top, 0px) + 190px); z-index: 8; display: flex; flex-direction: column; gap: 4px; max-width: min(420px, 64vw); pointer-events: none; }
 .c4-msg { font-size: 13px; background: rgba(8,4,14,.62); padding: 5px 10px; border-left: 2px solid var(--frost); transition: opacity 1s; }
 .c4-msg.out { opacity: 0; } .c4-msg.big { border-left-color: #ffd23a; } .c4-msg.good { border-left-color: #5ad0ff; } .c4-msg.bad { border-left-color: #ff3048; }
-.c4-msg b.a { color: #5ad0ff; } .c4-msg b.e { color: #ff5060; }
+.c4-msg b.a { color: #5ad0ff; } .c4-msg b.e { color: #ff5060; } .c4-msg b.t { color: #ffd23a; }
 .c4-tag { position: fixed; left: 0; top: 0; z-index: 7; pointer-events: none; text-align: center; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; width: 130px; text-shadow: 0 1px 3px #000; }
 .c4-me.heal .c4-bar.ally { box-shadow: 0 0 0 1px #7dffb0, 0 0 14px #3dff8a; } .c4-me.heal .c4-bar.ally i { background: linear-gradient(90deg, #3dd88a, #9affc8) !important; }
 .c4-heal { position: fixed; inset: 0; pointer-events: none; z-index: 6; opacity: 0; transition: opacity .5s; background: radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(60,255,140,.28) 100%); } .c4-heal.on { opacity: 1; transition: opacity .08s; }
-.c4-tag.ally { color: #8ad8ff; } .c4-tag.foe { color: #ff7a8a; } .c4-tag .c4-bar { height: 4px; margin-top: 3px; }
+.c4-tag.ally { color: #8ad8ff; } .c4-tag.foe { color: #ff7a8a; } .c4-tag.third { color: #ffe07a; } .c4-bar.third i { background: #ffd23a; }
+.c4-target.third .lead { color: #ffe07a; } .c4-target.third .c4-bar i { background: #ffd23a; }
+.c4-side.third .c4-h { color: #ffd23a; } .c4-mrow.third .mbar i { background: linear-gradient(90deg, #a07a10, #ffd23a); } .c4-mrow.third em { color: #ffd23a; } .c4-forts .t { color: #ffd23a; } .c4-tag .c4-bar { height: 4px; margin-top: 3px; }
 .c4-big { position: fixed; inset: 0; display: grid; place-items: center; font-family: var(--font-display); font-size: clamp(40px, 10vw, 110px); letter-spacing: .12em; pointer-events: none; z-index: 9; }
 .c4-big.win { color: #5ad0ff; text-shadow: 0 0 40px rgba(90,208,255,.6); } .c4-big.lose { color: var(--crimson); text-shadow: 0 0 40px rgba(179,18,42,.6); }
 .c4-musou { display: none; }
@@ -586,7 +591,7 @@ body.run .g-sev.near b { color: var(--crimson); }
       <li><span class="when">1750 AD</span><div><b>An Heir Is Born</b><p>Hak Chompjak, son of Jakal Chompjak XVI, is born. He will become Sevirrus. His birth solves his father's lack of an heir.</p></div></li>
       <li><span class="when">1790 AD</span><div><b>Before the Throne</b><p>On Aridaxx, Sevirrus, born Hak Chompjak, stands one step below a throne he has already decided is his.</p></div></li>
           <li id="archAssa" hidden><span class="when">1790 AD</span><div><b>The Assassination</b><p>In the throne hall of Alphinos Keep, Sevirrus murders Damix Chompjak and Emperor Jakal Chompjak XVI, and takes the crown.</p></div></li>
-          <li id="archSiege" hidden><span class="when">1800 AD</span><div><b>The Siege of Alphinos</b><p>Driven from the plain of Kesh, the Emperor shuts himself inside Alphinos. Jazmak Chompjak, brother of Jakal XVI, brings Arixal’s army to its walls.</p></div></li>
+          <li id="archSiege" hidden><span class="when">1800 AD</span><div><b>The Siege of Alphinos</b><p>Driven from the plain of Kesh, the Emperor shuts himself inside Alphinos. Arixal’s army marches on it, and Jazmak Chompjak, brother of Jakal XVI, camps his own host outside its walls, sworn to neither side.</p></div></li>
     </ol>
     <div class="eyebrow">Archive · Lore article 02</div>
     <h3>Carax: A Chompy Mining Site</h3>
@@ -880,6 +885,7 @@ body.run .g-sev.near b { color: var(--crimson); }
   const dropSave = i => { try { localStorage.removeItem(skey(i)); } catch (e) {} };
   function latestSave() { let best = null; for (let i = 1; i <= SLOTS; i++) { const sv = readSave(i); if (sv && (!best || sv.t > best.s.t)) best = { s: sv, i }; } return best; }
   function describe(sv) {
+    if (sv.chapter === 5) return sv.complete ? 'Chapter V complete · Alphinos' : sv.phase === 'battle' ? `Battle of Alphinos · ${sv.ko || 0} KO · ${Math.floor((sv.time || 0) / 60)}:${String(Math.floor((sv.time || 0) % 60)).padStart(2, '0')}` : 'Chapter V · before the battle of Alphinos';
     if (sv.chapter === 4) return sv.complete ? 'Chapter IV complete · Kesh' : sv.phase === 'battle' ? `Battle of Kesh · ${sv.ko || 0} KO · ${Math.floor((sv.time || 0) / 60)}:${String(Math.floor((sv.time || 0) % 60)).padStart(2, '0')}` : 'Chapter IV · before the battle of Kesh';
     if (sv.chapter === 3) return 'Chapter III complete · Emperor Hak';
     if (sv.chapter === 2) return sv.complete ? 'Chapter II complete' : `The road to Alphinos · ${Math.max(0, Math.round(sv.pos[1] + 204))} m to the gates`;
@@ -893,7 +899,7 @@ body.run .g-sev.near b { color: var(--crimson); }
   const PKEY = 'sevirrus.progress';
   function progress() {
     let p = {}; try { p = JSON.parse(localStorage.getItem(PKEY) || '{}') || {}; } catch (e) {}
-    for (let i = 1; i <= SLOTS; i++) { const sv = readSave(i); if (!sv) continue; if (sv.complete || sv.chapter >= 2) p.c1 = true; if ((sv.chapter === 2 && sv.complete) || sv.chapter >= 3) p.c2 = true; if (sv.chapter >= 3 && (sv.chapter > 3 || sv.complete)) p.c3 = true; if (sv.chapter === 4 && sv.complete) p.c4 = true; }
+    for (let i = 1; i <= SLOTS; i++) { const sv = readSave(i); if (!sv) continue; if (sv.complete || sv.chapter >= 2) p.c1 = true; if ((sv.chapter === 2 && sv.complete) || sv.chapter >= 3) p.c2 = true; if (sv.chapter >= 3 && (sv.chapter > 3 || sv.complete)) p.c3 = true; if ((sv.chapter === 4 && sv.complete) || sv.chapter >= 5) p.c4 = true; if (sv.chapter === 5 && sv.complete) p.c5 = true; }
     return p;
   }
   const chOpen = (n, p) => n <= 1 || !!p['c' + (n - 1)];
@@ -975,6 +981,7 @@ body.run .g-sev.near b { color: var(--crimson); }
     $('#pSaves').hidden = true;
     if (window.__menu.quitChapter) window.__menu.quitChapter(true);
     primeAudio();
+    if (sv.chapter === 5 && sv.complete) { applyProgress(sv); say('Chapter V is complete in this save. Alphinos has fallen.'); items[0].focus(); return; }
     if (sv.chapter === 4 && sv.complete) { applyProgress(sv); if (window.__menu.playChapter5 && window.__menu.playChapter5()) say('Chapter V: The Siege of Alphinos'); else { say('Still loading. Try again in a moment.'); items[0].focus(); } return; }
     if (sv.chapter === 3) { applyProgress(sv); if (window.__menu.playChapter4 && window.__menu.playChapter4()) say('Chapter IV: Enough is Enough'); else { say('Still loading. Try again in a moment.'); items[0].focus(); } return; }
     if (sv.complete && sv.chapter === 2) { applyProgress(sv); if (window.__menu.playChapter3 && window.__menu.playChapter3()) say('Chapter III: Assassination'); else { say('Still loading. Try again in a moment.'); items[0].focus(); } return; }
@@ -2531,7 +2538,7 @@ function startChapter() {
 M.playChapter = startChapter;
 // snapshot of the chapter for a save (only ever taken when the player picks a slot)
 M.getState = () => {
-  if (game && game.ch === 4) return game.done ? { v: 1, t: Date.now(), chapter: 4, phase: 'prebattle', complete: true } : battleState();
+  if (game && game.bt) return game.done ? { v: 1, t: Date.now(), chapter: STAGE.ch, stage: STAGE.id, phase: 'prebattle', complete: true } : battleState();
   if (!game) return M.ch3Save ? { v: 1, t: Date.now(), chapter: 3, complete: true } : null;
   if (game.phase === 'escape') { const p = game.mover.position; return { v: 1, t: Date.now(), chapter: 2, phase: 'escape', complete: !!game.done, pos: [+p.x.toFixed(2), +p.z.toFixed(2)], yaw: +game.mover.rotation.y.toFixed(3), hp: Math.round(B.hp), check: game.check, sevZ: +rig.position.z.toFixed(2), heard: [...game.heard] }; }
   const phase = game.phase === 'toCar' || game.phase === 'drive' || game.phase === 'bastion' ? game.phase : 'site';
@@ -2545,7 +2552,7 @@ M.getState = () => {
 };
 // rebuild the chapter from a save
 M.loadState = st => {
-  if (st.chapter === 4) { if (game || st.complete) return false; if (st.phase === 'battle') c4Loading(() => { document.body.classList.remove('c4screen'); startBattle(st); }); else c4Loading(showPreBattle); return true; }
+  if (st.chapter === 4 || st.chapter === 5) { STAGE = st.stage && STAGES[st.stage] ? STAGES[st.stage] : st.chapter === 5 ? STAGES.alphinos : STAGES.kesh; if (game || st.complete) return false; if (st.phase === 'battle') c4Loading(() => { document.body.classList.remove('c4screen'); startBattle(st); }); else c4Loading(showPreBattle); return true; }
   if (st.chapter === 2) { if (game) return false; return startEscape(st); }
   if (!startChapter()) return false;
   game.restored = true;
@@ -2591,7 +2598,7 @@ function endChapter() {
   const wasDone = game.done;
   G('gPause').hidden = true; G('gDone').hidden = true; recSkip.hidden = true; clearTimeout(say.t);
   try {
-  if (game.ch === 4) endBattleCleanup();
+  if (game.bt) endBattleCleanup();
   scene.remove(game.mover); if (game.ghost) scene.remove(game.ghost);
   if (game.phase === 'escape') {
     if (runSet) runSet.g.visible = false; if (game.jakal) scene.remove(game.jakal.mover); if (game.ghostBlade) scene.remove(game.ghostBlade); (game.rings || []).forEach(x => scene.remove(x.w));
@@ -2643,7 +2650,9 @@ document.body.appendChild(recSkip);
 addEventListener('keydown', e => {
   if (e.key !== 'Enter' || e.repeat) return;
   const ae = document.activeElement; if (ae && /INPUT|TEXTAREA|SELECT/.test(ae.tagName)) return;
-  if (ae && ae.tagName === 'BUTTON') ae.blur();
+  // a button in a menu or panel (save slots, pause menu, chapter cards, Begin…) is pressed with Enter as usual;
+  // only a stray focus (the cutscene's Skip button) is dropped, so Enter skips a line rather than the whole scene
+  if (ae && ae.tagName === 'BUTTON') { if (ae.closest('.panel, .panel-wrap, .gwrap, #menu, .c4hud, .menu')) return; ae.blur(); }
   if (cine && cine.jaz) { const S = cine.jaz; if (S.line >= 0) { (S.skipped = S.skipped || new Set()).add(S.line); M.voice && M.voice.stop(); subsEl.style.opacity = 0; } e.preventDefault(); return; }
   if (cine && cine.ch5) { const S = cine.ch5; if (S.line >= 0) { (S.skipped = S.skipped || new Set()).add(S.line); M.voice && M.voice.stop(); subsEl.style.opacity = 0; } e.preventDefault(); return; }
   if (cine && cine.ch4) { const S = cine.ch4; if (S.line >= 0) { (S.skipped = S.skipped || new Set()).add(S.line); M.voice && M.voice.stop(); subsEl.style.opacity = 0; } e.preventDefault(); return; }
@@ -4094,6 +4103,7 @@ function startEscape(st) {
 }
 M.playEscape = startEscape;
 M._game = () => game;   // test hooks
+M._stage = id => { STAGE = STAGES[id]; return !!STAGE; }; M._camYaw = y => { camYaw = y; }; M._unit = id => game && game.units.find(u => u.id === id); M._stageId = () => STAGE && STAGE.id; M._sevHit = () => STAGE.sevHit;
 M._setHp = v => { B.hp = v; }; M._dropTest = (x, z) => { dropItem(V(x, 0, z), 'rock', true); dropItem(V(x + 1.4, 0, z - 0.6), 'great', true); }; M._down = u => officerDown(u, game.me); M._sim = t => simulate(t); M._reinforce = () => game && game.bases.forEach(b => reinforce(b));
 M._poses = POSES; M._fit = f => { fit = lastFit = f; fitT = 0; fitNext = 99; };
 M._step = (n, dt = 1 / 30) => { for (let i = 0; i < n && game; i++) gameUpdate(dt, performance.now() / 1000 + i * dt); return !!game; };
@@ -4646,6 +4656,14 @@ let arixalTpl = null, anizTpl = null, hanaxaTpl = null, jazmakTpl = null;
   new GLTFLoader().parse(p('glbJazmak'), '', g => { jazmakTpl = g.scene; }, () => {});
 }
 const K4 = { LEN: 1609, HALF: 804, W: 170, ALLY: 0x5ad0ff, FOE: 0xff3048 };
+// the armies: Arixal's (A), Sevirrus's (E) and, at Alphinos only, Jazmak's third party (T), hostile to both
+const SIDE = {
+  A: { rgb: '90,208,255', hex: 0x5ad0ff, cls: 'a', tag: 'ally', flag: 0x2a7ac0, em: 0x0a2a44, tint: 0xb8dcff, lead: 'Arixal Chompjak', army: 'Arixal Chompjak’s army', label: 'Allied' },
+  E: { rgb: '255,48,72', hex: 0xff3048, cls: 'e', tag: 'foe', flag: 0x8a0c1c, em: 0x2a0408, tint: 0xffb0b8, lead: 'Sevirrus', army: 'Sevirrus’s army', label: 'Enemy' },
+  T: { rgb: '255,210,58', hex: 0xffd23a, cls: 't', tag: 'third', flag: 0xb08a18, em: 0x3a2a04, tint: 0xfff0b0, lead: 'Jazmak Chompjak', army: 'Jazmak Chompjak’s army', label: 'Third party' },
+};
+const nameOf = (side, name) => `<b class="${SIDE[side].cls}">${name}</b>`;
+let STAGE = null;   // the battle being fought (STAGES.kesh or STAGES.alphinos), set before its loading screen
 const C4_BASES = [
   { id: 'campA', name: 'Allied Camp', side: 'A', main: true, x: 0, z: 770 },
   { id: 'fortS', name: 'Southern Fort', side: 'A', x: -55, z: 470 },
@@ -4654,22 +4672,22 @@ const C4_BASES = [
   { id: 'fortP', name: 'Spire Fort', side: 'E', x: 70, z: -440 },
   { id: 'campE', name: 'Sevirrus’s Camp', side: 'E', main: true, x: 0, z: -770 },
 ];
-const gatePost = b => b.main ? { x: b.x, z: b.z + (b.side === 'A' ? -50 : 50) } : { x: b.x, z: b.z + 14.5 };
+const gatePost = b => b.gate ? { x: b.gate.x, z: b.gate.z } : b.main ? { x: b.x, z: b.z + (b.side === 'A' ? -50 : 50) } : { x: b.x, z: b.z + 14.5 };
 // supply crates along the plain and inside each fort; strike one to break it open for the space rock inside
 function crateSpots() {
   let seed = 71; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
   const out = [];
   for (let z = 720; z > -740; z -= 52) out.push({ x: (rnd() - 0.5) * 300, z: z + (rnd() - 0.5) * 30 });
-  C4_BASES.forEach(b => { if (!b.main) { out.push({ x: b.x - 7, z: b.z - 7 }, { x: b.x + 7, z: b.z - 7 }); } else out.push({ x: b.x + 14, z: b.z }, { x: b.x - 14, z: b.z }); });
+  STAGE.bases.forEach(b => { if (!b.main) { out.push({ x: b.x - 7, z: b.z - 7 }, { x: b.x + 7, z: b.z - 7 }); } else out.push({ x: b.x + 14, z: b.z + 18 }, { x: b.x - 14, z: b.z + 18 }); });
   return out;
 }
 const ORDER_TEXT = { follow: 'Follow me!', advance: 'Advance!', hold: 'Hold your positions!', fallback: 'Fall back to the main camp!' };
 const C4_UNITS = [
-  { id: 'arixal', name: 'Arixal Chompjak', side: 'A', leader: true, stars: 4, tpl: 'arixal', x: 0, z: 770, troops: 0 },
+  { id: 'arixal', name: 'Arixal Chompjak', side: 'A', leader: true, chief: true, stars: 4, tpl: 'arixal', x: 0, z: 770, troops: 0 },
   { id: 'hanaxa', name: 'Hanaxa Chompjak', side: 'A', tpl: 'hanaxa', x: -70, z: 715, troops: 70 },
   { id: 'aniz', name: 'Aniz Chompjak', side: 'A', tpl: 'aniz', x: 70, z: 715, troops: 70 },
   { id: 'haplok', name: 'Marshal Haplok', side: 'A', tpl: 'chompy', badge: 0x3aa0ff, x: 0, z: 660, troops: 90 },
-  { id: 'sevirrus', name: 'Sevirrus', side: 'E', leader: true, stars: 8, tpl: 'sev', x: 0, z: -770, troops: 140 },
+  { id: 'sevirrus', name: 'Sevirrus', side: 'E', leader: true, chief: true, stars: 8, tpl: 'sev', x: 0, z: -770, troops: 140 },
   { id: 'tamix', name: 'Tamix', side: 'E', tpl: 'chompy', badge: 0xffd23a, x: 65, z: 176, troops: 110, home: 'fortC' },
   { id: 'zarkam', name: 'Zarkam', side: 'E', tpl: 'chompy', badge: 0xff2a2a, x: -70, z: -144, troops: 120, home: 'fortA' },
   { id: 'almak', name: 'Almak', side: 'E', tpl: 'chompy', badge: 0x3adc5a, x: 70, z: -434, troops: 120, home: 'fortP' },
@@ -4684,6 +4702,16 @@ function fieldSquads() {
   }
   return out;
 }
+const STAGES = {
+  kesh: { id: 'kesh', ch: 4, title: 'Chapter IV · Enough is Enough', name: 'The Plain of Kesh', place: 'Kesh', bases: C4_BASES, units: C4_UNITS, squads: fieldSquads,
+    sides: ['A', 'E'], newOfficers: true, caps: { A: 16, E: 40 }, sevHit: 11, song: 'songKesh', objective: 'Defeat Sevirrus',
+    win: 'Sevirrus is defeated', lose: 'Arixal Chompjak is defeated', lost: 'Arixal Chompjak has fallen. Sevirrus holds Kesh.', winMsg: '<b class="e">Sevirrus</b> has been driven back!',
+    startMsg: '<b class="a">Arixal Chompjak</b> has begun battle with <b class="e">Sevirrus</b>!',
+    near: [{ id: 'sevirrus', text: '<b class="e">Sevirrus</b>: Brother of a dead man. Come and kneel.', vo: 92 }],
+    pre: [{ cls: 'ally', h: 'Allies', rows: [['Leader', 'Arixal Chompjak', 4], ['Officers', 'Hanaxa Chompjak · Aniz Chompjak · Marshal Haplok']], note: 'Sub officers advance on their own.' },
+          { cls: 'foe', h: 'Enemies', rows: [['Leader', 'Sevirrus', 8], ['Officers', 'Zarkam · Almak · Tamix']] }],
+    gateNote: 'Each side’s new officers come from its main camp, so its gate captain is the one that matters most.' },
+};
 const CH4_INTRO = [   // Hak alone in the throne hall (CH4SEV1..6, CH4GUARD1 when recorded)
   [4.0, 3.2, 'Sevirrus', 'He said he loved me.', 85],
   [8.6, 4.25, 'Sevirrus', 'He said it the way he said everything. Like an order.', 86],
@@ -4729,7 +4757,7 @@ function endCh4Intro(toBattleScreen) {
   rig.position.set(0, 0, 0); rig.rotation.set(0, 0, 0); rig.rotation.order = 'XYZ'; applyPose(sev.j, POSES.stand); eyeMats.forEach(m => { m.emissiveIntensity = 0; });
   subsEl.style.opacity = 0; cineEls.black.style.opacity = 0; cineEls.card.style.opacity = 0; cineEls.skip.hidden = true;
   document.body.classList.remove('cine'); M.voice && M.voice.stop(); speak(null);
-  if (toBattleScreen) { document.body.classList.add('c4screen'); setTimeout(() => c4Loading(showPreBattle), 0); } else M.onCh4End && M.onCh4End(false);
+  if (toBattleScreen) { STAGE = STAGES.kesh; document.body.classList.add('c4screen'); setTimeout(() => c4Loading(showPreBattle), 0); } else M.onCh4End && M.onCh4End(false);
 }
 function ch4IntroUpdate(dt, time) {
   const I = cine.ch4, T = (I.t += dt);
@@ -5058,14 +5086,14 @@ function buildJazSet() {
   // the company: two ranks of Arixal's soldiers before him, and more on the slope behind them
   const ranks = [];
   for (let k = 0; k < 16; k++) { const r = k < 8 ? 0 : 1, x = (k % 8 - 3.5) * 0.95 + (r ? 0.45 : 0), z = 4.4 + r * 1.3;
-    const c = rigClone(chompyTpl); const mats = factionMats('A'); let n = 0; c.mover.traverse(o => { if (o.isMesh) o.material = mats[n++ % mats.length]; });
+    const c = rigClone(chompyTpl); const mats = factionMats('T'); let n = 0; c.mover.traverse(o => { if (o.isMesh) o.material = mats[n++ % mats.length]; });
     c.mover.position.set(x, 0, z); c.mover.rotation.y = Math.PI + (Math.random() - 0.5) * 0.15; c.ph = Math.random() * 6; g.add(c.mover); ranks.push(c); }
   const far = new THREE.MeshStandardMaterial({ color: 0x1a2436, roughness: 0.9 });
   for (let k = 0; k < 60; k++) { const x = (Math.random() - 0.5) * 16, z = 8 + Math.random() * 9, y = terrainH(x, z);
     const b = new THREE.Mesh(new THREE.CapsuleGeometry(0.22, 0.95, 3, 6), far); b.position.set(x, y + 0.7, z); g.add(b);
     const h = new THREE.Mesh(new THREE.SphereGeometry(0.17, 8, 6), far); h.position.set(x, y + 1.5, z); g.add(h); }
   // their banners: Arixal's blue
-  const flagM = new THREE.MeshStandardMaterial({ color: 0x2a7ac0, emissive: 0x0a2a44, side: THREE.DoubleSide, roughness: 0.7 }), poleM = new THREE.MeshStandardMaterial({ color: 0x18141c });
+  const flagM = new THREE.MeshStandardMaterial({ color: SIDE.T.flag, emissive: SIDE.T.em, side: THREE.DoubleSide, roughness: 0.7 }), poleM = new THREE.MeshStandardMaterial({ color: 0x18141c });
   const flags = [];
   for (const [x, z] of [[-4.6, 5.2], [4.6, 5.2], [-2.5, 9.5], [3, 10.5]]) { const y = terrainH(x, z); const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 5, 6), poleM); pole.position.set(x, y + 2.5, z); g.add(pole);
     const f = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 2.2, 8, 1), flagM); f.position.set(x + 0.72, y + 3.8, z); g.add(f); flags.push(f); }
@@ -5132,7 +5160,8 @@ function endJaz(finished) {
   camera.fov = 32; camera.far = 60; camera.updateProjectionMatrix(); blackHole.position.set(60, 110, -300);
   subsEl.style.opacity = 0; subsEl.className = 'subs'; cineEls.black.style.opacity = 0; cineEls.card.style.opacity = 0; cineEls.skip.hidden = true;
   document.body.classList.remove('cine'); M.voice && M.voice.stop(); speak(null);
-  M.onCh5End && M.onCh5End(true);
+  // on to the battle of Alphinos
+  STAGE = STAGES.alphinos; document.body.classList.add('c4screen'); setTimeout(() => c4Loading(showPreBattle), 0);
 }
 function jazUpdate(dt, time) {
   const S = cine.jaz, Tn = (S.t += dt), T = jzOld(Tn), J = S.J;   // Tn: real time, for the voices; T: the scene's layout
@@ -5206,21 +5235,20 @@ function drawStageMap(cv, units, t, opts = {}) {
   c.fillStyle = 'rgba(16,10,26,.92)'; c.fillRect(0, 0, W, H);
   // the plain, its ridges and the two camps
   c.strokeStyle = 'rgba(169,147,230,.35)'; c.lineWidth = 1; c.strokeRect(mx(-K4.W), mz(-K4.HALF), mx(K4.W) - mx(-K4.W), mz(K4.HALF) - mz(-K4.HALF));
-  c.fillStyle = 'rgba(90,208,255,.12)'; c.fillRect(mx(-60), mz(735), mx(60) - mx(-60), mz(800) - mz(735));
-  c.fillStyle = 'rgba(255,48,72,.14)'; c.fillRect(mx(-60), mz(-800), mx(60) - mx(-60), mz(-735) - mz(-800));
+  (opts.bases || []).forEach(b => { if (b.main) { c.fillStyle = `rgba(${SIDE[b.side].rgb},.13)`; c.fillRect(mx(b.x - 60), mz(b.z - 33), mx(60) - mx(-60), mz(66) - mz(0)); } });
   if (opts.squads) [...units, ...(opts.extra || [])].forEach(u => {
     if (!u.alive || u.troops <= 0) return;
-    c.fillStyle = u.side === 'A' ? 'rgba(90,208,255,.45)' : 'rgba(255,48,72,.45)';
+    c.fillStyle = `rgba(${SIDE[u.side].rgb},.45)`;
     const n = Math.min(24, Math.ceil(u.troops / 6));
     for (let i = 0; i < n; i++) { const a = i * 2.4, r = 3 + (i % 5) * 2.2; c.fillRect(mx(u.x + Math.cos(a) * r * 3) - 1, mz(u.z + Math.sin(a) * r * 3) - 1, 2, 2); }
   });
   // forts: squares in their holder's colour, the main camps larger
-  (opts.bases || []).forEach(b => { const sz = b.main ? 9 : 6, col = b.side === 'A' ? '90,208,255' : '255,48,72';
+  (opts.bases || []).forEach(b => { const sz = b.main ? 9 : 6, col = SIDE[b.side].rgb;
     c.fillStyle = `rgba(${col},.28)`; c.fillRect(mx(b.x) - sz, mz(b.z) - sz, sz * 2, sz * 2); c.strokeStyle = `rgba(${col},.95)`; c.lineWidth = 1.2; c.strokeRect(mx(b.x) - sz, mz(b.z) - sz, sz * 2, sz * 2);
     if (opts.labels && !b.main) { c.font = '9px "Chakra Petch", sans-serif'; c.fillStyle = `rgba(${col},.7)`; const tw = c.measureText(b.name.toUpperCase()).width; c.fillText(b.name.toUpperCase(), Math.max(3, Math.min(W - tw - 3, mx(b.x) - tw / 2)), mz(b.z) + sz + 10); } });
   // gate captains: a small diamond while he stands, a grey cross once his gate is sealed
   (opts.gates || []).forEach(g => { const x = mx(g.x), y = mz(g.z);
-    if (g.alive) { const col = g.side === 'A' ? '90,208,255' : '255,48,72'; c.fillStyle = `rgba(${col},.95)`; c.beginPath(); c.moveTo(x, y - 3.5); c.lineTo(x + 3.5, y); c.lineTo(x, y + 3.5); c.lineTo(x - 3.5, y); c.closePath(); c.fill(); c.strokeStyle = 'rgba(240,200,110,.9)'; c.lineWidth = 1; c.stroke(); }
+    if (g.alive) { const col = SIDE[g.side].rgb; c.fillStyle = `rgba(${col},.95)`; c.beginPath(); c.moveTo(x, y - 3.5); c.lineTo(x + 3.5, y); c.lineTo(x, y + 3.5); c.lineTo(x - 3.5, y); c.closePath(); c.fill(); c.strokeStyle = 'rgba(240,200,110,.9)'; c.lineWidth = 1; c.stroke(); }
     else { c.strokeStyle = 'rgba(170,170,180,.8)'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(x - 3, y - 3); c.lineTo(x + 3, y + 3); c.moveTo(x + 3, y - 3); c.lineTo(x - 3, y + 3); c.stroke(); } });
   (opts.items || []).forEach(it => { c.fillStyle = 'rgba(110,255,160,.95)'; c.fillRect(mx(it.x) - 1.5, mz(it.z) - 1.5, 3, 3); });
   // T-shaped icons; leaders flash white, sub officers glow faintly
@@ -5228,7 +5256,7 @@ function drawStageMap(cv, units, t, opts = {}) {
     if (u.alive === false || u.anon || u.captain) return;
     const x = mx(u.x), y = mz(u.z), s = u.leader ? 7 : 5;
     const pulse = u.leader ? (Math.sin(t * 6) > 0 ? 1 : 0) : 0.35 + Math.sin(t * 3 + u.x) * 0.2;
-    const col = u.side === 'A' ? '90,208,255' : '255,48,72';
+    const col = SIDE[u.side].rgb;
     c.fillStyle = `rgba(${col},1)`; c.fillRect(x - s, y - s, s * 2, s * 0.6); c.fillRect(x - s * 0.3, y - s, s * 0.6, s * 2);
     if (pulse > 0) { c.fillStyle = `rgba(255,255,255,${u.leader ? 0.85 * pulse : pulse * 0.45})`; c.fillRect(x - s, y - s, s * 2, s * 0.6); c.fillRect(x - s * 0.3, y - s, s * 0.6, s * 2); }
     if (opts.labels) { c.font = '10px "Chakra Petch", sans-serif'; c.fillStyle = `rgba(${col},.95)`; const txt = u.name.toUpperCase(), tw = c.measureText(txt).width; let tx = u.x < 0 ? x - s - 4 - tw : x + s + 4; tx = Math.max(3, Math.min(W - tw - 3, tx)); c.textAlign = 'left'; c.fillText(txt, tx, y + (u.side === 'A' && !u.leader ? (u.x < 0 ? -9 : u.x > 0 ? 13 : 3) : 3)); }
@@ -5263,11 +5291,12 @@ const loadEl = (() => { const d = document.createElement('div'); d.className = '
 const C4_TIPS = ['Press M to see the whole battle: every officer, every fort, and how each army’s morale is holding.', 'While the gate captain of Sevirrus’s camp lives, new officers keep riding out to replace the ones you defeat.', 'Defeat a Gate Captain and his fort sends no more troops. They stand before the gates, marked ◆ on your map.', 'Break supply crates for space rocks. A space rock restores some health; a great space rock restores all of it.', 'Defeated officers drop a great space rock. Take it before Sevirrus finds you.', 'Arixal fells a soldier in three strikes. Sevirrus is another matter.', 'Your officers advance on their own. Help them, or they may fall back.', 'Strike to fill the gold bar, then press Q to unleash his Latent Powers.', 'Every soldier answers to an officer. Defeat the officer and his squad breaks.', 'Sevirrus will not leave his camp until you come for him, or until he tires of waiting.', 'Defeat a Base Captain to take his fort. Forts send fresh troops to whoever holds them.', 'Press 1 to 4 to order your officers: follow me, advance, hold, or fall back.', 'Every soldier and officer you cut down saps Sevirrus’s morale. A wavering army strikes weakly.'];
 function c4Loading(next) {
   loadEl.hidden = false; document.body.classList.add('c4screen');
-  G('c4LoadTip').textContent = C4_TIPS[Math.random() * C4_TIPS.length | 0];
+  loadEl.querySelector('.eyebrow').textContent = STAGE.title; G('c4LoadT').textContent = STAGE.name;
+  const tips = STAGE.tips || C4_TIPS; G('c4LoadTip').textContent = tips[Math.random() * tips.length | 0];
   const t0 = performance.now(); let built = false;
   const step = () => {
     const k = Math.min(1, (performance.now() - t0) / 2400); G('c4LoadBar').style.width = (k * 100) + '%';
-    if (k > 0.35 && !built) { built = true; if (!fieldSet) fieldSet = buildField(); }
+    if (k > 0.35 && !built) { built = true; ensureField(); }
     if (k < 1) requestAnimationFrame(step); else { loadEl.hidden = true; next(); }
   };
   requestAnimationFrame(step);
@@ -5276,17 +5305,32 @@ M.c4Loading = c4Loading;
 let preRaf = 0;
 function showPreBattle() {
   document.body.classList.add('c4screen');
-  preEl.hidden = false; G('c4Begin').focus();
-  const units = C4_UNITS.map(u => ({ ...u, alive: true })), extra = fieldSquads();
-  const draw = () => { if (preEl.hidden) return; drawStageMap(G('c4Map'), units, performance.now() / 1000, { labels: true, squads: true, extra, bases: C4_BASES, gates: C4_BASES.map(b => ({ ...gatePost(b), side: b.side, alive: true })) }); preRaf = requestAnimationFrame(draw); };
+  renderPre(); preEl.hidden = false; G('c4Begin').focus({ preventScroll: true }); preEl.querySelector('.panel').scrollTop = 0;
+  const units = STAGE.units.map(u => ({ ...u, alive: true })), extra = STAGE.squads();
+  const draw = () => { if (preEl.hidden) return; drawStageMap(G('c4Map'), units, performance.now() / 1000, { labels: true, squads: true, extra, bases: STAGE.bases, gates: STAGE.bases.map(b => ({ ...gatePost(b), side: b.side, alive: true })) }); preRaf = requestAnimationFrame(draw); };
   cancelAnimationFrame(preRaf); draw();
 }
 M.showPreBattle = showPreBattle;
-G('c4Begin').addEventListener('click', () => { preEl.hidden = true; c4Loading(() => { document.body.classList.remove('c4screen'); startBattle(); }); });
-G('c4Back').addEventListener('click', () => { preEl.hidden = true; document.body.classList.remove('c4screen'); M.onCh4End && M.onCh4End(false); });
+// the panel is rebuilt for each stage, so its buttons are handled here
+preEl.addEventListener('click', e => {
+  if (e.target.id === 'c4Begin') { preEl.hidden = true; c4Loading(() => { document.body.classList.remove('c4screen'); startBattle(); }); }
+  if (e.target.id === 'c4Back') { preEl.hidden = true; document.body.classList.remove('c4screen'); M.onCh4End && M.onCh4End(false); }
+});
+function renderPre() {
+  const S = STAGE, stars = n => '★'.repeat(n);
+  preEl.classList.toggle('three', S.sides.length > 2);
+  preEl.querySelector('.eyebrow').textContent = S.title; G('hC4').textContent = S.name;
+  preEl.querySelector('.c4-info').innerHTML =
+    `<div class="c4-cond"><b class="win">VICTORY</b><span>${S.win}</span><b class="lose">DEFEAT</b><span>${S.lose}</span></div>` +
+    S.pre.map(g => `<div class="c4-side ${g.cls}"><div class="c4-h">${g.h}</div>${g.rows.map(r => `<div class="c4-row"><span class="role">${r[0]}</span><b>${r[1]}</b>${r[2] ? `<i>${stars(r[2])}</i>` : ''}</div>`).join('')}${g.note ? `<p class="c4-note">${g.note}</p>` : ''}</div>`).join('') +
+    `<p class="c4-note"><b style="color:#f0c060">◆ Gate Captains</b> keep each fort and camp sending out troops. Defeat one to seal its gates and stop the reinforcements. ${S.gateNote}<br><b style="color:#7dffb0">■ Supply crates</b> hold space rocks that restore health. The great ones restore all of it.</p>` +
+    `<div class="c4-btns"><button class="close" id="c4Begin">Begin</button><button class="close" id="c4Back">Return to menu</button></div>`;
+}
 
 // --------------------------------------------------------------------- the field ----------
 let fieldSet = null;
+const fieldSets = {};
+function ensureField() { if (!fieldSets[STAGE.id]) fieldSets[STAGE.id] = STAGE.id === 'alphinos' ? buildAlphField() : buildField(); fieldSet = fieldSets[STAGE.id]; return fieldSet; }
 function buildField() {
   const g = new THREE.Group(); g.visible = false; scene.add(g);
   // the plain: violet-teal earth with low swells
@@ -5324,7 +5368,7 @@ function buildField() {
   const sun = new THREE.DirectionalLight(0xb8f0ff, 1.2); sun.position.set(30, 60, 20); g.add(sun); g.add(sun.target);
   // the forts: four walls with a gate, and a banner in the holder's colours
   const wallM = new THREE.MeshStandardMaterial({ color: 0x3a3046, roughness: 0.9 }), flags = {}, gates = {};
-  C4_BASES.forEach(b => {
+  STAGES.kesh.bases.forEach(b => {
     if (!b.main) {
       const H = 4.2, L = 24;
       [[0, -L / 2, L, 1.2], [-L / 2, 0, 1.2, L], [L / 2, 0, 1.2, L]].forEach(([x, z, w, d]) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, H, d), wallM); m.position.set(b.x + x, H / 2, b.z + z); m.castShadow = true; m.receiveShadow = true; g.add(m); });
@@ -5337,7 +5381,7 @@ function buildField() {
       pc.position.set(b.x, H / 2, b.z + L / 2); pc.userData = { H, open: 1 }; g.add(pc); gates[b.id] = pc;
     }
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 9, 6), new THREE.MeshStandardMaterial({ color: 0x18141c })); pole.position.set(b.x, 4.5, b.z); g.add(pole);
-    const fm = new THREE.MeshStandardMaterial({ color: b.side === 'A' ? 0x2a7ac0 : 0x8a0c1c, side: THREE.DoubleSide, roughness: 0.7, emissive: b.side === 'A' ? 0x0a2a44 : 0x2a0408 });
+    const fm = new THREE.MeshStandardMaterial({ color: SIDE[b.side].flag, side: THREE.DoubleSide, roughness: 0.7, emissive: SIDE[b.side].em });
     const flag = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.4), fm); flag.position.set(b.x + 1.15, 8.2, b.z); g.add(flag); flags[b.id] = fm;
   });
   return { g, sky, sun, flags, gates, obst };
@@ -5348,21 +5392,23 @@ const c4Mat = {};
 function factionMats(side) {
   if (c4Mat[side]) return c4Mat[side];
   const list = []; chompyTpl.traverse(o => { if (o.isMesh) list.push(o.material); });
-  c4Mat[side] = list.map(m => { const c = m.clone(); c.color = new THREE.Color(side === 'A' ? 0xb8dcff : 0xffb0b8); return c; });
+  c4Mat[side] = list.map(m => { const c = m.clone(); c.color = new THREE.Color(SIDE[side].tint); return c; });
+  // Jazmak's men in his own gold: the base colours are flattened to yellows so they never read as Sevirrus's red
+  if (side === 'T') { const gold = [0xc9a227, 0x8a6a14, 0xe8c85a, 0x5a4410]; c4Mat.T.forEach((m, i) => { m.vertexColors = false; m.color.set(gold[i % gold.length]); m.needsUpdate = true; }); }
   return c4Mat[side];
 }
 function makeTrooper(side, officer) {
   const c = rigClone(chompyTpl);
   const mats = factionMats(side); let k = 0; c.mover.traverse(o => { if (o.isMesh) { o.material = mats[k++ % mats.length]; o.castShadow = false; } });
   const sw = giveDamixSword(c.j); sw.scale.setScalar(0.9);
-  const tag = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.03), new THREE.MeshBasicMaterial({ color: side === 'A' ? K4.ALLY : K4.FOE, toneMapped: false })); tag.position.set(0.1, 0.32, 0.2); c.j.spine.add(tag);
+  const tag = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.03), new THREE.MeshBasicMaterial({ color: SIDE[side].hex, toneMapped: false })); tag.position.set(0.1, 0.32, 0.2); c.j.spine.add(tag);
   scene.add(c.mover);
   return Object.assign(c, { side, officer, hp: 3, state: 'idle', t: 0, cd: Math.random() * 1.5, gait: makeGait(c.mover), fall: 0, target: null });
 }
 function makeOfficerModel(u) {
   let c;
   if (u.tpl === 'sev') { return null; }
-  const tpl = { arixal: arixalTpl, aniz: anizTpl, hanaxa: hanaxaTpl, chompy: chompyTpl }[u.tpl];
+  const tpl = { arixal: arixalTpl, aniz: anizTpl, hanaxa: hanaxaTpl, chompy: chompyTpl, jazmak: jazmakTpl }[u.tpl];
   c = rigClone(tpl);
   if (u.tpl === 'chompy') { const mats = factionMats(u.side); let k = 0; c.mover.traverse(o => { if (o.isMesh) o.material = mats[k++ % mats.length]; }); c.mover.scale.setScalar(1.08); }
   if (u.badge) { const b = new THREE.Mesh(new THREE.OctahedronGeometry(0.07), new THREE.MeshBasicMaterial({ color: u.badge, toneMapped: false })); b.position.set(0, 0.3, 0.22); c.j.spine.add(b); b.scale.setScalar(1.3); }
@@ -5375,7 +5421,7 @@ function makeOfficerModel(u) {
 const c4Hud = (() => {
   const d = document.createElement('div'); d.className = 'c4hud'; d.id = 'c4Hud';
   d.innerHTML = `<canvas class="c4-mini" id="c4Mini" width="120" height="300" aria-label="Battle map"></canvas>
-    <div class="c4-me"><span class="nm">Arixal Chompjak</span><div class="c4-bar ally"><i id="c4Hp"></i></div><div class="c4-bar musou"><i id="c4Mu"></i></div><span class="ko"><b id="c4Ko">0</b> KO</span><div class="c4-mor" id="c4Mor"><span>Morale</span><div class="c4-mbar"><i id="c4MA"></i></div></div></div>
+    <div class="c4-me"><span class="nm">Arixal Chompjak</span><div class="c4-bar ally"><i id="c4Hp"></i></div><div class="c4-bar musou"><i id="c4Mu"></i></div><span class="ko"><b id="c4Ko">0</b> KO</span><div class="c4-mor" id="c4Mor"><span>Morale</span><div class="c4-mbar"><i id="c4MA"></i><i id="c4ME"></i><i id="c4MT"></i></div></div></div>
     <div class="c4-target" id="c4Target" hidden><span class="lead" id="c4TLead"></span><b id="c4TName"></b><div class="c4-bar foe"><i id="c4THp"></i></div></div>
     <div class="c4-feed" id="c4Feed" aria-live="polite"></div>
     <div class="c4-tags" id="c4Tags"></div>
@@ -5471,6 +5517,7 @@ const mapView = (() => {
         <div><div class="c4-h">Morale</div><div class="c4-mor2" id="c4MvMorale"></div></div>
         <div class="c4-side ally"><div class="c4-h">Allied officers</div><div class="c4-olist" id="c4MvA"></div></div>
         <div class="c4-side foe"><div class="c4-h">Enemy officers</div><div class="c4-olist" id="c4MvE"></div></div>
+        <div class="c4-side third" id="c4MvTWrap" hidden><div class="c4-h">Third party officers</div><div class="c4-olist" id="c4MvT"></div></div>
         <div><div class="c4-h">Forts and gates</div><div class="c4-forts" id="c4MvForts"></div></div>
         <div class="c4-btns"><button class="close" id="c4MvClose">Back to battle</button></div>
       </div>
@@ -5483,13 +5530,15 @@ const moraleWord = v => v >= 80 ? 'Soaring' : v >= 60 ? 'High' : v >= 40 ? 'Stea
 function renderMapView() {
   const live = o => Math.round(o.troops + game.troops.filter(t => t.officer === o && t.state !== 'dead' && t.state !== 'flee').length);
   const m = game.morale;
-  const row = (side, label) => `<div class="c4-mrow ${side === 'A' ? 'ally' : 'foe'}"><div class="nm"><span>${label}</span><em>${moraleWord(m[side])} · ${Math.round(m[side])}</em></div><div class="mbar"><i style="width:${m[side]}%"></i></div><small>Soldiers strike at ×${mf(side).toFixed(2)} strength</small></div>`;
-  G('c4MvMorale').innerHTML = row('A', 'Arixal Chompjak’s army') + row('E', 'Sevirrus’s army');
-  const list = side => game.units.filter(u => u.side === side && !u.captain).map(u => `<div class="${u.alive ? '' : 'dead'}"><b>${u.name}</b><span>${u === game.me ? Math.round(B.hp) + ' HP' : u.alive ? live(u) + ' troops' : (side === 'E' ? 'defeated' : 'retreated')}</span></div>`).join('');
-  G('c4MvA').innerHTML = list('A'); G('c4MvE').innerHTML = list('E');
+  const row = (side, label) => `<div class="c4-mrow ${SIDE[side].tag}"><div class="nm"><span>${label}</span><em>${moraleWord(m[side])} · ${Math.round(m[side])}</em></div><div class="mbar"><i style="width:${m[side]}%"></i></div><small>Soldiers strike at ×${mf(side).toFixed(2)} strength</small></div>`;
+  G('c4MvMorale').innerHTML = STAGE.sides.map(sd => row(sd, SIDE[sd].army)).join('');
+  const list = side => game.units.filter(u => u.side === side && !u.captain).map(u => `<div class="${u.alive ? '' : 'dead'}"><b>${u.name}</b><span>${u === game.me ? Math.round(B.hp) + ' HP' : u.alive ? live(u) + ' troops' : (side !== 'A' ? 'defeated' : 'retreated')}</span></div>`).join('');
+  G('c4MvA').innerHTML = list('A'); G('c4MvE').innerHTML = list('E'); G('c4MvTWrap').hidden = !STAGE.sides.includes('T'); if (STAGE.sides.includes('T')) G('c4MvT').innerHTML = list('T');
+  G('hMv').textContent = STAGE.name;
+  mapView.querySelector('.c4-mv-legend').innerHTML = `<b style="color:#fff">▲</b> Arixal · ${STAGE.sides.map(sd => `<b style="color:#${SIDE[sd].hex.toString(16).padStart(6, '0')}">T</b>`).join('/')} officers · <b style="color:#f0c060">◆</b> gate captain · <b style="color:#9a9aa6">✕</b> sealed gate · <b style="color:#7dffb0">■</b> space rock`;
   G('c4MvForts').innerHTML = game.bases.map(b => { const g = gateOf(b), open = g && g.alive && g.side === b.side;
-    return `<span class="${b.side === 'A' ? 'a' : 'e'}">${b.name}</span><span class="${b.side === 'A' ? 'a' : 'e'}">${b.side === 'A' ? 'Allied' : 'Enemy'}</span><span class="${open ? 'open' : 'sealed'}">${open ? (b.main ? 'Gate open · sends officers and troops' : 'Gate open · sends troops') : 'Gate sealed'}</span>`; }).join('');
-  G('c4MvEyebrow').textContent = `Chapter IV · Enough is Enough · ${Math.floor(game.t / 60)}:${String(Math.floor(game.t % 60)).padStart(2, '0')} · ${game.ko} KO`;
+    return `<span class="${SIDE[b.side].cls}">${b.name}</span><span class="${SIDE[b.side].cls}">${SIDE[b.side].label}</span><span class="${open ? 'open' : 'sealed'}">${open ? (b.main ? (STAGE.newOfficers ? 'Gate open · sends officers and troops' : 'Gate open · returns fallen officers, sends troops') : 'Gate open · sends troops') : 'Gate sealed'}</span>`; }).join('');
+  G('c4MvEyebrow').textContent = `${STAGE.title} · ${Math.floor(game.t / 60)}:${String(Math.floor(game.t % 60)).padStart(2, '0')} · ${game.ko} KO`;
 }
 function drawMapView() {
   if (mapView.hidden || !game || !game.units) return;
@@ -5499,14 +5548,14 @@ function drawMapView() {
   mvRaf = requestAnimationFrame(drawMapView);
 }
 function openMapView() {
-  if (!game || game.ch !== 4 || game.over || game.paused) return;
+  if (!game || !game.bt || game.over || game.paused) return;
   game.paused = true; keys.clear(); mapView.hidden = false;
   renderMapView(); cancelAnimationFrame(mvRaf); drawMapView(); G('c4MvClose').focus({ preventScroll: true }); mapView.querySelector('.panel').scrollTop = 0;
 }
 function closeMapView() {
   if (mapView.hidden) return;
   mapView.hidden = true; cancelAnimationFrame(mvRaf);
-  if (game && game.ch === 4) game.paused = false;
+  if (game && game.bt) game.paused = false;
 }
 G('c4MvClose').addEventListener('click', closeMapView);
 mapView.addEventListener('click', e => { if (e.target === mapView) closeMapView(); });
@@ -5516,65 +5565,223 @@ const mf = side => 0.6 + (game && game.morale ? game.morale[side] : 50) / 100 * 
 function morale(side, d) {
   if (!game || !game.morale) return;
   const m = game.morale; m[side] = THREE.MathUtils.clamp(m[side] + d, 0, 100);
-  const tot = m.A + m.E || 1; G('c4MA').style.width = (m.A / tot * 100) + '%';
-  G('c4Mor').title = `Morale: Arixal ${Math.round(m.A)} · Sevirrus ${Math.round(m.E)}`;
-  if (m.E < 20 && !game.heard.has('eWaver')) { game.heard.add('eWaver'); feed('<b class="e">Sevirrus</b>’s army is wavering!', 'good'); }
-  if (m.E > 35) game.heard.delete('eWaver');
+  updateMoraleBar();
+  for (const sd of STAGE.sides) { if (sd === 'A') continue; const k = sd + 'Waver';
+    if (m[sd] < 20 && !game.heard.has(k)) { game.heard.add(k); feed(`${nameOf(sd, SIDE[sd].lead)}’s army is wavering!`, 'good'); }
+    if (m[sd] > 35) game.heard.delete(k); }
   if (m.A < 20 && !game.heard.has('aWaver')) { game.heard.add('aWaver'); feed('<b class="a">Arixal Chompjak</b>’s army is losing heart!', 'bad'); }
   if (m.A > 35) game.heard.delete('aWaver');
+}
+function updateMoraleBar() {
+  const m = game.morale, sides = STAGE.sides, tot = sides.reduce((a, sd) => a + (m[sd] || 0), 0) || 1;
+  G('c4MA').style.width = (m.A / tot * 100) + '%'; G('c4ME').style.width = (m.E / tot * 100) + '%'; G('c4MT').style.width = sides.includes('T') ? (m.T / tot * 100) + '%' : '0';
+  G('c4Mor').title = 'Morale: ' + sides.map(sd => `${SIDE[sd].lead} ${Math.round(m[sd])}`).join(' · ');
 }
 function feed(html, cls = '') { const el = document.createElement('div'); el.className = 'c4-msg ' + cls; el.innerHTML = html; G('c4Feed').prepend(el); setTimeout(() => el.classList.add('out'), 5200); setTimeout(() => el.remove(), 6200); while (G('c4Feed').children.length > 6) G('c4Feed').lastChild.remove(); }
 const tagEls = new Map();
 function tagFor(u) {
-  if (!tagEls.has(u.id)) { const e = document.createElement('div'); e.className = 'c4-tag ' + (u.side === 'A' ? 'ally' : 'foe'); e.innerHTML = `<span>${u.name}</span><div class="c4-bar ${u.side === 'A' ? 'ally' : 'foe'}"><i></i></div>`; G('c4Tags').appendChild(e); tagEls.set(u.id, e); }
+  if (!tagEls.has(u.id)) { const e = document.createElement('div'); e.className = 'c4-tag ' + SIDE[u.side].tag; e.innerHTML = `<span>${u.name}</span><div class="c4-bar ${SIDE[u.side].tag}"><i></i></div>`; G('c4Tags').appendChild(e); tagEls.set(u.id, e); }
   return tagEls.get(u.id);
 }
 
 // -------------------------------------------------------------------- the battle ----------
 function startBattle(st) {
   if (game || !arixalTpl || !anizTpl || !hanaxaTpl || !chompyTpl || !sev) return false;
-  if (!fieldSet) fieldSet = buildField();
-  fieldSet.g.visible = true;
-  const units = C4_UNITS.map(u => ({ ...u, pos: new THREE.Vector3(u.x, 0, u.z), hp: 100, maxTroops: u.troops, alive: true, engaged: null, model: null }));
+  if (st && st.stage && STAGES[st.stage]) STAGE = STAGES[st.stage]; else if (st && st.chapter) STAGE = st.chapter === 5 ? STAGES.alphinos : STAGES.kesh; if (!STAGE) STAGE = STAGES.kesh;
+  ensureField();
+  Object.values(fieldSets).forEach(f => { f.g.visible = f === fieldSet; });
+  const units = STAGE.units.map(u => ({ ...u, pos: new THREE.Vector3(u.x, 0, u.z), hp: 100, maxTroops: u.troops, alive: true, engaged: null, model: null }));
   const me = units[0];
-  const squads = fieldSquads().map(q => ({ ...q, pos: new THREE.Vector3(q.x, 0, q.z), hp: 100, max: q.troops }));
-  const bases = C4_BASES.map(b => ({ ...b, pos: new THREE.Vector3(b.x, 0, b.z) }));
-  bases.forEach(b => { if (fieldSet.flags[b.id]) { fieldSet.flags[b.id].color.set(b.side === 'A' ? 0x2a7ac0 : 0x8a0c1c); fieldSet.flags[b.id].emissive.set(b.side === 'A' ? 0x0a2a44 : 0x2a0408); } });
+  const squads = STAGE.squads().map(q => ({ ...q, pos: new THREE.Vector3(q.x, 0, q.z), hp: 100, max: q.troops }));
+  const bases = STAGE.bases.map(b => ({ ...b, pos: new THREE.Vector3(b.x, 0, b.z) }));
+  bases.forEach(b => setFlag(b));
   // each fort has a base captain and a garrison; take the fort by defeating him
   bases.filter(b => !b.main).forEach(b => units.push({ id: 'cap_' + b.id, name: 'Base Captain', side: b.side, tpl: 'chompy', badge: 0xf0f0f0, captain: true, base: b, pos: b.pos.clone(), x: b.x, z: b.z, hp: 70, troops: 30, maxTroops: 30, alive: true, engaged: null, model: null }));
   // and a gate captain: while he lives, the base keeps sending troops out
   bases.forEach(b => { const gp = gatePost(b); units.push({ id: 'gate_' + b.id, name: 'Gate Captain', side: b.side, tpl: 'chompy', badge: 0xd0a040, captain: true, gate: true, base: b, post: new THREE.Vector3(gp.x, 0, gp.z), pos: new THREE.Vector3(gp.x, 0, gp.z), x: gp.x, z: gp.z, hp: 55, troops: 10, maxTroops: 10, alive: true, engaged: null, model: null }); });
   units.forEach(u => { if (u.home) u.homePos = bases.find(b => b.id === u.home).pos.clone(); });
   const a = rigClone(arixalTpl); a.mover.position.copy(me.pos); a.mover.rotation.y = Math.PI; scene.add(a.mover);
-  game = { phase: 'battle', ch: 4, t: 0, mover: a.mover, j: a.j, gait: makeGait(a.mover), units, squads, bases, aOrder: 'advance', eOrder: 'hold', morale: { A: 50, E: 50 }, me, troops: [], ko: 0, musou: 0, paused: false, done: false, heard: new Set(), simT: 0, spawnT: 0, foes: [] };
+  game = { phase: 'battle', ch: STAGE.ch, t: 0, mover: a.mover, j: a.j, gait: makeGait(a.mover), units, squads, bases, aOrder: 'advance', eOrder: 'hold', tOrder: 'hold', morale: Object.fromEntries(STAGE.sides.map(sd => [sd, 50])), adv: {}, fallT: {}, routed: {}, bt: true, stage: STAGE.id, me, troops: [], ko: 0, musou: 0, paused: false, done: false, heard: new Set(), simT: 0, spawnT: 0, foes: [] };
   game.sword = giveDamixSword(a.j); game.sword.scale.setScalar(1.15); game.trail = makeTrail(0x5ad0ff);
   buildPickups();
   Object.values(fieldSet.gates).forEach(pc => { pc.userData.open = 1; pc.position.y = -pc.userData.H / 2 + 0.3; });
   me.model = { mover: a.mover, j: a.j };
   // Sevirrus holds the north camp
-  rig.visible = true; rig.rotation.order = 'YXZ'; rig.position.set(0, 0, -770); rig.rotation.set(0, 0, 0); sev.gait = makeGait(rig); setBlade(true, 1);
+  const campE0 = bases.find(b => b.main && b.side === 'E');
+  rig.visible = true; rig.rotation.order = 'YXZ'; rig.position.set(campE0.x, 0, campE0.z); rig.rotation.set(0, 0, 0); sev.gait = makeGait(rig); setBlade(true, 1);
   units.find(u => u.id === 'sevirrus').model = { mover: rig, j: sev.j, sev: true };
   B.maxHp = 100; B.hp = 100;
   setPlanet(false); floor.visible = ring1.visible = ring2.visible = ticks.visible = false; dust.visible = false; blackHole.visible = false; stars.visible = false;
+  if (STAGE.env) STAGE.env(); else {
   scene.fog.color.set(0x24304a); scene.fog.density = 0.011; camera.far = 220; camera.fov = 55; camera.updateProjectionMatrix();
-  hemi.color.set(0x8ab0d0); hemi.groundColor.set(0x2a1a30); key.angle = Math.PI / 4; key.distance = 40; key.decay = 1.0;
+  hemi.color.set(0x8ab0d0); hemi.groundColor.set(0x2a1a30); key.angle = Math.PI / 4; key.distance = 40; key.decay = 1.0; }
   camYaw = 0; camPitch = 0.3;
   document.body.classList.add('game', 'c4');
   G('c4Ko').textContent = '0'; G('c4Feed').innerHTML = ''; G('c4Big').textContent = '';
   if (st && st.phase === 'battle') restoreBattle(st);
-  updateC4Hud(); G('c4MA').style.width = (game.morale.A / (game.morale.A + game.morale.E || 1) * 100) + '%'; document.querySelectorAll('.c4-orders button').forEach(b => b.classList.toggle('on', b.dataset.o === 'advance')); G('gHud').querySelector('.g-ch').textContent = 'Chapter IV · Enough is Enough'; hud.obj.textContent = 'Defeat Sevirrus'; updateOfficerCount();
-  setTimeout(() => game && game.ch === 4 && feed(game.restored ? '<b class="a">Arixal Chompjak</b> returns to the battle of Kesh.' : '<b class="a">Arixal Chompjak</b> has begun battle with <b class="e">Sevirrus</b>!', 'big'), 400);
-  M.song && M.song.play('songKesh');
+  updateC4Hud(); updateMoraleBar(); document.querySelectorAll('.c4-orders button').forEach(b => b.classList.toggle('on', b.dataset.o === 'advance')); G('gHud').querySelector('.g-ch').textContent = STAGE.title; hud.obj.textContent = STAGE.objective; updateOfficerCount();
+  setTimeout(() => game && game.bt && feed(game.restored ? `<b class="a">Arixal Chompjak</b> returns to the battle of ${STAGE.place}.` : STAGE.startMsg, 'big'), 400);
+  M.song && M.song.play(STAGE.song);
   return true;
 }
 M.startBattle = startBattle;
+
+// ======================================================== THE BATTLE OF ALPHINOS (Chapter V) ==========
+// Arixal's army from the south, Sevirrus inside Alphinos at the north end, and Jazmak's host camped outside the walls to the west.
+const ALPH_BASES = [
+  { id: 'campA', name: 'Allied Camp', side: 'A', main: true, x: 0, z: 770 },
+  { id: 'fortH', name: 'Hanaxa’s Redoubt', side: 'A', x: -70, z: 560 },
+  { id: 'fortS', name: 'Southern Fort', side: 'A', x: 65, z: 470 },
+  { id: 'fortT1', name: 'Ochre Watch', side: 'T', x: -85, z: 80 },
+  { id: 'fortE1', name: 'Bridge Fort', side: 'E', x: 75, z: 180 },
+  { id: 'fortT2', name: 'Gold Ridge', side: 'T', x: -95, z: -150 },
+  { id: 'fortE2', name: 'East Barbican', side: 'E', x: 80, z: -220 },
+  { id: 'campT', name: 'Jazmak’s Camp', side: 'T', main: true, x: -100, z: -380, gate: { x: -52, z: -380 } },
+  { id: 'fortE3', name: 'Outer Gatehouse', side: 'E', x: 30, z: -560 },
+  { id: 'campE', name: 'Alphinos Keep', side: 'E', main: true, x: 0, z: -770, gate: { x: 0, z: -704 } },
+];
+const ALPH_UNITS = [
+  { id: 'arixal', name: 'Arixal Chompjak', side: 'A', leader: true, chief: true, stars: 2, tpl: 'arixal', x: 0, z: 770, troops: 0 },
+  { id: 'zamik', name: 'Zamik Chompjak', side: 'A', tpl: 'chompy', badge: 0x7ac8ff, x: -35, z: 705, troops: 80 },
+  { id: 'haplok', name: 'Marshal Haplok', side: 'A', tpl: 'chompy', badge: 0x3aa0ff, x: 0, z: 660, troops: 90 },
+  { id: 'xanok', name: 'Xanok', side: 'A', tpl: 'chompy', badge: 0x5affe0, x: 40, z: 690, troops: 70 },
+  { id: 'danix', name: 'Danix', side: 'A', tpl: 'chompy', badge: 0x9ab0ff, x: 70, z: 610, troops: 70 },
+  { id: 'tritujak', name: 'Tritujak', side: 'A', tpl: 'chompy', badge: 0x60a0ff, x: 20, z: 620, troops: 70 },
+  { id: 'hanaxa', name: 'Hanaxa Chompjak', side: 'A', leader: true, stars: 2, tpl: 'hanaxa', x: -70, z: 585, troops: 90 },
+  { id: 'aniz', name: 'Aniz Chompjak', side: 'A', tpl: 'aniz', x: -82, z: 575, troops: 60, follows: 'hanaxa' },
+  { id: 'sevirrus', name: 'Sevirrus', side: 'E', leader: true, chief: true, stars: 7, tpl: 'sev', x: 0, z: -770, troops: 140 },
+  { id: 'zarkam', name: 'Zarkam', side: 'E', tpl: 'chompy', badge: 0xff2a2a, x: 80, z: -214, troops: 110, home: 'fortE2' },
+  { id: 'almak', name: 'Almak', side: 'E', tpl: 'chompy', badge: 0x3adc5a, x: 75, z: 186, troops: 100, home: 'fortE1' },
+  { id: 'tamix', name: 'Tamix', side: 'E', tpl: 'chompy', badge: 0xff9a3a, x: 30, z: -554, troops: 110, home: 'fortE3' },
+  { id: 'kraxis', name: 'Kraxis', side: 'E', tpl: 'chompy', badge: 0xff8a2a, x: 35, z: -690, troops: 90 },
+  { id: 'vorlag', name: 'Vorlag', side: 'E', tpl: 'chompy', badge: 0xb04aff, x: -35, z: -690, troops: 90 },
+  { id: 'darkmar', name: 'Darkmar', side: 'E', tpl: 'chompy', badge: 0xff2a8a, x: 0, z: -640, troops: 90 },
+  { id: 'jazmak', name: 'Jazmak Chompjak', side: 'T', leader: true, chief: true, stars: 8, tpl: 'jazmak', x: -100, z: -380, troops: 140 },
+  { id: 'tajak', name: 'Tajak Chompjak', side: 'T', tpl: 'chompy', badge: 0xfff07a, x: -85, z: 86, troops: 100, home: 'fortT1' },
+  { id: 'jamak', name: 'Jamak', side: 'T', tpl: 'chompy', badge: 0xffc23a, x: -95, z: -144, troops: 100, home: 'fortT2' },
+  { id: 'qajak', name: 'Qajak', side: 'T', tpl: 'chompy', badge: 0xe0b020, x: -55, z: -300, troops: 80 },
+  { id: 'gakal', name: 'Gakal', side: 'T', tpl: 'chompy', badge: 0xffe0a0, x: -125, z: -280, troops: 80 },
+  { id: 'inonzak', name: 'Inonzak', side: 'T', tpl: 'chompy', badge: 0xd8a040, x: -75, z: -450, troops: 80 },
+  { id: 'gakam', name: 'Gakam', side: 'T', tpl: 'chompy', badge: 0xfff8c0, x: -60, z: -20, troops: 80 },
+  { id: 'talmis', name: 'Talmis', side: 'T', tpl: 'chompy', badge: 0xc8902a, x: -120, z: 200, troops: 80 },
+];
+function alphSquads() {
+  let seed = 31; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  const out = []; let n = 0;
+  for (let z = 700; z > -740; z -= 46) for (const lane of [-1, 1]) {
+    const x = lane * (25 + rnd() * 95);
+    const side = z > 430 ? 'A' : z < -600 ? 'E' : x < -15 ? (rnd() < 0.8 ? 'T' : 'E') : (z > 250 && rnd() < 0.4 ? 'A' : 'E');
+    out.push({ id: 'sq' + n++, name: 'Trooper', side, anon: true, alive: true, leader: false, x, z: z + (rnd() - 0.5) * 20, troops: Math.round(14 + rnd() * 10) });
+  }
+  return out;
+}
+STAGES.alphinos = { id: 'alphinos', ch: 5, title: 'Chapter V · The Siege of Alphinos', name: 'The Siege of Alphinos', place: 'Alphinos', bases: ALPH_BASES, units: ALPH_UNITS, squads: alphSquads,
+  sides: ['A', 'E', 'T'], newOfficers: false, caps: { A: 14, E: 26, T: 22 }, sevHit: 7, song: 'songAridaxx', objective: 'Defeat Sevirrus and Jazmak Chompjak',
+  win: 'Jazmak Chompjak and Sevirrus are both defeated', lose: 'Arixal Chompjak is defeated', lost: 'Arixal Chompjak has fallen. Alphinos stands, and Aridaxx burns.',
+  winMsg: '<b class="a">Arixal Chompjak</b> has taken Alphinos!',
+  startMsg: '<b class="a">Arixal Chompjak</b> has begun battle with <b class="e">Sevirrus</b> and <b class="t">Jazmak Chompjak</b>!',
+  near: [{ id: 'sevirrus', text: '<b class="e">Sevirrus</b>: You came all this way, brother. Stay a while.' }, { id: 'jazmak', text: '<b class="t">Jazmak Chompjak</b>: Out of my way, boy. The rat is mine.' }],
+  pre: [{ cls: 'ally', h: 'Allies', rows: [['Leader', 'Arixal Chompjak', 2], ['Officers', 'Zamik Chompjak · Marshal Haplok · Xanok · Danix · Tritujak'], ['Leader', 'Hanaxa Chompjak', 2], ['Sub officer', 'Aniz Chompjak']], note: 'Officers advance on their own. Aniz stays at Hanaxa’s side.' },
+        { cls: 'foe', h: 'Enemies', rows: [['Leader', 'Sevirrus', 7], ['Officers', 'Zarkam · Almak · Tamix · Kraxis · Vorlag · Darkmar']] },
+        { cls: 'third', h: 'Third party · hostile to both', rows: [['Leader', 'Jazmak Chompjak', 8], ['Officers', 'Tajak Chompjak · Jamak · Qajak · Gakal · Inonzak · Gakam · Talmis']] }],
+  gateNote: 'No new officers come here, but a fallen officer returns from his main camp while its gate captain lives.',
+  tips: ['Jazmak Chompjak answers to no one. His yellow army will fight Sevirrus and you alike.', 'Defeat a leader and his whole army breaks. Victory needs both Jazmak and Sevirrus.', 'Fallen officers return from their main camp. Kill its gate captain and they stay down.', 'Let Sevirrus and Jazmak bleed each other. Strike whichever is weaker.', 'Press M to see every army’s morale, officers and forts.', 'Press 1 to 4 to order your officers: follow me, advance, hold, or fall back.', 'Break supply crates for space rocks. A great space rock restores all your health.'],
+  env() {
+    scene.fog.color.set(0x150c26); scene.fog.density = 0.011; camera.far = 220; camera.fov = 55; camera.updateProjectionMatrix();
+    hemi.color.set(0x8a7ac0); hemi.groundColor.set(0x1a1030); key.angle = Math.PI / 4; key.distance = 40; key.decay = 1.0;
+  },
+};
+// the field: Aridaxx at night under Aridaxx I, Alphinos's walls at the north end, Jazmak's tents outside them
+function buildAlphField() {
+  const g = new THREE.Group(); g.visible = false; scene.add(g);
+  const geo = new THREE.PlaneGeometry(K4.W * 2 + 120, K4.LEN + 120, 60, 240); geo.rotateX(-Math.PI / 2);
+  const pos = geo.attributes.position, col = new Float32Array(pos.count * 3), cA = new THREE.Color(0x2c1c40), cB = new THREE.Color(0x3a2452), cC = new THREE.Color(0x1c1428), tc = new THREE.Color();
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), z = pos.getZ(i), edge = Math.max(0, Math.abs(x) - K4.W + 10);
+    pos.setY(i, edge * 0.4);
+    const n = (Math.sin(x * 0.07 + z * 0.01) + Math.sin(z * 0.045 - x * 0.03)) * 0.25 + 0.5;
+    tc.copy(cA).lerp(cB, n).lerp(cC, Math.min(1, edge / 30)); col.set([tc.r, tc.g, tc.b], i * 3);
+  }
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.computeVertexNormals();
+  const ground = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 })); ground.receiveShadow = true; g.add(ground);
+  let seed = 19; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  const rock = new THREE.InstancedMesh(new THREE.DodecahedronGeometry(1, 0), new THREE.MeshStandardMaterial({ color: 0x281c34, roughness: 0.95, flatShading: true }), 420);
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), p3 = new THREE.Vector3(), obst = [];
+  for (let i = 0; i < 420; i++) {
+    const cliff = i >= 220, sd = rnd() < 0.5 ? -1 : 1;
+    const x = cliff ? sd * (K4.W - 4 + rnd() * 40) : (rnd() - 0.5) * K4.W * 1.8, z = -K4.HALF + rnd() * K4.LEN, s = cliff ? 3 + rnd() * 9 : 0.5 + rnd() * 2;
+    if (!cliff && Math.abs(x) < 30 && Math.abs(z) > 690) continue;
+    q.setFromEuler(new THREE.Euler(rnd() * 3, rnd() * 3, rnd() * 3)); m4.compose(p3.set(x, s * 0.3, z), q, sc.set(s, s * (cliff ? 1.4 : 0.7), s)); rock.setMatrixAt(i, m4); obst.push([x, z, s + 0.6]);
+  }
+  rock.castShadow = true; g.add(rock);
+  const stone = new THREE.MeshStandardMaterial({ color: 0x2e2438, roughness: 0.9 }), dark = new THREE.MeshStandardMaterial({ color: 0x1c1624, roughness: 0.92 });
+  const winM = new THREE.MeshBasicMaterial({ color: 0xff4a2a });
+  const add = (geo2, m, x, y, z, rot = 0) => { const o = new THREE.Mesh(geo2, m); o.position.set(x, y, z); o.rotation.y = rot; o.castShadow = true; o.receiveShadow = true; g.add(o); return o; };
+  // Alphinos: a curtain wall across the north end with its gate, towers, and the keep where Sevirrus waits
+  const WZ = -712, H = 11;
+  for (const [x0, x1] of [[-150, -9], [9, 150]]) add(new THREE.BoxGeometry(x1 - x0, H, 3), stone, (x0 + x1) / 2, H / 2, WZ);
+  add(new THREE.BoxGeometry(18, 4, 3), stone, 0, H - 2, WZ);
+  for (const x of [-150, -95, -45, -14, 14, 45, 95, 150]) { add(new THREE.CylinderGeometry(4, 4.6, H + 7, 10), dark, x, (H + 7) / 2, WZ); add(new THREE.ConeGeometry(5, 6, 10), dark, x, H + 10, WZ); }
+  for (const x of [-150, 150]) add(new THREE.BoxGeometry(3, H, 90), stone, x, H / 2, WZ - 45);
+  add(new THREE.BoxGeometry(46, 30, 26), dark, 0, 15, -785); add(new THREE.BoxGeometry(18, 52, 18), dark, 0, 26, -785); add(new THREE.ConeGeometry(12, 20, 12), dark, 0, 62, -785);
+  for (const x of [-26, 26]) { add(new THREE.CylinderGeometry(5, 5.5, 44, 12), dark, x, 22, -780); add(new THREE.ConeGeometry(6.4, 14, 12), dark, x, 51, -780); }
+  for (let k = 0; k < 40; k++) { const w = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 2.2), winM); w.position.set((rnd() - 0.5) * 42, 6 + rnd() * 40, -771.9); g.add(w); }
+  for (let k = 0; k < 24; k++) { const w = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 1.4), winM); w.position.set((rnd() - 0.5) * 290, 4 + rnd() * 5, WZ + 1.55); g.add(w); }
+  const keepLight = new THREE.PointLight(0xff3a2a, 40, 60, 1.6); keepLight.position.set(0, 12, -735); g.add(keepLight);
+  // camps: Arixal's blue tents in the south, Jazmak's ochre tents and stakes outside the walls to the west
+  const tent = (x, z, c) => { const t = add(new THREE.ConeGeometry(3, 4, 6), new THREE.MeshStandardMaterial({ color: c, roughness: 0.9 }), x, 2, z); return t; };
+  for (let k = 0; k < 8; k++) tent(-42 + k * 12, 790, k % 2 ? 0x26324a : 0x1c2840);
+  for (let k = 0; k < 10; k++) { const a = k / 10 * Math.PI * 2; tent(-100 + Math.cos(a) * 30, -380 + Math.sin(a) * 26, k % 2 ? 0x5a4418 : 0x46340e); }
+  for (let k = 0; k < 40; k++) { const a = k / 40 * Math.PI * 2; if (Math.abs(Math.cos(a) - 1) < 0.15) continue; add(new THREE.CylinderGeometry(0.25, 0.3, 3.4, 6), new THREE.MeshStandardMaterial({ color: 0x3a2a14 }), -100 + Math.cos(a) * 46, 1.7, -380 + Math.sin(a) * 42); }
+  const flagOn = (c, x, z) => { const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 6, 6), new THREE.MeshStandardMaterial({ color: 0x18141c })); pole.position.set(x, 3, z); const f = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 2.6), new THREE.MeshStandardMaterial({ color: c, side: THREE.DoubleSide, roughness: 0.8 })); f.position.set(x + 0.72, 4.6, z); g.add(pole, f); };
+  for (let k = -3; k <= 3; k++) { flagOn(SIDE.A.flag, k * 12, 735); flagOn(SIDE.E.flag, k * 14, WZ + 3); }
+  for (let k = 0; k < 6; k++) flagOn(SIDE.T.flag, -100 + Math.cos(k) * 50, -380 + Math.sin(k) * 46);
+  // the forts, as at Kesh
+  const flags = {}, gates = {};
+  ALPH_BASES.forEach(b => {
+    if (!b.main) {
+      const FH = 4.2, L = 24;
+      [[0, -L / 2, L, 1.2], [-L / 2, 0, 1.2, L], [L / 2, 0, 1.2, L]].forEach(([x, z, w, d]) => add(new THREE.BoxGeometry(w, FH, d), stone, b.x + x, FH / 2, b.z + z));
+      for (const sx of [-1, 1]) add(new THREE.BoxGeometry(L / 2 - 4, FH, 1.2), stone, b.x + sx * (L / 4 + 2), FH / 2, b.z + L / 2);
+      for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) add(new THREE.CylinderGeometry(1.4, 1.6, 7, 8), stone, b.x + x * L / 2, 3.5, b.z + z * L / 2);
+      const pc = new THREE.Group(), ironM = new THREE.MeshStandardMaterial({ color: 0x1a161e, metalness: 0.6, roughness: 0.5 });
+      for (let i = -3; i <= 3; i++) { const bar = new THREE.Mesh(new THREE.BoxGeometry(0.22, FH, 0.22), ironM); bar.position.x = i * 1.15; pc.add(bar); }
+      for (const y of [-1.2, 0.2, 1.6]) { const bar = new THREE.Mesh(new THREE.BoxGeometry(8, 0.2, 0.22), ironM); bar.position.y = y; pc.add(bar); }
+      pc.position.set(b.x, FH / 2, b.z + L / 2); pc.userData = { H: FH, open: 1 }; g.add(pc); gates[b.id] = pc;
+    }
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 9, 6), new THREE.MeshStandardMaterial({ color: 0x18141c })); pole.position.set(b.x, 4.5, b.z); g.add(pole);
+    const fm = new THREE.MeshStandardMaterial({ color: SIDE[b.side].flag, side: THREE.DoubleSide, roughness: 0.7, emissive: SIDE[b.side].em });
+    const flag = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.4), fm); flag.position.set(b.x + 1.15, 8.2, b.z); g.add(flag); flags[b.id] = fm;
+  });
+  // the night sky travels with him: violet haze, stars, and Aridaxx I with its dust ring
+  const sky = new THREE.Group(); g.add(sky);
+  const MOON = new THREE.Vector3(-0.42, 0.34, -1).normalize();
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(160, 32, 16), new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, fog: false, uniforms: { uMoon: { value: MOON } },
+    vertexShader: 'varying vec3 vD; void main(){ vD = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: 'uniform vec3 uMoon; varying vec3 vD; void main(){ float h = max(vD.y, 0.0); vec3 c = mix(vec3(0.20, 0.09, 0.30), vec3(0.012, 0.008, 0.035), pow(h, 0.5)); float g = max(dot(vD, uMoon), 0.0); c += vec3(0.30, 0.62, 0.52) * pow(g, 60.0) * 0.55 + vec3(0.25, 0.35, 0.45) * pow(g, 8.0) * 0.18; gl_FragColor = vec4(c, 1.0); }' }));
+  dome.renderOrder = -4; sky.add(dome);
+  const sp = new Float32Array(1800 * 3);
+  for (let k = 0; k < 1800; k++) { const u = rnd() * 0.97 + 0.03, th = rnd() * Math.PI * 2, qq = Math.sqrt(1 - u * u); sp.set([Math.cos(th) * qq * 150, u * 150, Math.sin(th) * qq * 150], k * 3); }
+  const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(sp, 3));
+  const st = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xe6dcff, size: 0.4, fog: false, transparent: true, opacity: 0.85, depthWrite: false })); st.renderOrder = -4; sky.add(st);
+  const mc = document.createElement('canvas'); mc.width = mc.height = 256; const x2 = mc.getContext('2d');
+  const grd = x2.createRadialGradient(110, 100, 10, 128, 128, 128); grd.addColorStop(0, '#d9fff0'); grd.addColorStop(0.6, '#8fd8be'); grd.addColorStop(1, '#4f9a8c'); x2.fillStyle = grd; x2.fillRect(0, 0, 256, 256);
+  let sd2 = 9; const rr = () => (sd2 = (sd2 * 9301 + 49297) % 233280) / 233280;
+  for (let k = 0; k < 14; k++) { x2.fillStyle = `rgba(${120 + rr() * 40 | 0},${70 + rr() * 30 | 0},${150 + rr() * 50 | 0},${0.35 + rr() * 0.3})`; x2.beginPath(); x2.ellipse(rr() * 256, rr() * 256, 14 + rr() * 40, 10 + rr() * 26, rr() * 3, 0, Math.PI * 2); x2.fill(); }
+  for (let k = 0; k < 40; k++) { const cx = rr() * 256, cy = rr() * 256, r = 2 + rr() * 8; x2.strokeStyle = 'rgba(30,60,60,.35)'; x2.lineWidth = 1.5; x2.beginPath(); x2.arc(cx, cy, r, 0, Math.PI * 2); x2.stroke(); }
+  const mt = new THREE.CanvasTexture(mc); mt.colorSpace = THREE.SRGBColorSpace;
+  const moon = new THREE.Mesh(new THREE.SphereGeometry(6.5, 40, 20), new THREE.MeshBasicMaterial({ map: mt, fog: false })); moon.position.copy(MOON).multiplyScalar(135); moon.rotation.set(0.3, 1.2, 0.2); moon.renderOrder = -3; sky.add(moon);
+  const ring = new THREE.Mesh(new THREE.RingGeometry(8.6, 12.2, 80), new THREE.MeshBasicMaterial({ color: 0x9adcd0, transparent: true, opacity: 0.16, side: THREE.DoubleSide, fog: false, depthWrite: false })); ring.position.copy(moon.position); ring.lookAt(0, 0, 0); ring.rotateX(1.2); ring.renderOrder = -3; sky.add(ring);
+  const sun = new THREE.DirectionalLight(0xa8f0dc, 1.0); sun.position.set(-20, 40, -50); g.add(sun); g.add(sun.target);
+  return { g, sky, sun, flags, gates, obst };
+}
 // a save taken mid-battle: everything needed to put the battle back exactly as it was
 function battleState() {
   const p = game.mover.position, r2 = v => Math.round(v * 100) / 100;
-  return { v: 1, t: Date.now(), chapter: 4, phase: 'battle', complete: false, time: r2(game.t), ko: game.ko, musou: Math.round(game.musou), hp: Math.round(B.hp),
-    pos: [r2(p.x), r2(p.z)], yaw: r2(game.mover.rotation.y), morale: { A: r2(game.morale.A), E: r2(game.morale.E) },
-    aOrder: game.aOrder, eOrder: game.eOrder, sevAdvance: !!game.sevAdvance, eFallT: game.eFallT || 0, heard: [...game.heard],
-    units: game.units.filter(u => u !== game.me).map(u => ({ id: u.id, x: r2(u.pos.x), z: r2(u.pos.z), hp: r2(u.hp), troops: Math.round(u.troops + game.troops.filter(t => t.officer === u && t.state !== 'dead' && t.state !== 'flee').length), alive: u.alive, side: u.side })),
+  return { v: 1, t: Date.now(), chapter: STAGE.ch, stage: STAGE.id, phase: 'battle', complete: false, time: r2(game.t), ko: game.ko, musou: Math.round(game.musou), hp: Math.round(B.hp),
+    pos: [r2(p.x), r2(p.z)], yaw: r2(game.mover.rotation.y), morale: Object.fromEntries(Object.entries(game.morale).map(([k, v]) => [k, r2(v)])), tOrder: game.tOrder, adv: game.adv, fallT: game.fallT, routed: game.routed,
+    aOrder: game.aOrder, eOrder: game.eOrder, sevAdvance: !!game.adv.E, heard: [...game.heard],
+    units: game.units.filter(u => u !== game.me).map(u => ({ id: u.id, downAt: u.downAt, x: r2(u.pos.x), z: r2(u.pos.z), hp: r2(u.hp), troops: Math.round(u.troops + game.troops.filter(t => t.officer === u && t.state !== 'dead' && t.state !== 'flee').length), alive: u.alive, side: u.side })),
     bases: Object.fromEntries(game.bases.map(b => [b.id, b.side])),
     squads: game.squads.map(q => Math.round(q.troops + game.troops.filter(t => t.officer === q && t.state !== 'dead' && t.state !== 'flee').length)),
     spawned: game.units.filter(u => u.spawned).map(u => ({ id: u.id, name: u.name, badge: u.badge, side: u.side })), rfN: game.rfN || 0, rfT: game.rfT || null,
@@ -5584,21 +5791,23 @@ function restoreBattle(st) {
   const p = game.mover.position;
   p.set(st.pos[0], 0, st.pos[1]); game.mover.rotation.y = st.yaw; camYaw = st.yaw + Math.PI;
   B.hp = st.hp || 100; game.t = st.time || 0; game.ko = st.ko || 0; game.musou = st.musou || 0; G('c4Ko').textContent = game.ko;
-  game.morale = { A: st.morale.A, E: st.morale.E }; game.aOrder = st.aOrder || 'advance'; game.eOrder = st.eOrder || 'hold';
-  game.sevAdvance = !!st.sevAdvance; game.eFallT = st.eFallT || 0; (st.heard || []).forEach(h => game.heard.add(h));
-  game.bases.forEach(b => { if (st.bases && st.bases[b.id]) { b.side = st.bases[b.id]; const f = fieldSet.flags[b.id]; if (f) { f.color.set(b.side === 'A' ? 0x2a7ac0 : 0x8a0c1c); f.emissive.set(b.side === 'A' ? 0x0a2a44 : 0x2a0408); } } });
+  STAGE.sides.forEach(sd => { if (st.morale && st.morale[sd] !== undefined) game.morale[sd] = st.morale[sd]; }); game.aOrder = st.aOrder || 'advance'; game.eOrder = st.eOrder || 'hold'; game.tOrder = st.tOrder || 'hold';
+  game.adv = { ...(st.adv || {}) }; if (st.sevAdvance) game.adv.E = true; game.fallT = { ...(st.fallT || {}) }; if (st.eFallT) game.fallT.E = st.eFallT; game.routed = { ...(st.routed || {}) }; (st.heard || []).forEach(h => game.heard.add(h));
+  game.bases.forEach(b => { if (st.bases && st.bases[b.id]) { b.side = st.bases[b.id]; setFlag(b); } });
   (st.spawned || []).forEach(sp => spawnOfficer(sp.side, sp)); game.rfN = st.rfN || game.rfN || 0; if (st.rfT) game.rfT = { ...st.rfT };
   (st.units || []).forEach(s2 => {
     const u = game.units.find(o => o.id === s2.id); if (!u) return;
     u.pos.set(s2.x, 0, s2.z); u.hp = s2.hp; u.troops = s2.troops; u.alive = s2.alive; u.side = s2.side;
     if (u.id === 'sevirrus') rig.position.set(s2.x, 0, s2.z);
+    if (s2.downAt !== undefined) u.downAt = s2.downAt;
   });
   (st.squads || []).forEach((n, i) => { if (game.squads[i]) game.squads[i].troops = n; });
   (st.crates || []).forEach(i => { const c = game.crates[i]; if (c) { c.broken = true; c.m.visible = false; } });
   (st.items || []).forEach(([x, z, k]) => dropItem(V(x, 0, z), k, true));
   game.units.forEach(u => { if (u.gate) { if (u.pos.distanceTo(u.post) > 1) u.pos.copy(u.post); setGate(u.base, u.alive && u.side === u.base.side, true); } });
   document.querySelectorAll('.c4-orders button').forEach(b => b.classList.toggle('on', b.dataset.o === game.aOrder));
-  updateOfficerCount();
+  if (game.routed.E) rig.visible = false;
+  updateMoraleBar(); updateOfficerCount();
   game.restored = true;
 }
 function updateC4Hud() {
@@ -5608,11 +5817,19 @@ function updateC4Hud() {
 }
 // how strong each side's push is
 function setAllyOrder(o) {
-  if (!game || game.ch !== 4 || game.over) return;
+  if (!game || !game.bt || game.over) return;
   game.aOrder = o; game.units.forEach(u => { if (u.side === 'A' && !u.captain) u.holdAt = u.pos.clone(); });
   feed(`<b class="a">Arixal Chompjak</b>: ${ORDER_TEXT[o]}`, 'good');
   document.querySelectorAll('.c4-orders button').forEach(b => b.classList.toggle('on', b.dataset.o === o));
 }
+function setFactionOrder(side, o) {
+  if (side === 'E') { setEnemyOrder(o); return; }
+  game.tOrder = o;
+  const t = { advance: 'orders his officers to advance!', hold: 'orders his officers to hold their forts!', fallback: 'calls his officers back to his camp!' }[o];
+  feed(`${nameOf(side, SIDE[side].lead)} ${t}`, 'bad');
+}
+const orderOf = side => side === 'A' ? game.aOrder : side === 'E' ? game.eOrder : game.tOrder;
+const campOf = side => game.bases.find(b => b.main && b.side === side) || game.bases.find(b => b.main && b.id === (side === 'A' ? 'campA' : 'campE'));
 function setEnemyOrder(o) {
   game.eOrder = o;
   const t = { advance: 'orders his officers to advance!', hold: 'orders his officers to hold their forts!', fallback: 'calls his officers back to his camp!' }[o];
@@ -5620,31 +5837,37 @@ function setEnemyOrder(o) {
 }
 const nearestOf = (list, pos) => list.reduce((b, f) => (!b || f.pos.distanceTo(pos) < b.pos.distanceTo(pos) ? f : b), null);
 function simulate(dt) {
-  const U = game.units, me = game.me, sevU = U.find(u => u.id === 'sevirrus');
-  // Sevirrus's orders: hold the forts, then advance; pull back if he is hurt; later he takes the field himself
-  if (game.eOrder === 'hold' && game.t > 55) setEnemyOrder('advance');
-  if (game.eOrder !== 'fallback' && sevU.hp < 35) setEnemyOrder('fallback');
-  if (game.eOrder === 'fallback' && sevU.hp >= 35 && game.t - (game.eFallT || 0) > 40) setEnemyOrder('advance');
-  if (game.eOrder === 'fallback' && !game.eFallT) game.eFallT = game.t;
-  if (!game.sevAdvance && (game.t > 150 || U.filter(u => u.side === 'E' && !u.leader && !u.captain && u.alive).length === 0)) { game.sevAdvance = true; feed('<b class="e">Sevirrus</b> advances!', 'big'); }
-  const campA = game.bases.find(b => b.id === 'campA').pos, campE = game.bases.find(b => b.id === 'campE').pos;
+  const U = game.units, me = game.me;
+  // each hostile army's orders: hold the forts, then advance; pull back when its leader is hurt; later the leader takes the field himself
+  for (const sd of STAGE.sides) {
+    if (sd === 'A' || game.routed[sd]) continue;
+    const L = U.find(u => u.chief && u.side === sd); if (!L) continue;
+    const ord = orderOf(sd), wait = sd === 'E' ? 55 : 70;
+    if (ord === 'hold' && game.t > wait) setFactionOrder(sd, 'advance');
+    if (orderOf(sd) !== 'fallback' && L.hp < 35) setFactionOrder(sd, 'fallback');
+    if (orderOf(sd) === 'fallback' && L.hp >= 35 && game.t - (game.fallT[sd] || 0) > 40) setFactionOrder(sd, 'advance');
+    if (orderOf(sd) === 'fallback' && !game.fallT[sd]) game.fallT[sd] = game.t;
+    if (!game.adv[sd] && (game.t > (sd === 'E' ? 150 : 120) || fieldOfficers(sd).length === 0)) { game.adv[sd] = true; feed(`${nameOf(sd, SIDE[sd].lead)} advances!`, 'big'); }
+  }
   U.forEach(u => {
     if (!u.alive || u === me) return;
     const hostile = U.filter(o => o.side !== u.side && o.alive);
     const t = nearestOf(hostile, u.pos);
     u.engaged = t && t.pos.distanceTo(u.pos) < 28 ? t : null;
     // where this unit is trying to be
-    const order = u.captain ? 'hold' : u.side === 'A' ? game.aOrder : u.leader ? (game.sevAdvance && game.eOrder !== 'fallback' ? 'advance' : 'hold') : game.eOrder;
+    const order = u.captain ? 'hold' : u.side === 'A' ? game.aOrder : u.chief ? (game.adv[u.side] && orderOf(u.side) !== 'fallback' ? 'advance' : 'hold') : orderOf(u.side);
     let dest = null;
     if (u.captain) dest = u.post || u.base.pos;
     else if (order === 'follow') dest = tmpB.subVectors(u.pos, me.pos).setY(0).length() > 9 ? me.pos : null;
-    else if (order === 'fallback') dest = u.side === 'A' ? campA : campE;
-    else if (order === 'hold') dest = u.side === 'E' ? (u.homePos || (u.leader ? campE : null)) : u.holdAt || null;
+    else if (order === 'fallback') dest = campOf(u.side).pos;
+    else if (order === 'hold') dest = u.side !== 'A' ? (u.homePos || (u.chief ? campOf(u.side).pos : null)) : u.holdAt || null;
     else {
       const forts = game.bases.filter(b => !b.main && b.side !== u.side);
       const fort = nearestOf(forts, u.pos), foeOff = nearestOf(hostile.filter(o => !o.captain && (u.side === 'A' ? true : true)), u.pos);
       dest = fort && (!foeOff || fort.pos.distanceTo(u.pos) < foeOff.pos.distanceTo(u.pos) + 60) ? fort.pos : foeOff ? foeOff.pos : null;
     }
+    // a sub officer stays with the leader he serves
+    if (u.follows && order !== 'fallback' && order !== 'follow') { const L = U.find(o => o.id === u.follows && o.alive); if (L) dest = L.pos.distanceTo(u.pos) > 9 ? L.pos : null; }
     if (u.engaged && order !== 'fallback') dest = u.engaged.pos;
     u.dest = dest;
     // units out of his sight move on the map; the ones near him are walked by their bodies
@@ -5668,8 +5891,32 @@ const OFFICER_POOL = {
   A: [['Captain Bezzo', 0x7ac8ff], ['Captain Lurra', 0x9ab0ff], ['Captain Mozz', 0x5affe0], ['Captain Tevik', 0xa0d8ff], ['Captain Orrin', 0x60a0ff], ['Captain Hessa', 0xb0f0ff]],
 };
 const OFFICERS_WANTED = 3, OFFICER_EVERY = 40;
+// Alphinos: no new officers, but a fallen one rides back out of his main camp while its gate captain lives
+function officerReturns(dt) {
+  game.rfT = game.rfT || {};
+  for (const sd of STAGE.sides) {
+    if (game.routed[sd]) continue;
+    const camp = campOf(sd), g = camp && gateOf(camp);
+    game.rfT[sd] = Math.max(0, (game.rfT[sd] || 0) - dt);
+    if (!g || !g.alive || g.side !== camp.side || game.rfT[sd] > 0) continue;
+    const u = game.units.find(o => o.side === sd && !o.alive && !o.captain && !o.leader && o.downAt !== undefined && game.t - o.downAt > 40);
+    if (!u) continue;
+    game.rfT[sd] = 12;
+    if (u.model) { scene.remove(u.model.mover); u.model = null; }
+    const gp = gatePost(camp); u.pos.set(gp.x + (Math.random() - 0.5) * 8, 0, gp.z); u.homePos = u.homePos || u.pos.clone(); if (sd === 'A') u.holdAt = u.pos.clone();
+    u.alive = true; u.hp = 100; u.troops = Math.round((u.maxTroops || 60) * 0.6); delete u.downAt;
+    const t = tagEls.get(u.id); if (t) { t.remove(); tagEls.delete(u.id); }
+    feed(`${nameOf(sd, u.name)} returns to the field from ${camp.name}!`, sd === 'A' ? 'good' : 'bad');
+    updateOfficerCount();
+  }
+}
 function fieldOfficers(side) { return game.units.filter(u => u.side === side && u.alive && !u.leader && !u.captain); }
 function updateOfficerCount() {
+  if (STAGE.sides.includes('T')) {
+    const left = fieldOfficers('E').length + fieldOfficers('T').length;
+    hud.count.textContent = left ? `${left} hostile officer${left > 1 ? 's' : ''} remain${left > 1 ? '' : 's'}` : 'Only the leaders remain';
+    return;
+  }
   const left = fieldOfficers('E').length;
   hud.count.textContent = left ? `${left} enemy officer${left > 1 ? 's' : ''} remain${left > 1 ? '' : 's'}` : 'Only Sevirrus remains';
 }
@@ -5689,6 +5936,7 @@ function spawnOfficer(side, spec) {
   return u;
 }
 function officerReinforcements(dt) {
+  if (!STAGE.newOfficers) { officerReturns(dt); return; }
   game.rfT = game.rfT || { A: 0, E: 0 };
   ['A', 'E'].forEach(side => {
     const camp = game.bases.find(b => b.main && b.side === side), g = camp && gateOf(camp);
@@ -5714,26 +5962,30 @@ function setGate(b, open, snap) {
   const pc = fieldSet && fieldSet.gates[b.id]; if (!pc) return;
   pc.userData.open = open ? 1 : 0; if (snap) pc.position.y = open ? -pc.userData.H / 2 + 0.3 : pc.userData.H / 2;
 }
+function killerSide(by) { return !by ? null : by === game.me ? 'A' : by.side || (by.officer && by.officer.side) || null; }
+function setFlag(b) { const f = fieldSet && fieldSet.flags[b.id]; if (f) { f.color.set(SIDE[b.side].flag); f.emissive.set(SIDE[b.side].em); } }
 function gateDown(u, by) {
   u.alive = false; u.hp = 0;
-  const b = u.base, foe = u.side === 'E';
+  const b = u.base, foe = u.side !== 'A', ks = killerSide(by);
   setGate(b, false);
-  if (b.main) feed(foe ? `The <b class="e">Gate Captain</b> of ${b.name} has fallen! No more officers or troops will come from Sevirrus’s camp.`
-                       : `The <b class="a">Gate Captain</b> of the ${b.name} has fallen! No more officers or troops will come from our camp.`, foe ? 'good' : 'bad');
-  else feed(foe ? `The <b class="e">Gate Captain</b> of the ${b.name} has fallen! Its gates are sealed. No more reinforcements.`
-                : `The <b class="a">Gate Captain</b> of the ${b.name} has fallen! Our reinforcements there have stopped.`, foe ? 'good' : 'bad');
-  if (foe) { morale('A', 5); morale('E', -7); } else { morale('A', -5); morale('E', 4); }
+  const gc = nameOf(u.side, 'Gate Captain'), lead = SIDE[u.side].lead;
+  if (b.main) feed(foe ? `The ${gc} of ${b.name} has fallen! ${STAGE.newOfficers ? `No more officers or troops will come from ${lead}’s camp.` : `No more troops will come from ${lead}’s camp, and his fallen officers cannot return.`}`
+                       : `The ${gc} of the ${b.name} has fallen! ${STAGE.newOfficers ? 'No more officers or troops will come from our camp.' : 'No more troops will come from our camp, and our fallen officers cannot return.'}`, foe ? 'good' : 'bad');
+  else feed(foe ? `The ${gc} of the ${b.name} has fallen! Its gates are sealed. No more reinforcements.`
+                : `The ${gc} of the ${b.name} has fallen! Our reinforcements there have stopped.`, foe ? 'good' : 'bad');
+  morale(u.side, -7); if (ks && ks !== u.side) morale(ks, 5); else if (foe) morale('A', 5);
   if (u.model) u.model.dead = 0.001;
   const t = tagEls.get(u.id); if (t) t.hidden = true;
   game.troops.filter(tr => tr.officer === u && tr.state !== 'dead').forEach(tr => { tr.state = 'flee'; tr.t = 0; });
   if (by === game.me) dropItem(u.pos, 'rock');
 }
-function captureBase(u) {
-  const b = u.base, side = u.side === 'A' ? 'E' : 'A';
+function captureBase(u, by) {
+  const b = u.base, old = u.side; let side = killerSide(by);
+  if (!side || side === old) side = old === 'A' ? 'E' : 'A';
   b.side = side;
-  if (side === 'A') { morale('A', 6); morale('E', -8); } else { morale('A', -6); morale('E', 6); }
-  if (fieldSet.flags[b.id]) { fieldSet.flags[b.id].color.set(side === 'A' ? 0x2a7ac0 : 0x8a0c1c); fieldSet.flags[b.id].emissive.set(side === 'A' ? 0x0a2a44 : 0x2a0408); }
-  feed(side === 'A' ? `<b class="a">Arixal Chompjak</b> has captured the ${b.name}!` : `<b class="e">Sevirrus</b>’s army has seized the ${b.name}!`, side === 'A' ? 'good' : 'bad');
+  morale(side, 6); morale(old, -8);
+  setFlag(b);
+  feed(side === 'A' ? `<b class="a">Arixal Chompjak</b> has captured the ${b.name}!` : `${nameOf(side, SIDE[side].lead)}’s army has seized the ${b.name}!`, side === 'A' ? 'good' : 'bad');
   game.troops.filter(tr => tr.officer === u && tr.state !== 'dead').forEach(tr => { tr.state = 'flee'; tr.t = 0; });
   if (u.model) { scene.remove(u.model.mover); u.model = null; }
   const t = tagEls.get(u.id); if (t) { t.remove(); tagEls.delete(u.id); }
@@ -5748,18 +6000,41 @@ function captureBase(u) {
     g.side = side; g.hp = 55; g.troops = 6; g.pos.copy(g.post); g.alive = true; setGate(b, true);
   }
 }
+// a leader falls. At Kesh that is the battle; at Alphinos his whole army breaks, and the battle is won when both have
+function chiefDown(u, by) {
+  if (STAGE.sides.length === 2) { u.alive = false; u.hp = 0; battleWon(); return; }
+  const sd = u.side; game.routed[sd] = true;
+  feed(sd === 'E' ? '<b class="e">Sevirrus</b> has been driven back into the keep! His army is routed!' : `${nameOf(sd, SIDE[sd].lead)} has fallen! His army breaks and scatters!`, 'big');
+  routSide(sd);
+  morale('A', 15);
+  if (STAGE.sides.every(s => s === 'A' || game.routed[s])) battleWon();
+}
+function routSide(sd) {
+  game.units.forEach(o => {
+    if (o.side !== sd || o === game.me || !o.alive) return;
+    o.alive = false; o.hp = 0; o.routed = true;
+    if (o.model && !o.model.sev) o.model.dead = 0.001;
+    const t = tagEls.get(o.id); if (t) t.hidden = true;
+    if (o.gate) setGate(o.base, false);
+  });
+  game.squads.forEach(q => { if (q.side === sd) q.troops = 0; });
+  game.troops.filter(tr => tr.side === sd && tr.state !== 'dead').forEach(tr => { tr.state = 'flee'; tr.t = 0; });
+  if (sd === 'E') { setTimeout(() => { if (game && game.bt && game.routed.E && !game.over) rig.visible = false; }, 1800); }
+  game.morale[sd] = 0; updateMoraleBar(); updateOfficerCount();
+}
 function officerDown(u, by) {
   if (!u.alive) return;
   if (u.gate) { gateDown(u, by); return; }
-  if (u.captain) { if (by === game.me) dropItem(u.pos, 'rock'); captureBase(u); return; }
+  if (u.captain) { if (by === game.me) dropItem(u.pos, 'rock'); captureBase(u, by); return; }
   u.alive = false; u.hp = 0;
-  if (by === game.me && !u.leader && u.side === 'E') dropItem(u.pos, 'great');
-  if (u.leader && u.side === 'E') { battleWon(); return; }
+  if (by === game.me && !u.leader && u.side !== 'A') dropItem(u.pos, 'great');
+  if (u.chief && u.side !== 'A') { chiefDown(u, by); return; }
+  u.downAt = game.t;
   updateOfficerCount();
   if (u === game.me) return;
-  const who = `<b class="${u.side === 'A' ? 'a' : 'e'}">${u.name}</b>`;
-  feed(u.side === 'E' ? `${who} has been defeated!` : `${who} has retreated!`, u.side === 'E' ? 'good' : 'bad');
-  if (u.side === 'E') { morale('A', 10); morale('E', -14); } else { morale('A', -10); morale('E', 8); }
+  const who = nameOf(u.side, u.name), ks = killerSide(by);
+  feed(u.side !== 'A' ? `${who} has been defeated!` : `${who} has retreated!`, u.side !== 'A' ? 'good' : 'bad');
+  morale(u.side, u.side === 'A' ? -10 : -14); if (ks && ks !== u.side) morale(ks, u.side === 'A' ? 8 : 10); else if (u.side !== 'A') morale('A', 10);
   if (u.model && !u.model.sev) { u.model.dead = 0.001; }
   const t = tagEls.get(u.id); if (t) t.hidden = true;
   game.troops.filter(tr => tr.officer === u && tr.state !== 'dead').forEach(tr => { tr.state = 'flee'; tr.t = 0; });
@@ -5774,20 +6049,20 @@ function manageTroops() {
     }
     return true;
   });
-  let nE = game.troops.filter(t => t.side === 'E' && t.state !== 'dead').length, nA = game.troops.filter(t => t.side === 'A' && t.state !== 'dead').length;
+  const n = {}; STAGE.sides.forEach(sd => { n[sd] = game.troops.filter(t => t.side === sd && t.state !== 'dead').length; });
   [...U, ...game.squads].forEach(u => {
     if (!u.alive || u === game.me || u.troops < 1) return;
     const d = u.pos.distanceTo(p); if (d > (u.anon ? 115 : 75)) return;
-    const cap = u.side === 'E' ? 40 : 16;
+    const cap = STAGE.caps[u.side] || 16;
     let here = game.troops.filter(t => t.officer === u && t.state !== 'dead').length;
-    while (here < Math.min(u.troops, u.anon ? 10 : u.side === 'E' ? 16 : 7) && (u.side === 'E' ? nE : nA) < cap) {
+    while (here < Math.min(u.troops, u.anon ? 10 : u.side !== 'A' ? 16 : 7) && n[u.side] < cap) {
       const tr = makeTrooper(u.side, u); const a = Math.random() * Math.PI * 2, r = 5 + Math.random() * 12;
       // a far squad sends its men into the ground around him, so the field is never empty
       const anchor = d < 40 ? u.pos : tmpB.subVectors(u.pos, p).setY(0).normalize().multiplyScalar(22 + Math.random() * 14).add(p);
       tr.mover.position.set(anchor.x + Math.cos(a) * r, 0, anchor.z + Math.sin(a) * r);
       if (tr.mover.position.distanceTo(p) < 10) tr.mover.position.addScaledVector(tmpA.subVectors(tr.mover.position, p).setY(0).normalize(), 10);
       tr.mover.position.x = THREE.MathUtils.clamp(tr.mover.position.x, -K4.W + 2, K4.W - 2);
-      u.troops -= 1; game.troops.push(tr); here++; if (u.side === 'E') nE++; else nA++;
+      u.troops -= 1; game.troops.push(tr); here++; n[u.side]++;
     }
   });
   // officers' bodies appear when he is near
@@ -5801,8 +6076,8 @@ function manageTroops() {
 function nearestHostile(tr, range) {
   let best = null, bd = range;
   const consider = (o, pos) => { const d = pos.distanceTo(tr.mover.position); if (d < bd) { bd = d; best = o; } };
-  if (tr.side === 'E') { consider(game.me, game.mover.position); game.units.forEach(u => { if (u.side === 'A' && u.alive && u.model && u !== game.me) consider(u, u.model.mover.position); }); }
-  else game.units.forEach(u => { if (u.side === 'E' && u.alive && u.model) consider(u, u.model.mover.position); });
+  if (tr.side !== 'A') consider(game.me, game.mover.position);
+  game.units.forEach(u => { if (u.side !== tr.side && u.alive && u.model && u !== game.me) consider(u, u.model.mover.position); });
   game.troops.forEach(o => { if (o.side !== tr.side && o.state !== 'dead' && o.state !== 'flee') consider(o, o.mover.position); });
   return best;
 }
@@ -5818,7 +6093,7 @@ function trooperUpdate(tr, dt) {
   if (tr.state === 'dead') { tr.fall = Math.min(1, tr.fall + dt * 2.6); tr.mover.rotation.x = -1.45 * tr.fall * tr.fall; applyPose(tr.j, POSES.collapse); return; }
   if (tr.state === 'flee') { fp.x += Math.sin(tr.mover.rotation.y) * 4 * dt; fp.z += Math.cos(tr.mover.rotation.y) * 4 * dt; applyPose(tr.j, addPose('stand', stepGait(tr.gait, dt))); return; }
   tr.retarget = (tr.retarget || 0) - dt;
-  if (tr.retarget <= 0 || !tr.target || (tr.target.state === 'dead') || tr.target.alive === false) { tr.target = nearestHostile(tr, tr.side === 'E' ? 22 : 16); tr.retarget = 0.6 + Math.random() * 0.5; }
+  if (tr.retarget <= 0 || !tr.target || (tr.target.state === 'dead') || tr.target.alive === false) { tr.target = nearestHostile(tr, tr.side !== 'A' ? 22 : 16); tr.retarget = 0.6 + Math.random() * 0.5; }
   let pose = 'guard';
   if (tr.target) {
     const tp = posOf(tr.target), dx = tp.x - fp.x, dz = tp.z - fp.z, d = Math.hypot(dx, dz) || 1;
@@ -5831,7 +6106,7 @@ function trooperUpdate(tr, dt) {
       if (!tr.struck && tr.t > 0.08) {
         tr.struck = true;
         if (d < 2.2) {
-          if (tr.target === game.me) hurtPlayer(tr.side === 'E' ? 2.2 * mf('E') : 0, tr);
+          if (tr.target === game.me) hurtPlayer(tr.side !== 'A' ? 2.2 * mf(tr.side) : 0, tr);
           else if (tr.target.hp !== undefined && tr.target.state !== undefined) { tr.target.hp -= 1; if (tr.target.hp <= 0) killTrooper(tr.target, false); }
           else if (tr.target.alive) { tr.target.hp -= tr.target.leader ? 0.05 : 0.4; if (tr.target.hp <= 0 && !tr.target.leader) officerDown(tr.target, tr.officer); }
         }
@@ -5854,8 +6129,8 @@ function killTrooper(tr, byPlayer) {
   if (tr.state === 'dead') return;
   tr.state = 'dead'; tr.t = 0;
   tr.j.spine.getWorldPosition(tmpA); spray(tmpA, UP, 60, 2.2, 1.0);
-  if (tr.side === 'E') { morale('E', -0.35); morale('A', 0.12); } else { morale('A', -0.25); morale('E', 0.08); }
-  if (byPlayer && tr.side === 'E' && Math.random() < 0.03) dropItem(tr.mover.position, 'rock');
+  if (tr.side !== 'A') { morale(tr.side, -0.35); morale('A', 0.12); } else { morale('A', -0.25); morale('E', 0.08); }
+  if (byPlayer && tr.side !== 'A' && Math.random() < 0.03) dropItem(tr.mover.position, 'rock');
   if (byPlayer) { game.ko++; G('c4Ko').textContent = game.ko; if (game.ko % 100 === 0) feed(`<b class="a">Arixal Chompjak</b>: ${game.ko} KOs!`, 'good'); }
 }
 // Arixal's blade: fast, wide, three hits fell a soldier
@@ -5863,7 +6138,7 @@ function c4Swing(range = 3.0, cone = 0.0, dmg = 1) {
   const p = game.mover.position, fy = game.mover.rotation.y, fx = Math.sin(fy), fz = Math.cos(fy);
   let hitAny = false;
   game.troops.forEach(tr => {
-    if (tr.side !== 'E' || tr.state === 'dead' || tr.state === 'flee') return;
+    if (tr.side === 'A' || tr.state === 'dead' || tr.state === 'flee') return;
     const dx = tr.mover.position.x - p.x, dz = tr.mover.position.z - p.z, d = Math.hypot(dx, dz);
     if (d > range || (dx * fx + dz * fz) / Math.max(d, 1e-3) < cone) return;
     tr.hp -= dmg; hitAny = true; tr.state = 'idle'; tr.t = 0; tr.cd = Math.max(tr.cd, 0.5);
@@ -5873,10 +6148,11 @@ function c4Swing(range = 3.0, cone = 0.0, dmg = 1) {
     if (tr.hp <= 0) killTrooper(tr, true);
   });
   game.units.forEach(u => {
-    if (u.side !== 'E' || !u.alive || !u.model) return;
+    if (u.side === 'A' || !u.alive || !u.model) return;
     const op = u.model.mover.position, dx = op.x - p.x, dz = op.z - p.z, d = Math.hypot(dx, dz);
     if (d > range + 0.4 || (dx * fx + dz * fz) / Math.max(d, 1e-3) < cone) return;
     if (u.id === 'sevirrus' && !game.musouT && (game.sevBlock || 0) <= 0 && Math.random() < 0.35 * mf('E') && !(u.model.atk)) { game.sevBlock = 0.4; sev.j.wristR.getWorldPosition(tmpA); sparks(tmpA, 40, 3); feed('<b class="e">Sevirrus</b> blocks.', ''); return; }
+    if (u.chief && u.tpl === 'jazmak' && !game.musouT && (game.jzBlock || 0) <= 0 && Math.random() < 0.3 * mf('T') && !(u.model.atk)) { game.jzBlock = 0.4; u.model.j.wristR.getWorldPosition(tmpA); sparks(tmpA, 40, 3); feed('<b class="t">Jazmak Chompjak</b> blocks.', ''); return; }
     u.hp -= (u.leader ? 0.9 : 2.6) * dmg; hitAny = true; game.lastTarget = u;
     u.model.j.spine.getWorldPosition(tmpA); spray(tmpA, tmpB.set(dx / d, 0.4, dz / d).normalize(), 30, 2.2, 0.9); u.stag = 0.12;
     if (u.hp <= 0) officerDown(u, game.me);
@@ -5890,42 +6166,42 @@ function c4Swing(range = 3.0, cone = 0.0, dmg = 1) {
   if (hitAny) { game.musou = Math.min(100, game.musou + 2.2); impactFrame(30); }
 }
 function c4Attack() {
-  if (!game || game.ch !== 4 || game.over || game.paused || game.musouT) return;
+  if (!game || !game.bt || game.over || game.paused || game.musouT) return;
   if (game.atk && game.atk.t < 0.28) return;
   game.combo = (game.combo || 0) + 1;
   game.atk = { t: 0, hit: false, alt: game.combo % 2 === 0 };
   // turn toward the nearest enemy in reach, as Jakal does
   const p = game.mover.position; let best = null, bd = 3.2;
-  game.troops.forEach(t => { if (t.side === 'E' && t.state !== 'dead' && t.state !== 'flee') { const d = t.mover.position.distanceTo(p); if (d < bd) { bd = d; best = t.mover.position; } } });
-  game.units.forEach(u => { if (u.side === 'E' && u.alive && u.model) { const d = u.model.mover.position.distanceTo(p); if (d < bd) { bd = d; best = u.model.mover.position; } } });
+  game.troops.forEach(t => { if (t.side !== 'A' && t.state !== 'dead' && t.state !== 'flee') { const d = t.mover.position.distanceTo(p); if (d < bd) { bd = d; best = t.mover.position; } } });
+  game.units.forEach(u => { if (u.side !== 'A' && u.alive && u.model) { const d = u.model.mover.position.distanceTo(p); if (d < bd) { bd = d; best = u.model.mover.position; } } });
   if (!best) game.crates.forEach(c => { if (!c.broken) { const d = c.m.position.distanceTo(p); if (d < bd) { bd = d; best = c.m.position; } } });
   if (best) game.mover.rotation.y = Math.atan2(best.x - p.x, best.z - p.z);
 }
 function c4Musou() {
-  if (!game || game.ch !== 4 || game.over || game.paused || game.musou < 100 || game.musouT) return;
+  if (!game || !game.bt || game.over || game.paused || game.musou < 100 || game.musouT) return;
   game.musou = 0; game.musouT = 0.001; feed('<b class="a">Arixal Chompjak</b> unleashes his Latent Powers!', 'big'); whiteEl.style.opacity = 0.4; setTimeout(() => { whiteEl.style.opacity = 0; }, 120);
 }
 addEventListener('keydown', e => {
-  if (game && game.ch === 4 && mapViewOpen() && (e.key.toLowerCase() === 'm' || e.key === 'Tab')) { e.preventDefault(); closeMapView(); return; }
-  if (!game || game.ch !== 4 || game.paused) return;
+  if (game && game.bt && mapViewOpen() && (e.key.toLowerCase() === 'm' || e.key === 'Tab')) { e.preventDefault(); closeMapView(); return; }
+  if (!game || !game.bt || game.paused) return;
   const k = e.key.toLowerCase();
   if (k === 'f' || k === 'k') c4Attack();
   if (k === 'q') c4Musou();
   if (k === 'm' || e.key === 'Tab') { e.preventDefault(); openMapView(); }
   if (k === ' ' && !game.dodge && !game.over) { const fy = game.mover.rotation.y; game.dodge = { t: 0, dx: Math.sin(fy), dz: Math.cos(fy) }; }
 });
-canvasEl.addEventListener('pointerup', e => { if (game && game.ch === 4 && clickStart && Math.hypot(e.clientX - clickStart.x, e.clientY - clickStart.y) < 6 && e.pointerType !== 'touch') c4Attack(); });
-hud.exBtn.addEventListener('click', () => { if (game && game.ch === 4) c4Attack(); });
+canvasEl.addEventListener('pointerup', e => { if (game && game.bt && clickStart && Math.hypot(e.clientX - clickStart.x, e.clientY - clickStart.y) < 6 && e.pointerType !== 'touch') c4Attack(); });
+hud.exBtn.addEventListener('click', () => { if (game && game.bt) c4Attack(); });
 G('c4MuBtn').addEventListener('click', c4Musou);
 document.querySelectorAll('.c4-orders button').forEach(b => b.addEventListener('click', () => setAllyOrder(b.dataset.o)));
-addEventListener('keydown', e => { if (!game || game.ch !== 4 || game.paused) return; const o = { 1: 'follow', 2: 'advance', 3: 'hold', 4: 'fallback' }[e.key]; if (o) setAllyOrder(o); });
+addEventListener('keydown', e => { if (!game || !game.bt || game.paused) return; const o = { 1: 'follow', 2: 'advance', 3: 'hold', 4: 'fallback' }[e.key]; if (o) setAllyOrder(o); });
 
 const ARIX_COMBO = [['slashWind', 'slashFollow'], ['slashBack', 'slashFollow'], ['overhead', 'strikeDown'], ['slashWind', 'slashFollow'], ['thrustWind', 'thrust'], ['overhead', 'strikeLow']];
 function battleUpdate4(dt, time) {
   const p = game.mover.position, me = game.me;
   game.t += dt;
   // the light and sky travel with him
-  fieldSet.sky.position.set(p.x, 0, p.z); fieldSet.sun.position.set(p.x + 30, 60, p.z + 20); fieldSet.sun.target.position.copy(p);
+  fieldSet.sky.position.set(p.x, 0, p.z); if (STAGE.id === 'alphinos') fieldSet.sun.position.set(p.x - 30, 40, p.z - 60); else fieldSet.sun.position.set(p.x + 30, 60, p.z + 20); fieldSet.sun.target.position.copy(p);
   hemi.intensity = 1.35; key.intensity = 30; key.position.set(p.x + 3, 10, p.z + 5); keyTarget.position.set(p.x, 1, p.z);
   rimL.intensity = 0; rimR.intensity = 0; under.intensity = 0; cineSpot.intensity = 0; bhLight.intensity = 0;
   updateBlood(dt); updateSparks(dt); updateShards(dt); fxTick();
@@ -5986,20 +6262,21 @@ function battleUpdate4(dt, time) {
   // officers near him
   game.units.forEach(u => { if (u.model && u !== me) officerUpdate(u, dt, time); });
   if (game.sevBlock > 0) game.sevBlock -= dt;
+  if (game.jzBlock > 0) game.jzBlock -= dt;
 
   // labels, target panel, minimap
   updateTags(); updateTarget(); updateC4Hud();
   game.mapT = (game.mapT || 0) - dt; if (game.mapT <= 0) { game.mapT = 0.1; drawStageMap(G('c4Mini'), game.units.map(u => ({ ...u, x: u.pos.x, z: u.pos.z })), time, { squads: true, extra: game.squads, bases: game.bases, gates: game.units.filter(u => u.gate).map(u => ({ x: u.post.x, z: u.post.z, side: u.side, alive: u.alive })), items: game.items.map(it => ({ x: it.m.position.x, z: it.m.position.z })), player: { x: p.x, z: p.z, yaw: game.mover.rotation.y } }); }
   // warnings
-  const sevU = game.units.find(u => u.id === 'sevirrus');
-  if (!game.heard.has('sevnear') && p.distanceTo(sevU.pos) < 60) { game.heard.add('sevnear'); feed('<b class="e">Sevirrus</b>: Brother of a dead man. Come and kneel.', 'big'); M.voice && M.voice.play(92); }
+  (STAGE.near || []).forEach(nr => { const u = game.units.find(o => o.id === nr.id); const k = 'near_' + nr.id;
+    if (u && u.alive && !game.heard.has(k) && p.distanceTo(u.pos) < 60) { game.heard.add(k); feed(nr.text, 'big'); if (nr.vo !== undefined) M.voice && M.voice.play(nr.vo); } });
   battleCamera(dt);
 }
 // who an officer's body should strike at: the nearest enemy soldier, officer or Arixal
 function officerFoe(u, op, range) {
   let best = null, bd = range;
   const take = (o, pos) => { const d = pos.distanceTo(op); if (d < bd) { bd = d; best = { o, pos }; } };
-  if (u.side === 'E') take(game.me, game.mover.position);
+  if (u.side !== 'A') take(game.me, game.mover.position);
   game.units.forEach(o => { if (o.side !== u.side && o.alive && o.model && o !== game.me) take(o, o.model.mover.position); });
   game.troops.forEach(t => { if (t.side !== u.side && t.state !== 'dead' && t.state !== 'flee') take(t, t.mover.position); });
   return best;
@@ -6008,6 +6285,7 @@ function officerHit(u, f, dmg) {
   if (f.o === game.me) { hurtPlayer(dmg, u); return; }
   if (f.o.state !== undefined) { f.o.hp -= 2; if (f.o.hp <= 0) killTrooper(f.o, false); return; }
   if (f.o.id === 'sevirrus' && Math.random() < 0.6) { sev.j.wristR.getWorldPosition(tmpA); sparks(tmpA, 20, 2); return; }
+  if (f.o.chief && f.o.tpl === 'jazmak' && f.o.model && Math.random() < 0.5) { f.o.model.j.wristR.getWorldPosition(tmpA); sparks(tmpA, 20, 2); return; }
   f.o.hp -= f.o.leader ? 0.6 : 3; f.o.stag = 0.12; if (f.o.hp <= 0) officerDown(f.o, u);
 }
 function officerUpdate(u, dt, time) {
@@ -6022,9 +6300,9 @@ function officerUpdate(u, dt, time) {
       if (m.atk) {
         m.atk.t += dt; const a = m.atk, w = ['slashWind', 'overhead', 'thrustWind'][a.n], h = ['slashFollow', 'strikeDown', 'thrust'][a.n];
         applyPose(sev.j, a.t < 0.3 ? mixPose('guard', w, a.t / 0.3) : mixPose(w, h, Math.min(1, (a.t - 0.3) / 0.08)));
-        if (!a.hit && a.t > 0.36) { a.hit = true; if (dd < 2.6) { hurtPlayer(11, u); game.j.spine.getWorldPosition(tmpA); spray(tmpA, tmpB.set(-dx / dd, 0.3, -dz / dd).normalize(), 40, 2, 0.8); }
+        if (!a.hit && a.t > 0.36) { a.hit = true; if (dd < 2.6) { hurtPlayer(STAGE.sevHit, u); game.j.spine.getWorldPosition(tmpA); spray(tmpA, tmpB.set(-dx / dd, 0.3, -dz / dd).normalize(), 40, 2, 0.8); }
           // his sweep cuts down any of Arixal's men beside him too
-          game.troops.forEach(t => { if (t.side === 'A' && t.state !== 'dead' && t.mover.position.distanceTo(op) < 2.8) killTrooper(t, false); }); }
+          game.troops.forEach(t => { if (t.side !== 'E' && t.state !== 'dead' && t.mover.position.distanceTo(op) < 2.8) killTrooper(t, false); }); }
         if (a.t > 0.6) { m.atk = a.n < 2 ? { t: 0, n: a.n + 1 } : null; if (!m.atk) m.cd = 1.0 + Math.random() * 0.8; }
       } else if (dd > 2.2) {
         const sp = dd > 9 ? 7.5 : 4.2; op.x += dx / dd * sp * dt; op.z += dz / dd * sp * dt;
@@ -6039,7 +6317,7 @@ function officerUpdate(u, dt, time) {
     return;
   }
   // officers and captains: strike the nearest enemy in reach, otherwise go where their orders send them
-  const f = officerFoe(u, op, u.side === 'E' ? 10 : 8);
+  const f = officerFoe(u, op, u.side !== 'A' ? 10 : 8);
   let moving = false;
   if (f) {
     const ex = f.pos.x - op.x, ez = f.pos.z - op.z, ed = Math.hypot(ex, ez) || 1; m.mover.rotation.y = Math.atan2(ex, ez);
@@ -6054,7 +6332,7 @@ function officerUpdate(u, dt, time) {
   let pose = addPose('guard', stepGait(m.gait, dt));
   if (m.atk) {
     m.atk.t += dt; pose = m.atk.t < 0.4 ? mixPose('guard', 'overhead', m.atk.t / 0.4) : mixPose('overhead', 'strikeDown', Math.min(1, (m.atk.t - 0.4) / 0.1));
-    if (!m.atk.hit && m.atk.t > 0.45) { m.atk.hit = true; const g = m.atk.f; if (g && g.pos.distanceTo(op) < 2.8) officerHit(u, g, (u.captain ? 3 : 5) * mf(u.side)); }
+    if (!m.atk.hit && m.atk.t > 0.45) { m.atk.hit = true; const g = m.atk.f; if (g && g.pos.distanceTo(op) < 2.8) officerHit(u, g, (u.chief ? 9 : u.captain ? 3 : 5) * mf(u.side)); }
     if (m.atk.t > 0.75) { m.atk = null; m.cd = (u.captain ? 1.4 : 1.0) + Math.random() * 0.8; }
   }
   if (u.stag > 0) { u.stag -= dt; pose = addPose(pose, { spine: [-0.25, 0, 0] }); }
@@ -6076,8 +6354,8 @@ function updateTags() {
 function updateTarget() {
   const t = game.lastTarget, el = G('c4Target');
   if (!t || (t.state === 'dead' && (t.t || 0) > 1.5) || t.alive === false) { el.hidden = true; return; }
-  const isOfficer = t.alive !== undefined, officer = isOfficer ? t : t.officer, lead = officer.side === 'E' ? 'Sevirrus' : 'Arixal Chompjak';
-  el.hidden = false; el.className = 'c4-target ' + (officer.side === 'E' ? 'foe' : 'ally');
+  const isOfficer = t.alive !== undefined, officer = isOfficer ? t : t.officer, lead = SIDE[officer.side].lead;
+  el.hidden = false; el.className = 'c4-target ' + SIDE[officer.side].tag;
   G('c4TLead').textContent = lead.toUpperCase();
   // an officer shows his own name; a rank-and-file soldier is just a trooper of his side
   G('c4TName').textContent = isOfficer ? officer.name.toUpperCase() : 'TROOPER';
@@ -6091,12 +6369,12 @@ function battleCamera(dt) {
 }
 function battleWon() {
   if (game.over) return; game.over = { won: true, t: 0 };
-  feed('<b class="e">Sevirrus</b> has been driven back!', 'big');
+  feed(STAGE.winMsg, 'big');
   G('c4Big').textContent = 'VICTORY'; G('c4Big').className = 'c4-big win';
 }
 function battleLost() {
   if (game.over) return; game.over = { won: false, t: 0 };
-  feed('<b class="a">Arixal Chompjak</b> has been defeated!', 'bad');
+  feed('<b class="a">Arixal Chompjak</b> has been defeated!', 'bad'); G('c4Lost').querySelector('p').textContent = STAGE.lost; G('c4Lost').querySelector('.eyebrow').textContent = STAGE.title;
   G('c4Big').textContent = 'DEFEAT'; G('c4Big').className = 'c4-big lose';
 }
 function overUpdate(dt, time) {
@@ -6113,9 +6391,9 @@ function overUpdate(dt, time) {
   if (o.t > 4.2 && !o.shown) {
     o.shown = true;
     if (o.won) {
-      game.done = true; M.markCleared && M.markCleared(4); M.onChapterComplete && M.onChapterComplete();
+      game.done = true; M.markCleared && M.markCleared(STAGE.ch); M.onChapterComplete && M.onChapterComplete();
       game.paused = true; M.renderDoneSlots && M.renderDoneSlots();
-      G('gDone').querySelector('.eyebrow').textContent = `Chapter IV · Enough is Enough · ${game.ko} KO · ${Math.floor(game.t / 60)}:${String(Math.floor(game.t % 60)).padStart(2, '0')}`;
+      G('gDone').querySelector('.eyebrow').textContent = `${STAGE.title} · ${game.ko} KO · ${Math.floor(game.t / 60)}:${String(Math.floor(game.t % 60)).padStart(2, '0')}`;
       G('gDoneNext').hidden = true; G('gDone').hidden = false; G('gDoneMenu').focus();
     } else { G('c4Lost').hidden = false; G('c4Retry').focus(); }
   }
