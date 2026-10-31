@@ -66,7 +66,7 @@ def main(src, dst, height=1.8):
                 if nm is not None: nm /= np.maximum(np.linalg.norm(nm, axis=1, keepdims=True), 1e-9)
                 ix = read(p["indices"]).reshape(-1) if "indices" in p else np.arange(len(v))
                 if np.linalg.det(w[:3, :3]) < 0: ix = ix.reshape(-1, 3)[:, ::-1].reshape(-1)
-                parts.append(dict(name=nd.get("name", ""), group=group, v=v, n=nm, i=ix, mat=gl["materials"][p.get("material", 0)] if "materials" in gl else {}))
+                parts.append(dict(name=re.sub(r" \d+$", "", nd.get("name", "")), group=group, v=v, n=nm, i=ix, mat=gl["materials"][p.get("material", 0)] if "materials" in gl else {}))
         for c in nd.get("children", []): walk(c, w, group or N[c].get("name", ""))
     root_i = gl["scenes"][gl.get("scene", 0)]["nodes"][0]
     walk(root_i, np.eye(4), "")
@@ -96,27 +96,44 @@ def main(src, dst, height=1.8):
         raise KeyError(base)
 
     piv = {}
-    plo, phi, pc = box("Pelvis"); piv["Hips"] = np.array([0, pc[1], 0])
-    blo, bhi, bc = box("Belt"); piv["Spine"] = np.array([0, bhi[1] + 0.03, 0])
-    flo, fhi, fc = box("Face"); jlo = box("Jaw")[0]
-    piv["Head"] = np.array([0, jlo[1] + 0.02, fc[2] - 0.04])
-    piv["Neck"] = np.array([0, piv["Head"][1] - 0.1, 0])
-    for s in "LR":
-        side = "leftArm" if True else ""
-        sh = box(side_name("Shoulder", s) if False else [n for n in by if n.startswith("Shoulder ") and n.endswith("armour") and (box(n)[2][0] >= 0) == (s == "L")][0])
-        el = box([n for n in by if n.startswith("Elbow ") and (box(n)[2][0] >= 0) == (s == "L")][0])
-        gv = box([n for n in by if n.startswith("Glove ") and (box(n)[2][0] >= 0) == (s == "L")][0])
-        piv["UpperArm_" + s] = np.array([sh[2][0] * 0.8, sh[2][1] - 0.02, sh[2][2] * 0.3])
-        piv["LowerArm_" + s] = el[2].copy()
-        piv["Hand_" + s] = np.array([gv[2][0], gv[1][1] - 0.02, gv[2][2]])
-        tl = box([n for n in by if n.startswith("Trouser leg ") and (box(n)[2][0] >= 0) == (s == "L")][0])
-        kn = box([n for n in by if n.startswith("Knee ") and n.endswith("armour") and (box(n)[2][0] >= 0) == (s == "L")][0])
-        bt = box([n for n in by if n.startswith("Boot ") and (box(n)[2][0] >= 0) == (s == "L")][0])
-        piv["UpperLeg_" + s] = np.array([tl[2][0], tl[1][1] - 0.06, 0])
-        piv["LowerLeg_" + s] = np.array([kn[2][0], kn[2][1], tl[2][2]])
-        piv["Foot_" + s] = np.array([bt[2][0], bt[0][1] + (bt[1][1] - bt[0][1]) * 0.55, tl[2][2]])
-        ew = [n for n in by if n.startswith("Eye white") and (box(n)[2][0] >= 0) == (s == "L")]
-        piv["Eye_" + s] = box(ew[0])[2] if ew else np.array([0.06 if s == "L" else -0.06, fc[1], fhi[2]])
+    gown = "Pelvis" not in by
+    if gown:
+        # gowned figures (Aniz, Hanaxa): no visible legs, just slippers under a bell skirt
+        jlo = box("Jaw")[0]; flo, fhi, fc = box("Face")
+        piv["Head"] = np.array([0, jlo[1] + 0.02, fc[2] - 0.04]); piv["Neck"] = np.array([0, piv["Head"][1] - 0.1, 0])
+        bod = box("Corseted bodice"); piv["Spine"] = np.array([0, bod[0][1] + 0.12, 0]); piv["Hips"] = np.array([0, bod[0][1] + 0.02, 0])
+        for s in "LR":
+            sg = 1 if s == "L" else -1
+            sl = [n for n in by if n.startswith("Fitted sleeve")]; vs = np.vstack([q["v"] for n in sl for q in by[n] if (q["v"][:, 0].mean() >= 0) == (s == "L")])
+            fa = np.vstack([q["v"] for n in by if n.startswith("Forearm sleeve") for q in by[n] if (q["v"][:, 0].mean() >= 0) == (s == "L")])
+            piv["UpperArm_" + s] = np.array([vs[:, 0].mean() * 0.85, vs[:, 1].max() - 0.04, 0])
+            piv["LowerArm_" + s] = np.array([vs[:, 0].mean(), vs[:, 1].min() + 0.03, 0])
+            piv["Hand_" + s] = np.array([fa[:, 0].mean(), fa[:, 1].min() + 0.04, 0.03])
+            piv["UpperLeg_" + s] = np.array([sg * 0.1, piv["Hips"][1] - 0.06, 0]); piv["LowerLeg_" + s] = np.array([sg * 0.12, 0.5, 0]); piv["Foot_" + s] = np.array([sg * 0.13, 0.1, 0])
+            ew = [n for n in by if n.startswith("Eye white") and (box(n)[2][0] >= 0) == (s == "L")]
+            piv["Eye_" + s] = box(ew[0])[2] if ew else np.array([sg * 0.06, fc[1], fhi[2]])
+    if not gown:
+     plo, phi, pc = box("Pelvis") ; piv["Hips"] = np.array([0, pc[1], 0])
+     blo, bhi, bc = box("Belt"); piv["Spine"] = np.array([0, bhi[1] + 0.03, 0])
+     flo, fhi, fc = box("Face"); jlo = box("Jaw")[0]
+     piv["Head"] = np.array([0, jlo[1] + 0.02, fc[2] - 0.04])
+     piv["Neck"] = np.array([0, piv["Head"][1] - 0.1, 0])
+     for s in "LR":
+         side = "leftArm" if True else ""
+         sh = box(side_name("Shoulder", s) if False else [n for n in by if n.startswith("Shoulder ") and n.endswith("armour") and (box(n)[2][0] >= 0) == (s == "L")][0])
+         el = box([n for n in by if n.startswith("Elbow ") and (box(n)[2][0] >= 0) == (s == "L")][0])
+         gv = box([n for n in by if n.startswith("Glove ") and (box(n)[2][0] >= 0) == (s == "L")][0])
+         piv["UpperArm_" + s] = np.array([sh[2][0] * 0.8, sh[2][1] - 0.02, sh[2][2] * 0.3])
+         piv["LowerArm_" + s] = el[2].copy()
+         piv["Hand_" + s] = np.array([gv[2][0], gv[1][1] - 0.02, gv[2][2]])
+         tl = box([n for n in by if n.startswith("Trouser leg ") and (box(n)[2][0] >= 0) == (s == "L")][0])
+         kn = box([n for n in by if n.startswith("Knee ") and n.endswith("armour") and (box(n)[2][0] >= 0) == (s == "L")][0])
+         bt = box([n for n in by if n.startswith("Boot ") and (box(n)[2][0] >= 0) == (s == "L")][0])
+         piv["UpperLeg_" + s] = np.array([tl[2][0], tl[1][1] - 0.06, 0])
+         piv["LowerLeg_" + s] = np.array([kn[2][0], kn[2][1], tl[2][2]])
+         piv["Foot_" + s] = np.array([bt[2][0], bt[0][1] + (bt[1][1] - bt[0][1]) * 0.55, tl[2][2]])
+         ew = [n for n in by if n.startswith("Eye white") and (box(n)[2][0] >= 0) == (s == "L")]
+         piv["Eye_" + s] = box(ew[0])[2] if ew else np.array([0.06 if s == "L" else -0.06, fc[1], fhi[2]])
 
     def nrm(v): return v / np.linalg.norm(v)
     def limb_bone(c, s, arm):
@@ -128,6 +145,16 @@ def main(src, dst, height=1.8):
 
     def bone_for(p):
         nm, g = p["name"], p["group"]; c = (p["v"].min(0) + p["v"].max(0)) / 2; s = "L" if c[0] >= 0 else "R"
+        if gown:
+            if re.match(r"^(Iris|Pupil|Eye glint)", nm): return "Eye_" + s
+            if re.match(r"^(Neck)$", nm): return "Neck"
+            if re.match(r"^(Fitted sleeve|Etched shoulder)", nm): return "UpperArm_" + s if nm.startswith("Fitted") else "Spine"
+            if re.match(r"^(Forearm sleeve)", nm): return "LowerArm_" + s
+            if re.match(r"^(Ivory cuff|Hand|Thumb)", nm): return "Hand_" + s
+            if re.match(r"^(Silver slipper)", nm): return "Foot_" + s
+            if re.match(r"^(Sixteen pleat|Ornate silver waist)", nm): return "Hips"
+            if re.match(r"^(Corseted|Pearl necklace)", nm): return "Spine"
+            return "Head"
         if re.match(r"^(Iris|Pupil)", nm): return "Eye_" + s
         if g in ("head", "jaw", "eyes"): return "Head"
         if g in ("leftArm", "rightArm"): return limb_bone(c, s, True)

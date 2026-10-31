@@ -23,6 +23,7 @@ A browser game built with [three.js](https://threejs.org). The whole game is one
   3. Fight up five floors of the bastion against the Cult of Zark.
 - **Chapter II: The Siege of Aridaxx** (cutscene): a month later, Sevirrus breaks the gate of Alphinos Castle, beheads the Chompy guard, holds one head up for the rest to see, cuts down ten more and demands the head of Jakal Chompjak XVI. Damix Chompjak, Hak's cousin, watches in horror, then laughs, mocks him and throws him back down the steps again and again, until Sevirrus simply rolls his neck. Then, playable, as Damix: run the burning road to Alphinos Keep, cutting through the Cult of Zark, and seal the gates before Sevirrus reaches the Emperor. Sevirrus walks behind you the whole way and has no health bar: strike him, or let him catch you, and he stops your heart.
 - **Chapter III: Assassination** (cutscene): the throne hall of Alphinos Keep. Sevirrus kills Damix, then his father, Emperor Jakal Chompjak XVI, and takes the crown. After it, the main menu belongs to the Emperor.
+- **Chapter IV: Enough is Enough**: Hak alone with what he has done; then a pre-battle screen and a field battle on the Plain of Kesh, a mile long, against hundreds of Chompy soldiers. You are Arixal Chompjak, with Hanaxa Chompjak, Aniz Chompjak and Marshal Haplok. Defeat Sevirrus and his officers Zarkam, Almak and Tamix. Minimap, officer name tags and a target panel showing each soldier's leader and officer.
 
 The game saves only when the player chooses to (pause menu, or at the end of a chapter). Saves are stored in the browser.
 
@@ -35,6 +36,7 @@ The game saves only when the player chooses to (pause menu, or at the end of a c
 | Examine / enter / climb | E | Examine / Drive / Climb button |
 | Strike | click or F | Strike button |
 | Dodge | Space | Dodge button |
+| Musou (Arixal) | Q | Musou button |
 | Force blast (Damix) | Q | Blast button |
 | Seal the gates (Damix) | hold E | hold Seal |
 | Journal / Pause | J / Esc | buttons, top right |
