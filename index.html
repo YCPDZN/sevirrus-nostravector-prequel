@@ -742,6 +742,13 @@ body.run .g-sev.near b { color: var(--crimson); }
 <script type="application/octet-stream" id="vo110" data-src="assets/vo110.mp3"></script>
 <script type="application/octet-stream" id="vo111" data-src="assets/vo111.mp3"></script>
 <script type="application/octet-stream" id="vo112" data-src="assets/vo112.mp3"></script>
+<script type="application/octet-stream" id="vo113" data-src="assets/vo113.mp3"></script>
+<script type="application/octet-stream" id="vo114" data-src="assets/vo114.mp3"></script>
+<script type="application/octet-stream" id="vo115" data-src="assets/vo115.mp3"></script>
+<script type="application/octet-stream" id="vo116" data-src="assets/vo116.mp3"></script>
+<script type="application/octet-stream" id="vo117" data-src="assets/vo117.mp3"></script>
+<script type="application/octet-stream" id="vo118" data-src="assets/vo118.mp3"></script>
+<script type="application/octet-stream" id="vo119" data-src="assets/vo119.mp3"></script>
 <script type="application/octet-stream" id="songDrive" data-src="assets/songDrive.mp3"></script>
 <script type="application/octet-stream" id="songKesh" data-src="assets/songKesh.mp3"></script>
 <script type="application/octet-stream" id="songAridaxx" data-src="assets/songAridaxx.mp3"></script>
@@ -5584,6 +5591,10 @@ const END_LINES = [
   [37.2, 6.0, 'Let me do the time. Lock me in the deepest cell in Alphinos. I won’t fight you.', 117, 'hak'],
   [44.4, 7.2, 'And when I come out… I will find the Cult of Zark, and I will stop them. Every last one.', 118, 'hak'],
 ];
+const END_CLIP = [5.64, 4.44, 5.88, 6.35, 2.77, 6.03, 7.47];   // CH6SEVIRRUS1-7
+const ENDL = [], ENDW = [[0, 0]];
+{ let oP = 0, nP = 0; END_LINES.forEach((l, i) => { const s0 = nP + (l[0] - oP), d = END_CLIP[i] + 0.3; ENDL.push({ s: s0, d }); ENDW.push([l[0], s0], [l[0] + l[1], s0 + d]); oP = l[0] + l[1]; nP = s0 + d; }); ENDW.push([73, nP + (73 - oP)]); }
+function endOld(t) { for (let i = 1; i < ENDW.length; i++) { const [o0, n0] = ENDW[i - 1], [o1, n1] = ENDW[i]; if (t <= n1) return n1 > n0 ? o0 + (o1 - o0) * (t - n0) / (n1 - n0) : o1; } const [o, n] = ENDW[ENDW.length - 1]; return o + (t - n); }
 const ENDT = { LEAD: 53, OUT: 60.5, CARD1: 62, CARD2: 67, END: 73 };
 Object.assign(POSES, {
   cuffs: { shoulderL: [-0.3, -0.6, -0.6], elbowL: [-0.6, 0, 0], shoulderR: [-0.3, 0.6, 0.6], elbowR: [-0.6, 0, 0] },
@@ -5641,7 +5652,7 @@ function finishEnding() {
   G('gDone').querySelector('.eyebrow').textContent = E.stats || 'Chapter V · The Siege of Alphinos'; G('gDoneNext').textContent = 'Continue to Chapter VI'; G('gDoneNext').hidden = false; G('gDone').hidden = false; G('gDoneNext').focus();
 }
 function endingUpdate(dt, time) {
-  const E = cine.end, T = (E.t += dt);
+  const E = cine.end, Tn = (E.t += dt), T = endOld(Tn);
   [hemi, key, under, rimL, rimR, cineSpot, bhLight].forEach(l => { l.intensity = 0; });
   hemi.intensity = 0.45; hall.lights.forEach((f, i) => { f.intensity = 8 + Math.sin(time * 7 + i * 2) * 1.5 + Math.random(); });
   key.color.set(0xffd8b0); key.intensity = 14; key.position.set(2.5, 6, 6); keyTarget.position.set(0, 1, 2.5);
@@ -5670,7 +5681,7 @@ function endingUpdate(dt, time) {
     else applyPose(g.j, i < 2 ? POSES.armHold : POSES.rifleRest);
   });
   // subtitles: Sevirrus, until he tells the truth; then Hak Chompjak V
-  const li = END_LINES.findIndex(l => T >= l[0] && T < l[0] + l[1]);
+  const li = ENDL.findIndex(l => Tn >= l.s && Tn < l.s + l.d);
   if (li !== E.line) { E.line = li; if (li >= 0 && !(E.skipped && E.skipped.has(li))) {
     const [, , line, vo, alt] = END_LINES[li], name = alt === 'hak' ? HAK_NAME : 'Sevirrus';
     if (E.name && name !== E.name) E.flip = { from: E.name, to: name, t: 0 };
@@ -5706,7 +5717,7 @@ function endingUpdate(dt, time) {
   if (T >= ENDT.END) finishEnding();
 }
 M._endStart = () => startEnding('test');
-M._endTo = t => { let n = 0; while (cine && cine.end && cine.end.t < t && n++ < 8000) endingUpdate(1 / 30, cine.end.t); return cine && cine.end ? cine.end.t : null; };
+M._endTo = t => { let n = 0; while (cine && cine.end && endOld(cine.end.t) < t && n++ < 8000) endingUpdate(1 / 30, cine.end.t); return cine && cine.end ? cine.end.t : null; };
 M._jazTo = t => { let n = 0; while (cine && cine.jaz && jzOld(cine.jaz.t) < t && n++ < 8000) jazUpdate(1 / 30, cine.jaz.t); return cine && cine.jaz ? cine.jaz.t : null; };
 M._jazStart = () => startJaz();
 M._c5Crown = () => { const c = cine && cine.ch5 && cine.ch5.crown; if (!c) return null; const w = c.getWorldPosition(new THREE.Vector3()); return { parent: c.parent && (c.parent.name || c.parent.type), w: [w.x, w.y, w.z].map(v => +v.toFixed(2)), vis: c.visible }; };
