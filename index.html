@@ -591,6 +591,16 @@ body.run .g-sev.near b { color: var(--crimson); }
 <script type="application/octet-stream" id="vo73" data-src="assets/vo73.mp3"></script>
 <script type="application/octet-stream" id="vo74" data-src="assets/vo74.mp3"></script>
 <script type="application/octet-stream" id="vo75" data-src="assets/vo75.mp3"></script>
+<script type="application/octet-stream" id="vo76" data-src="assets/vo76.mp3"></script>
+<script type="application/octet-stream" id="vo77" data-src="assets/vo77.mp3"></script>
+<script type="application/octet-stream" id="vo78" data-src="assets/vo78.mp3"></script>
+<script type="application/octet-stream" id="vo79" data-src="assets/vo79.mp3"></script>
+<script type="application/octet-stream" id="vo80" data-src="assets/vo80.mp3"></script>
+<script type="application/octet-stream" id="vo81" data-src="assets/vo81.mp3"></script>
+<script type="application/octet-stream" id="vo82" data-src="assets/vo82.mp3"></script>
+<script type="application/octet-stream" id="vo83" data-src="assets/vo83.mp3"></script>
+<script type="application/octet-stream" id="vo84" data-src="assets/vo84.mp3"></script>
+<script type="application/octet-stream" id="vo85" data-src="assets/vo85.mp3"></script>
 <script type="application/octet-stream" id="songDrive" data-src="assets/songDrive.mp3"></script>
 <script type="importmap">
 { "imports": {
@@ -656,7 +666,7 @@ body.run .g-sev.near b { color: var(--crimson); }
   }
   let voBufs = [], voSrc = null, musicGain = null, voAn = null, voData = null;
   function primeVoices() {
-    for (let i = 1; i <= 75; i++) {
+    for (let i = 1; i <= 85; i++) {
       const raw = Uint8Array.from(atob($('#vo' + i).textContent.trim()), c => c.charCodeAt(0)).buffer;
       actx.decodeAudioData(raw).then(b => { voBufs[i - 1] = b; }).catch(() => {});
     }
@@ -4175,17 +4185,17 @@ const AS = {
   JDOWN: 27.0, JSTRIKE: 29.9, LEGCUT: 30.6,
   IMPALE: 45.6, JRIP: 47.4, JDECAP: 48.3, PICK: 50.6, CROWN: 52.6, CU: 54.2, FADE: 58.0, TITLE: 59.4, END: 65.0,
 };
-const ASSA_LINES = [   // [start, secs, who, line] (CH3 recordings drop in later)
-  [10.0, 3.2, 'Jakal Chompjak XVI', 'Hak. Put it down. You are still my son.'],
-  [14.2, 3.6, 'Sevirrus', 'Your son died the day you chose the throne over him.'],
-  [18.0, 1.8, 'Damix Chompjak', 'You will not touch him!'],
-  [22.8, 1.8, 'Sevirrus', 'Stay down, cousin.'],
-  [26.2, 1.4, 'Jakal Chompjak XVI', 'DAMIX!'],
-  [32.0, 2.6, 'Jakal Chompjak XVI', 'I gave you everything.'],
-  [35.0, 4.0, 'Sevirrus', 'You gave me a crown to kneel beneath. I’d rather wear it.'],
-  [39.6, 2.0, 'Jakal Chompjak XVI', '…I loved you.'],
-  [42.2, 3.0, 'Sevirrus', 'I know. That’s why it had to be you.'],
-  [53.4, 2.4, 'Sevirrus', 'Long live the Emperor.'],
+const ASSA_LINES = [   // [start, secs, who, line, voice] (CH3FIGHT1..10)
+  [10.0, 3.9, 'Jakal Chompjak XVI', 'Hak. Put it down. You are still my son.', 75],
+  [13.9, 4.6, 'Sevirrus', 'Your son died the day you chose the throne over him.', 76],
+  [18.5, 2.2, 'Damix Chompjak', 'You will not touch him!', 77],
+  [22.8, 2.4, 'Sevirrus', 'Stay down, cousin.', 78],
+  [26.2, 1.3, 'Jakal Chompjak XVI', 'DAMIX!', 79],
+  [32.0, 2.3, 'Jakal Chompjak XVI', 'I gave you everything.', 80],
+  [35.0, 4.85, 'Sevirrus', 'You gave me a crown to kneel beneath. I’d rather wear it.', 81],
+  [39.9, 1.75, 'Jakal Chompjak XVI', '…I loved you.', 82],
+  [41.75, 3.85, 'Sevirrus', 'I know. That’s why it had to be you.', 83],
+  [53.4, 2.5, 'Sevirrus', 'Long live the Emperor.', 84],
 ];
 Object.assign(POSES, {
   pickup: { rootY: -0.42, spine: [0.85, 0, 0], neck: [0.2, 0, 0], hipL: [-1.2, 0, 0.1], kneeL: [1.6, 0, 0], ankleL: [-0.4, 0, 0], hipR: [-0.4, 0, -0.1], kneeR: [1.4, 0, 0], shoulderL: [-1.0, 0, 0.1], elbowL: [-0.2, 0, 0], shoulderR: [-0.3, 0, -0.25], elbowR: [-0.45, 0, 0] },
@@ -4355,7 +4365,7 @@ function assaUpdate(dt, time) {
   if (T > AS.JDOWN + 0.5 && T < AS.JSTRIKE - 0.5) jpose = addPose(mixPose('damixHorror', 'guard', ss(AS.JDOWN + 0.5, AS.JDOWN + 1.2, T)), stepGait(J.gait || (J.gait = makeGait(J.mover)), sdt));
   if (T > AS.JSTRIKE - 0.5 && T < AS.LEGCUT) jpose = T < AS.JSTRIKE ? mixPose('guard', 'overhead', ss(AS.JSTRIKE - 0.5, AS.JSTRIKE - 0.15, T)) : mixPose('overhead', 'strikeDown', ss(AS.JSTRIKE - 0.15, AS.JSTRIKE, T));
   if (T > AS.LEGCUT) jpose = mixPose('hurt', 'kneelUp', ss(AS.LEGCUT, AS.LEGCUT + 0.6, T));
-  if (T > AS.LEGCUT + 0.6 && T < AS.IMPALE) jpose = addPose(POSES.kneelUp, { head: [-0.15 - (T > 39.6 && T < 42 ? 0.15 : 0), 0, 0], spine: [Math.sin(time * 1.6) * 0.03, 0, 0] });
+  if (T > AS.LEGCUT + 0.6 && T < AS.IMPALE) jpose = addPose(POSES.kneelUp, { head: [-0.15 - (T > 39.9 && T < 41.7 ? 0.15 : 0), 0, 0], spine: [Math.sin(time * 1.6) * 0.03, 0, 0] });
   if (T > AS.IMPALE) jpose = addPose(mixPose('kneelUp', 'impaled', ss(AS.IMPALE, AS.IMPALE + 0.15, T)), { spine: [0, 0, Math.sin(time * 26) * 0.03 * (1 - ss(AS.IMPALE, AS.JRIP, T))] });
   if (T > AS.JRIP) jpose = mixPose('impaled', 'kneelUp', ss(AS.JRIP, AS.JRIP + 0.5, T));
   if (T > AS.JDECAP) jpose = mixPose('kneelUp', 'slumped', ss(AS.JDECAP, AS.JDECAP + 0.9, T));
