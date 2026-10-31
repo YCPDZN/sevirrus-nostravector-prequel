@@ -4776,10 +4776,10 @@ const CH5_INTRO = [
   [63.2, 5.0, 'Sevirrus', 'No. No. NO. I am not weak. I am NOT WEAK!', 101, 'scream'],
   [70.0, 9.2, 'Sevirrus', 'Let them come to Alphinos. Let them all come. I will paint these walls with every last Chompjak… and then it will finally be quiet.', 102],
 ];
-const CH5_CLIP = [7.55, 7.0, 3.55, 2.27, 7.39, 3.47, 4.68, 5.15, 4.75, 5.72, 10.68];   // the recordings, in seconds
+const CH5_CLIP = [7.55, 7.0, 3.55, 2.27, 7.39, 8.52, 4.68, 5.15, 4.75, 5.72, 10.68];   // the recordings, in seconds
 const C5L = [], C5W = [[0, 0]];   // each line's new start and length, and the warp from real time back to the layout
 { let oPrev = 0, nPrev = 0;
-  CH5_INTRO.forEach((l, i) => { const s0 = nPrev + (l[0] - oPrev), d = Math.max(CH5_CLIP[i] + 0.3, i === 5 ? l[1] * 0.7 : 0); C5L.push({ s: s0, d }); C5W.push([l[0], s0], [l[0] + l[1], s0 + d]); oPrev = l[0] + l[1]; nPrev = s0 + d; });
+  CH5_INTRO.forEach((l, i) => { const s0 = nPrev + (l[0] - oPrev), d = CH5_CLIP[i] + 0.3; C5L.push({ s: s0, d }); C5W.push([l[0], s0], [l[0] + l[1], s0 + d]); oPrev = l[0] + l[1]; nPrev = s0 + d; });
   C5W.push([83, nPrev + (83 - oPrev)]); }
 function c5Old(t) { for (let i = 1; i < C5W.length; i++) { const [o0, n0] = C5W[i - 1], [o1, n1] = C5W[i]; if (t <= n1) return n1 > n0 ? o0 + (o1 - o0) * (t - n0) / (n1 - n0) : o1; } const [o, n] = C5W[C5W.length - 1]; return o + (t - n); }
 const C5 = { KILL: 25.1, CHOPS: [26.2, 27.0], THRONE: [51.6, 52.8, 54.0], FLOOR: [64.4, 65.3, 66.2, 67.2], END: 83 };
