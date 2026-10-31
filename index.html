@@ -5054,7 +5054,39 @@ function buildJazSet() {
   for (const [x, z] of [[-4.6, 5.2], [4.6, 5.2], [-2.5, 9.5], [3, 10.5]]) { const y = terrainH(x, z); const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 5, 6), poleM); pole.position.set(x, y + 2.5, z); g.add(pole);
     const f = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 2.2, 8, 1), flagM); f.position.set(x + 0.72, y + 3.8, z); g.add(f); flags.push(f); }
   castle.updateMatrixWorld(true); const top = beacon.getWorldPosition(new THREE.Vector3());
-  return { g, ranks, flags, castleTop: top };
+  // Aridaxx at night: a violet sky, and its moon, Aridaxx I, low over Alphinos: pale jade, scarred with amethyst seas, in a faint ring of dust
+  const MOON_DIR = new THREE.Vector3(-0.42, 0.36, -1).normalize();
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(640, 32, 16), new THREE.ShaderMaterial({
+    side: THREE.BackSide, depthWrite: false, fog: false, uniforms: { uMoon: { value: MOON_DIR } },
+    vertexShader: 'varying vec3 vD; void main(){ vD = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: `uniform vec3 uMoon; varying vec3 vD;
+      void main(){
+        float h = max(vD.y, 0.0);
+        vec3 c = mix(vec3(0.20, 0.09, 0.30), vec3(0.012, 0.008, 0.035), pow(h, 0.5));
+        float g = max(dot(vD, uMoon), 0.0);
+        c += vec3(0.30, 0.62, 0.52) * pow(g, 60.0) * 0.55 + vec3(0.25, 0.35, 0.45) * pow(g, 8.0) * 0.18;
+        gl_FragColor = vec4(c, 1.0);
+      }` }));
+  sky.renderOrder = -4; g.add(sky);
+  const mc = document.createElement('canvas'); mc.width = mc.height = 256; const x = mc.getContext('2d');
+  const grd = x.createRadialGradient(110, 100, 10, 128, 128, 128); grd.addColorStop(0, '#d9fff0'); grd.addColorStop(0.6, '#8fd8be'); grd.addColorStop(1, '#4f9a8c'); x.fillStyle = grd; x.fillRect(0, 0, 256, 256);
+  let sd = 9; const rr = () => (sd = (sd * 9301 + 49297) % 233280) / 233280;
+  for (let k = 0; k < 14; k++) { x.fillStyle = `rgba(${120 + rr() * 40 | 0},${70 + rr() * 30 | 0},${150 + rr() * 50 | 0},${0.35 + rr() * 0.3})`; x.beginPath(); x.ellipse(rr() * 256, rr() * 256, 14 + rr() * 40, 10 + rr() * 26, rr() * 3, 0, Math.PI * 2); x.fill(); }
+  for (let k = 0; k < 40; k++) { const cx = rr() * 256, cy2 = rr() * 256, r = 2 + rr() * 8; x.strokeStyle = 'rgba(30,60,60,.35)'; x.lineWidth = 1.5; x.beginPath(); x.arc(cx, cy2, r, 0, Math.PI * 2); x.stroke(); x.fillStyle = 'rgba(230,255,245,.18)'; x.beginPath(); x.arc(cx - r * 0.3, cy2 - r * 0.3, r * 0.6, 0, Math.PI * 2); x.fill(); }
+  const mt = new THREE.CanvasTexture(mc); mt.colorSpace = THREE.SRGBColorSpace;
+  const moon = new THREE.Mesh(new THREE.SphereGeometry(34, 48, 24), new THREE.MeshBasicMaterial({ map: mt, fog: false }));
+  moon.position.copy(MOON_DIR).multiplyScalar(560); moon.rotation.set(0.3, 1.2, 0.2); moon.renderOrder = -3; g.add(moon);
+  const ring = new THREE.Mesh(new THREE.RingGeometry(46, 64, 96), new THREE.MeshBasicMaterial({ color: 0x9adcd0, transparent: true, opacity: 0.16, side: THREE.DoubleSide, fog: false, depthWrite: false }));
+  ring.position.copy(moon.position); ring.lookAt(0, 0, 0); ring.rotateX(1.2); ring.renderOrder = -3; g.add(ring);
+  const hc = document.createElement('canvas'); hc.width = hc.height = 128; const hx = hc.getContext('2d'); const hg = hx.createRadialGradient(64, 64, 20, 64, 64, 64); hg.addColorStop(0, 'rgba(150,255,220,.45)'); hg.addColorStop(1, 'rgba(150,255,220,0)'); hx.fillStyle = hg; hx.fillRect(0, 0, 128, 128);
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(hc), transparent: true, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }));
+  halo.position.copy(moon.position); halo.scale.setScalar(150); halo.renderOrder = -3; g.add(halo);
+  // its own stars, further out than the moon, so the moon hides the ones behind it
+  const sp = new Float32Array(2400 * 3);
+  for (let k = 0; k < 2400; k++) { const u = rr() * 0.98 + 0.02, th = rr() * Math.PI * 2, q = Math.sqrt(1 - u * u); sp.set([Math.cos(th) * q * 620, u * 620, Math.sin(th) * q * 620], k * 3); }
+  const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(sp, 3));
+  const nstars = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xe6dcff, size: 1.6, fog: false, transparent: true, opacity: 0.85, depthWrite: false })); nstars.renderOrder = -4; g.add(nstars);
+  return { g, ranks, flags, castleTop: top, moonDir: MOON_DIR };
 }
 function startJaz() {
   if (!jazmakTpl || !chompyTpl) return false;
@@ -5063,7 +5095,11 @@ function startJaz() {
   const J = rigClone(jazmakTpl); J.mover.position.set(0, 0, 0); J.mover.rotation.y = Math.PI; scene.add(J.mover); J.gait = makeGait(J.mover); cine.jaz.J = J;
   if (!jazMouth) jazMouth = makeMouth(jazmakTpl, /^Jaw mouth/, 1.4269, 0.03);
   jazSet.g.visible = true; rig.visible = false; hall && (hall.g.visible = false);
-  setPlanet(true); blackHole.visible = stars.visible = true; dust.visible = false;
+  setPlanet(true); blackHole.visible = false; stars.visible = false; dust.visible = false;
+  // Aridaxx, not Carax: keep only the ground and the boulders, tinted violet, under night fog
+  planet.children.forEach((o, i) => { o.userData.jzWas = o.visible; if (i > 1) o.visible = false; });
+  const gm = planet.children[0].material; gm.userData.jzCol = gm.color.getHex(); gm.color.set(0xc8a4ff);
+  scene.fog.color.set(0x130a22); scene.fog.density = 0.022;
   [hemi, key, under, rimL, rimR, cineSpot, bhLight].forEach(l => { l.userData.was = l.intensity; l.intensity = 0; });
   document.body.classList.add('cine'); cineEls.skip.hidden = false; cineEls.skip.focus();
   return true;
@@ -5072,6 +5108,8 @@ function endJaz(finished) {
   const S = cine && cine.jaz; if (!S) return;
   cine = null;
   scene.remove(S.J.mover); jazSet.g.visible = false; rig.visible = true;
+  planet.children.forEach(o => { if (o.userData.jzWas !== undefined) { o.visible = o.userData.jzWas; delete o.userData.jzWas; } });
+  const gm = planet.children[0].material; if (gm.userData.jzCol !== undefined) gm.color.setHex(gm.userData.jzCol);
   setPlanet(false); blackHole.visible = stars.visible = false; dust.visible = true; bhLight.intensity = 0;
   [hemi, key, under, rimL, rimR, cineSpot].forEach(l => { if (l.userData.was !== undefined) l.intensity = l.userData.was; });
   key.position.set(0.9, 4.2, 2.6); keyTarget.position.set(0, 1.2, 0); key.color.set(0xffffff); cineSpot.color.set(0xffffff); hemi.color.set(0x4a2f72);
@@ -5084,10 +5122,9 @@ function jazUpdate(dt, time) {
   const S = cine.jaz, T = (S.t += dt), J = S.J;
   // the light: the black hole's glow behind Alphinos, a cold fill on the company
   [hemi, key, under, rimL, rimR, cineSpot, bhLight].forEach(l => { l.intensity = 0; });
-  hemi.color.set(0x7a5aa8); hemi.intensity = 0.75;
-  key.color.set(0xffb48a); key.intensity = 22; key.position.set(-3, 6, -6); keyTarget.position.set(0, 1.2, 0);
+  hemi.color.set(0x6a4aa0); hemi.intensity = 0.7;
+  const md = jazSet.moonDir; key.color.set(0xa8f0dc); key.intensity = 26; key.position.set(md.x * 8, md.y * 8 + 2, md.z * 8); keyTarget.position.set(0, 1.2, 0);
   cineSpot.color.set(0xe0d4ff); cineSpot.intensity = 14; cineSpot.position.set(0.8, 4.5, 6); cineTarget.position.set(0, 1.4, 0);
-  planetTick(time); bhMat.uniforms.uTime.value = time; blackHole.position.set(60, 110, -300); blackHole.quaternion.copy(camera.quaternion);
   jazSet.flags.forEach((f, i) => { const a = f.geometry.attributes.position; for (let k = 0; k < a.count; k++) { const x = a.getX(k) + 0.7; a.setZ(k, Math.sin(time * 4 + x * 3 + i) * 0.12 * x); } a.needsUpdate = true; });
 
   // Jazmak: facing the castle to name the enemy, then round to his soldiers
@@ -5128,7 +5165,7 @@ function jazUpdate(dt, time) {
   J.j.head.getWorldPosition(tmpA); const hd = tmpA.clone();
   let cp, cl, fov = 38;
   if (T < 4.6) { const k = ss(0, 4.6, T); cp = V(lerp(1.8, 0.8, k), lerp(5, 3.4, k), lerp(15, 11.5, k)); cl = V(-1, lerp(3, 1.6, k), -40); fov = 44; }
-  else if (T < 8.0) { const ct = jazSet.castleTop; cp = V(0.75, 1.5, 1.7); cl = V(ct.x, ct.y - 12, ct.z); fov = 44; }
+  else if (T < 8.0) { const ct = jazSet.castleTop; cp = V(0.75, 1.5, 1.7); cl = V(ct.x - 20, ct.y + 6, ct.z); fov = 50; }
   else if (T < 9.6) { cp = V(0.3, 1.25, 3.1); cl = V(0, 1.45, 0); fov = 40; }
   else if (T < 16.6) { cp = V(0.85, 1.7, 2.3); cl = hd; fov = 36; }
   else if (T < 20.4) { cp = V(-1.1, 1.95, -1.9); cl = V(0.4, 1.2, 5.2); fov = 44; }
