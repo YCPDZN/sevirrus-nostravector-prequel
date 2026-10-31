@@ -4259,7 +4259,7 @@ M.playChapter3 = startAssassination;
 function endAssassination(finished) {
   const A = cine && cine.assa; if (!A) return;
   cine = null;
-  scene.remove(A.jakal.mover, A.damix.mover, A.crown); [A.jakal, A.damix].forEach(c => { if (c.headFree) scene.remove(c.j.head); if (c.loose) scene.remove(c.loose); });
+  scene.remove(A.jakal.mover, A.damix.mover); A.crown.removeFromParent(); [A.jakal, A.damix].forEach(c => { if (c.headFree) scene.remove(c.j.head); if (c.loose) scene.remove(c.loose); });
   hall.g.visible = false; hall.jmover.visible = true; hall.extras.forEach(o => { o.visible = true; }); assaSet.g.visible = false;
   clearBlood(); clearGore(); clearSparks(); clearFx(); clearShards(); sevTrail.clear();
   whiteEl.style.opacity = 0; speedEl.style.opacity = 0; canvasEl.classList.remove('impact'); impactUntil = 0;
@@ -4454,13 +4454,17 @@ M._assaTo = t => { let n = 0; while (cine && cine.assa && cine.assa.t < t && n++
 
 // ---------- after Chapter III the menu belongs to the Emperor: crown, drawn blade, blood ----------
 let menuCrown = null, menuPool = null;
+// every frame, in every mode: the crown, the pool and the red light belong to the menu only
+function menuPost3Visibility() {
+  const on = !!M.post3 && !cine && !game;
+  if (menuCrown) menuCrown.visible = on;
+  if (menuPool) menuPool.visible = on;
+  rimL.color.set(on ? 0xb3122a : 0x8f6ae0); ring1.material.color.set(on ? 0xb3122a : 0xa993e6); dust.material.color.set(on ? 0xff3040 : 0xffffff);
+}
 function menuPost3(dt, t) {
   const on = !!M.post3 && !cine && !game;
   if (on && !menuCrown && jakalTpl && head) { menuCrown = makeCrown(); head.add(menuCrown); menuCrown.position.set(0, 0.37, -0.02);
     menuPool = new THREE.Mesh(new THREE.CircleGeometry(1.4, 40), poolMat); menuPool.rotation.x = -Math.PI / 2; menuPool.position.set(0.15, 0.004, 0.35); scene.add(menuPool); }
-  if (menuCrown) menuCrown.visible = on;
-  if (menuPool) menuPool.visible = on;
-  if (!cine && !game) { rimL.color.set(on ? 0xb3122a : 0x8f6ae0); ring1.material.color.set(on ? 0xb3122a : 0xa993e6); dust.material.color.set(on ? 0xff3040 : 0xffffff); }
   if (!on) return;
   setBlade(true, 1);
   // blood runs off the blade
@@ -4568,6 +4572,7 @@ function adapt(raw) {
 function loop() {
   const raw = clock.getDelta(), dt = Math.min(raw, 0.05), t = clock.elapsedTime; adapt(raw);
   if (document.hidden) { requestAnimationFrame(loop); return; }
+  menuPost3Visibility();
   if (cine) cineUpdate(dt, t); else if (game) gameUpdate(dt, t); else menuUpdate(dt, t);
 
   // eyes dart independently of the head
