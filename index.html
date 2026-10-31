@@ -389,6 +389,9 @@ body.run .g-sev.near b { color: var(--crimson); }
   text-shadow: 0 2px 6px #000, 0 0 18px rgba(0,0,0,.9); }
 .subs.shout .line { font-family: var(--font-display); letter-spacing: .06em; }
 .subs.scream .line { font-family: var(--font-display); letter-spacing: .05em; color: #ffd0d4; animation: subShake .07s steps(2) infinite; text-shadow: 0 0 12px rgba(255,30,60,.55); }
+.subs.hak .who { color: #b8c8ff; text-shadow: 0 0 10px rgba(140,170,255,.45); }
+.subs .who.flip { animation: whoFlip .07s steps(2) infinite; }
+@keyframes whoFlip { 0% { transform: translateX(-3px) skewX(-12deg); opacity: .85; } 50% { transform: translateX(3px) skewX(10deg); opacity: 1; } 100% { transform: none; } }
 .subs.hush .line { font-style: italic; opacity: .72; font-size: clamp(15px, 2vw, 20px); }
 @keyframes subShake { 0% { transform: translate(-2px, 1px); } 50% { transform: translate(2px, -1px); } 100% { transform: translate(-1px, -2px); } }
 #stage.glitch { animation: stageGlitch .12s steps(2) infinite; }
@@ -1359,7 +1362,8 @@ function speak(who, unvoiced) {          // who is speaking right now: drive the
 let jMouth = null;
 function jakalMouth() { if (!jMouth && jakalTpl) jMouth = makeMouth(jakalTpl, /^(Jaw|Lower lip|Mouth interior|Beard mouth inset|Beard chin|Beard carved strand)/, 1.57); return jMouth; }
 // during the chapter: is Jakal the one on the subtitle right now?
-const sevTalking = () => subsWho.textContent === 'Sevirrus' && subsEl.style.opacity !== '0';
+const HAK_NAME = 'Hak Chompjak V';   // his calm side, in the Chapter V breakdown
+const sevTalking = () => (subsWho.textContent === 'Sevirrus' || subsWho.textContent === HAK_NAME) && subsEl.style.opacity !== '0';
 const jakalTalking = () => subsWho.textContent === 'Jakal Chompjak XVI' && subsEl.style.opacity !== '0';
 
 function setBlade(on, k = 1) {
@@ -4764,11 +4768,11 @@ const CH5_INTRO = [
   [11.0, 6.4, 'Sevirrus', 'I took my father’s head. I took Damix’s heart. And Arixal rode away from me… whole.', 94],
   [19.6, 2.6, 'Chompy guard', 'M-Majesty… the wounded are asking for—', 103],
   [22.4, 2.4, 'Sevirrus', 'WHO TOLD YOU TO LOOK AT ME?!', 95, 'scream'],
-  [28.6, 6.2, 'Sevirrus', 'Mother held his banner. My own mother. She looked straight through me, like I was already dead.', 96],
+  [28.6, 6.2, 'Sevirrus', 'Mother held his banner. My own mother. She looked straight through me, like I was already dead.', 96, '', 'hak'],
   [36.0, 7.0, 'Sevirrus', 'I can hear them. Every one I ever cut. They’re laughing now. Do you hear it? They are all LAUGHING.', 97, 'scream'],
   [44.0, 4.4, 'Sevirrus', 'This crown was meant to make it quiet. Why is it so LOUD?', 98],
   [49.6, 5.0, 'Sevirrus', 'I bled for this. I butchered for this. What MORE do you want from me?!', 99, 'scream'],
-  [57.4, 4.6, 'Sevirrus', 'Father… when you looked at me… is this what you saw?', 100, 'hush'],
+  [57.4, 4.6, 'Sevirrus', 'Father… when you looked at me… is this what you saw?', 100, 'hush', 'hak'],
   [63.2, 5.0, 'Sevirrus', 'No. No. NO. I am not weak. I am NOT WEAK!', 101, 'scream'],
   [70.0, 9.2, 'Sevirrus', 'Let them come to Alphinos. Let them all come. I will paint these walls with every last Chompjak… and then it will finally be quiet.', 102],
 ];
@@ -4838,7 +4842,7 @@ function endCh5Intro(finished) {
   floor.visible = ring1.visible = ring2.visible = ticks.visible = true; dust.visible = true;
   rig.position.set(0, 0, 0); rig.rotation.set(0, 0, 0); rig.rotation.order = 'XYZ'; applyPose(sev.j, POSES.stand); setBlade(false); eyeMats.forEach(m => { m.emissiveIntensity = 0; });
   clearBlood(); clearGore(); clearSparks(); clearShards(); canvasEl.classList.remove('impact', 'glitch'); impactUntil = 0;
-  subsEl.style.opacity = 0; subsEl.className = 'subs'; cineEls.black.style.opacity = 0; cineEls.red.style.opacity = 0; cineEls.card.style.opacity = 0; cineEls.skip.hidden = true;
+  subsEl.style.opacity = 0; subsEl.className = 'subs'; subsWho.classList.remove('flip'); cineEls.black.style.opacity = 0; cineEls.red.style.opacity = 0; cineEls.card.style.opacity = 0; cineEls.skip.hidden = true;
   document.body.classList.remove('cine'); M.voice && M.voice.stop(); speak(null);
   M.onCh5End && M.onCh5End(finished);
 }
@@ -4892,7 +4896,8 @@ function ch5Update(dt, time) {
   applyPose(sev.j, pose);
   setBlade(true, T > 22.4 ? 1 : 0.5);
   const eyeK = T < 22.4 ? 0.3 + Math.random() * 0.2 : T < 56 ? 1.4 + Math.random() * 0.8 : T < 63.2 ? 0.15 : T < 69 ? 2.2 + Math.random() : 1.6;
-  eyeMats.forEach(m => { m.emissiveIntensity = eyeK; });
+  const calm = I.line >= 0 && CH5_INTRO[I.line][6] === 'hak';
+  eyeMats.forEach(m => { m.emissiveIntensity = calm ? 0.12 : eyeK; });
 
   // "Not ONE": the blade into the dais
   once('slam', T, 9.5, () => { bladeTip(tmpA); tmpA.y = 0.62; sparks(tmpA, 140, 5); shards(tmpA.clone(), 30); impactFrame(70); I.shake = 0.35; });
@@ -4956,7 +4961,19 @@ function ch5Update(dt, time) {
 
   // subtitles and voice
   const li = C5L.findIndex(l => Tn >= l.s && Tn < l.s + l.d);
-  if (li !== I.line) { I.line = li; if (li >= 0 && !(I.skipped && I.skipped.has(li))) { const [, , who, line, vo, how] = CH5_INTRO[li]; subsWho.textContent = who; subsLine.textContent = line; subsEl.className = 'subs' + (who === 'Sevirrus' ? '' : ' lead') + (how ? ' ' + how : ''); if (vo !== undefined) M.voice && M.voice.play(vo); } }
+  if (li !== I.line) { I.line = li; if (li >= 0 && !(I.skipped && I.skipped.has(li))) {
+    const [, , who, line, vo, how, alt] = CH5_INTRO[li], name = alt === 'hak' ? HAK_NAME : who;
+    // he flips between his two names: the old one fights the new one for a moment before it settles
+    if (I.name && name !== I.name && [I.name, name].every(n => n === 'Sevirrus' || n === HAK_NAME)) I.flip = { from: I.name, to: name, t: 0 };
+    if (who === 'Sevirrus') I.name = name;
+    subsWho.textContent = name; subsLine.textContent = line; subsEl.className = 'subs' + (who === 'Sevirrus' ? '' : ' lead') + (how ? ' ' + how : '') + (alt === 'hak' ? ' hak' : '');
+    if (vo !== undefined) M.voice && M.voice.play(vo); } }
+  if (I.flip) {
+    I.flip.t += dt; const f = I.flip, done = f.t > 0.75;
+    subsWho.textContent = done ? f.to : (Math.floor(f.t / 0.07) % 3 === 0 ? f.to : f.from); subsWho.classList.toggle('flip', !done);
+    subsEl.classList.toggle('hak', done ? f.to === HAK_NAME : subsWho.textContent === HAK_NAME);
+    if (done) I.flip = null;
+  }
   subsEl.style.opacity = li >= 0 && !(I.skipped && I.skipped.has(li)) ? 1 : 0;
   speak(sevTalking() ? 'sev' : null, li >= 0 && !(M.voice && M.voice.has && M.voice.has(CH5_INTRO[li][4])));
 
