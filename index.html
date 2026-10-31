@@ -793,6 +793,8 @@ body.run .g-sev.near b { color: var(--crimson); }
     $('#tagLine').textContent = post3 ? 'The Emperor is dead. Long live the Emperor.' : 'He does not hate you. He simply needs what you have.';
     $('#archAssa').hidden = !post3;
     $('#rankVal').textContent = post3 ? 'Emperor' : 'Pre-Emperor';
+    // alignment: Neutral Evil before the throne, Chaotic Evil after it
+    $('#algVal').textContent = post3 ? 'Chaotic Evil' : 'Neutral Evil'; $('#algCE').classList.toggle('ne', post3); $('#algNE').classList.toggle('ne', !post3);
     const done = ch > 1 || !!st.complete;
     $('#threatTxt').textContent = 'Threat assessment · ' + (done ? '12' : '11') + ' / 12';
     $('#threatLast').classList.toggle('f', done);
