@@ -758,7 +758,7 @@ body.run .g-sev.near b { color: var(--crimson); }
     return p;
   }
   const chOpen = (n, p) => n <= 1 || !!p['c' + (n - 1)];
-  window.__menu.markCleared = n => { const p = progress(); p['c' + n] = true; try { localStorage.setItem(PKEY, JSON.stringify(p)); } catch (e) {} refreshMenu(); };
+  window.__menu.markCleared = n => { const p = progress(); p['c' + n] = true; active = { chapter: n, complete: true }; try { localStorage.setItem(PKEY, JSON.stringify(p)); } catch (e) {} refreshMenu(); };
   function renderChapters() {
     const p = progress();
     document.querySelectorAll('.ch-card').forEach(c => { const n = +c.dataset.ch, open = chOpen(n, p); c.classList.toggle('locked', !open); c.classList.toggle('cleared', n >= 1 && !!p['c' + n]); c.setAttribute('aria-disabled', String(!open)); });
@@ -767,23 +767,33 @@ body.run .g-sev.near b { color: var(--crimson); }
   document.querySelectorAll('.ch-card').forEach(c => c.addEventListener('click', () => {
     const n = +c.dataset.ch, p = progress();
     if (!chOpen(n, p)) { doFlash(); say(c.querySelector('.ch-lock').textContent); return; }
-    $('#pChapters').hidden = true; primeAudio();
+    $('#pChapters').hidden = true; primeAudio(); active = { chapter: Math.max(1, n), complete: false };
     const M = window.__menu, run = [M.playIntro, M.playChapter, M.playChapter2, M.playChapter3][n];
     if (run && run()) say(c.querySelector('.ch-n').textContent + ': ' + c.querySelector('b').textContent); else say('Still loading. Try again in a moment.');
   }));
   const when = t => new Date(t).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   // the menu reflects the most recent save: Continue, and his threat assessment once Chapter I is done
-  function applyProgress(sv) {
-    const p = progress();
-    const cur = p.c3 ? 'III · Assassination' : p.c2 ? 'III · Assassination' : p.c1 ? 'II · The Siege of Aridaxx' : 'I · Investigation';
+  // the menu reflects the point in the story you are at: the save you last loaded, saved or played,
+  // otherwise your latest save, otherwise everything you have cleared
+  let active = null;
+  window.__menu.setActive = st => { active = st; refreshMenu(); };
+  function menuState() {
+    if (active) return active;
+    const L = latestSave(); if (L) return L.s;
+    const p = progress(); return p.c3 ? { chapter: 3, complete: true } : p.c2 ? { chapter: 2, complete: true } : p.c1 ? { chapter: 1, complete: true } : null;
+  }
+  function applyProgress() {
+    const st = menuState() || { chapter: 1 }, ch = st.chapter || 1;
+    const cur = ch === 3 ? 'III · Assassination' : ch === 2 ? (st.complete ? 'III · Assassination' : 'II · The Siege of Aridaxx') : st.complete ? 'II · The Siege of Aridaxx' : 'I · Investigation';
+    const sv = st;
     $('#curName').textContent = cur; contNote.dataset.base = cur.split(' · ')[1]; contNote.textContent = contNote.dataset.base;
     // after the Emperor dies, the menu is his
-    const post3 = !!p.c3; window.__menu.post3 = post3; document.body.classList.toggle('post3', post3);
+    const post3 = ch === 3; window.__menu.post3 = post3; document.body.classList.toggle('post3', post3);
     $('#subLine').innerHTML = post3 ? 'Emperor Hak · <em>after the throne</em> · Aridaxx' : 'Hak Chompjak · <em>before the throne</em> · Aridaxx';
     $('#tagLine').textContent = post3 ? 'The Emperor is dead. Long live the Emperor.' : 'He does not hate you. He simply needs what you have.';
     $('#archAssa').hidden = !post3;
     $('#rankVal').textContent = post3 ? 'Emperor' : 'Pre-Emperor';
-    const done = !!(sv && sv.complete) || !!p.c1;
+    const done = ch > 1 || !!st.complete;
     $('#threatTxt').textContent = 'Threat assessment · ' + (done ? '12' : '11') + ' / 12';
     $('#threatLast').classList.toggle('f', done);
   }
@@ -808,7 +818,7 @@ body.run .g-sev.near b { color: var(--crimson); }
           if (sv && !sb.dataset.armed) { sb.dataset.armed = 1; sb.textContent = 'Confirm'; sb.classList.add('warn'); return; }
           const st = window.__menu.getState && window.__menu.getState();
           if (!st) return;
-          if (writeSave(i, st)) { renderSlots(el, mode); refreshMenu(); const nb = el.children[i - 1].querySelector('button'); if (nb) { nb.textContent = 'Saved'; nb.disabled = true; } }
+          if (writeSave(i, st)) { active = st; renderSlots(el, mode); refreshMenu(); const nb = el.children[i - 1].querySelector('button'); if (nb) { nb.textContent = 'Saved'; nb.disabled = true; } }
           else say('Could not save in this browser.');
         });
       }
@@ -817,6 +827,7 @@ body.run .g-sev.near b { color: var(--crimson); }
   }
   function loadSlot(i) {
     const sv = readSave(i); if (!sv) return;
+    active = sv;
     $('#pSaves').hidden = true;
     if (window.__menu.quitChapter) window.__menu.quitChapter(true);
     primeAudio();
@@ -839,6 +850,7 @@ body.run .g-sev.near b { color: var(--crimson); }
     b.addEventListener('click', () => {
       const a = b.dataset.act;
       if (a === 'begin') {
+        active = { chapter: 1, complete: false }; refreshMenu();
         if (musicOn) primeAudio();
         if (window.__menu.playIntro && window.__menu.playIntro()) say('Intro playing');
         else { doFlash(); say('He is still taking shape. Try again in a moment.'); }
