@@ -660,6 +660,7 @@ body.run .g-sev.near b { color: var(--crimson); }
 <script type="application/octet-stream" id="vo92" data-src="assets/vo92.mp3"></script>
 <script type="application/octet-stream" id="vo93" data-src="assets/vo93.mp3"></script>
 <script type="application/octet-stream" id="songDrive" data-src="assets/songDrive.mp3"></script>
+<script type="application/octet-stream" id="songKesh" data-src="assets/songKesh.mp3"></script>
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -730,27 +731,31 @@ body.run .g-sev.near b { color: var(--crimson); }
     }
   }
   // 'Demons of Laniakea' plays on the rover while you drive; it loops and ducks under Jakal's voice
-  let songBuf = null, songSrc = null, songGain = null, songLoading = false;
+  // songs by tag: 'songDrive' (Demons of Laniakea, the rover) and 'songKesh' (Siege of Kesh, the battle)
+  const songBufs = {}, songLoading = {};
+  let songSrc = null, songGain = null, songNow = null;
   window.__menu.song = {
-    play() {
+    play(id = 'songDrive') {
       if (!actx || !musicOn) return;
+      if (songSrc && songNow !== id) this.stop();
+      this.wanted = id;
       const start = () => {
-        if (songSrc || !songBuf) return;
+        if (songSrc || !songBufs[id] || window.__menu.song.wanted !== id) return;
+        songNow = id;
         songGain = actx.createGain(); songGain.gain.setValueAtTime(0, actx.currentTime); songGain.gain.linearRampToValueAtTime(0.75, actx.currentTime + 2.5); songGain.connect(actx.destination);
-        songSrc = actx.createBufferSource(); songSrc.buffer = songBuf; songSrc.loop = true; songSrc.connect(songGain); songSrc.start();
+        songSrc = actx.createBufferSource(); songSrc.buffer = songBufs[id]; songSrc.loop = true; songSrc.connect(songGain); songSrc.start();
       };
-      if (songBuf) start();
-      else if (!songLoading) {
-        songLoading = true;
-        const raw = Uint8Array.from(atob($('#songDrive').textContent.trim()), c => c.charCodeAt(0)).buffer;
-        actx.decodeAudioData(raw).then(buf => { songBuf = buf; if (window.__menu.song.wanted) start(); }).catch(() => {});
+      if (songBufs[id]) start();
+      else if (!songLoading[id]) {
+        songLoading[id] = true;
+        const raw = Uint8Array.from(atob($('#' + id).textContent.trim()), c => c.charCodeAt(0)).buffer;
+        actx.decodeAudioData(raw).then(buf => { songBufs[id] = buf; start(); }).catch(() => {});
       }
-      this.wanted = true;
     },
     stop() {
-      this.wanted = false;
+      this.wanted = null;
       if (!songSrc) return;
-      const s = songSrc, g = songGain, t = actx.currentTime; songSrc = null;
+      const s = songSrc, g = songGain, t = actx.currentTime; songSrc = null; songNow = null;
       g.gain.setTargetAtTime(0, t, 0.4); s.stop(t + 2.5);
     },
   };
@@ -4558,6 +4563,16 @@ const C4_UNITS = [
   { id: 'zarkam', name: 'Zarkam', side: 'E', tpl: 'chompy', badge: 0xff2a2a, x: -100, z: -150, troops: 120 },
   { id: 'almak', name: 'Almak', side: 'E', tpl: 'chompy', badge: 0x3adc5a, x: 100, z: -430, troops: 120 },
 ];
+// rank-and-file squads posted along the whole plain, so it is never empty
+function fieldSquads() {
+  let seed = 23; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  const out = []; let n = 0;
+  for (let z = 690; z > -745; z -= 46) for (const lane of [-1, 1]) {
+    const side = z > 520 ? 'A' : z > 180 ? (rnd() < 0.45 ? 'A' : 'E') : 'E';
+    out.push({ id: 'sq' + n++, name: 'Trooper', side, anon: true, alive: true, leader: false, x: lane * (25 + rnd() * 95), z: z + (rnd() - 0.5) * 20, troops: Math.round(14 + rnd() * 10) });
+  }
+  return out;
+}
 const CH4_INTRO = [   // Hak alone in the throne hall (CH4SEV1..6, CH4GUARD1 when recorded)
   [4.0, 3.2, 'Sevirrus', 'He said he loved me.', 85],
   [8.6, 4.25, 'Sevirrus', 'He said it the way he said everything. Like an order.', 86],
@@ -4660,7 +4675,7 @@ function drawStageMap(cv, units, t, opts = {}) {
   c.strokeStyle = 'rgba(169,147,230,.35)'; c.lineWidth = 1; c.strokeRect(mx(-K4.W), mz(-K4.HALF), mx(K4.W) - mx(-K4.W), mz(K4.HALF) - mz(-K4.HALF));
   c.fillStyle = 'rgba(90,208,255,.12)'; c.fillRect(mx(-60), mz(735), mx(60) - mx(-60), mz(800) - mz(735));
   c.fillStyle = 'rgba(255,48,72,.14)'; c.fillRect(mx(-60), mz(-800), mx(60) - mx(-60), mz(-735) - mz(-800));
-  if (opts.squads) units.forEach(u => {
+  if (opts.squads) [...units, ...(opts.extra || [])].forEach(u => {
     if (!u.alive || u.troops <= 0) return;
     c.fillStyle = u.side === 'A' ? 'rgba(90,208,255,.45)' : 'rgba(255,48,72,.45)';
     const n = Math.min(24, Math.ceil(u.troops / 6));
@@ -4668,7 +4683,7 @@ function drawStageMap(cv, units, t, opts = {}) {
   });
   // T-shaped icons; leaders flash white, sub officers glow faintly
   units.forEach(u => {
-    if (u.alive === false) return;
+    if (u.alive === false || u.anon) return;
     const x = mx(u.x), y = mz(u.z), s = u.leader ? 7 : 5;
     const pulse = u.leader ? (Math.sin(t * 6) > 0 ? 1 : 0) : 0.35 + Math.sin(t * 3 + u.x) * 0.2;
     const col = u.side === 'A' ? '90,208,255' : '255,48,72';
@@ -4719,8 +4734,8 @@ let preRaf = 0;
 function showPreBattle() {
   document.body.classList.add('c4screen');
   preEl.hidden = false; G('c4Begin').focus();
-  const units = C4_UNITS.map(u => ({ ...u, alive: true }));
-  const draw = () => { if (preEl.hidden) return; drawStageMap(G('c4Map'), units, performance.now() / 1000, { labels: true, squads: true }); preRaf = requestAnimationFrame(draw); };
+  const units = C4_UNITS.map(u => ({ ...u, alive: true })), extra = fieldSquads();
+  const draw = () => { if (preEl.hidden) return; drawStageMap(G('c4Map'), units, performance.now() / 1000, { labels: true, squads: true, extra }); preRaf = requestAnimationFrame(draw); };
   cancelAnimationFrame(preRaf); draw();
 }
 M.showPreBattle = showPreBattle;
@@ -4821,8 +4836,9 @@ function startBattle() {
   fieldSet.g.visible = true;
   const units = C4_UNITS.map(u => ({ ...u, pos: new THREE.Vector3(u.x, 0, u.z), hp: 100, maxTroops: u.troops, alive: true, engaged: null, model: null }));
   const me = units[0];
+  const squads = fieldSquads().map(q => ({ ...q, pos: new THREE.Vector3(q.x, 0, q.z), hp: 100 }));
   const a = rigClone(arixalTpl); a.mover.position.copy(me.pos); a.mover.rotation.y = Math.PI; scene.add(a.mover);
-  game = { phase: 'battle', ch: 4, t: 0, mover: a.mover, j: a.j, gait: makeGait(a.mover), units, me, troops: [], ko: 0, musou: 0, paused: false, done: false, heard: new Set(), simT: 0, spawnT: 0, foes: [] };
+  game = { phase: 'battle', ch: 4, t: 0, mover: a.mover, j: a.j, gait: makeGait(a.mover), units, squads, me, troops: [], ko: 0, musou: 0, paused: false, done: false, heard: new Set(), simT: 0, spawnT: 0, foes: [] };
   game.sword = giveDamixSword(a.j); game.sword.scale.setScalar(1.15); game.trail = makeTrail(0x5ad0ff);
   me.model = { mover: a.mover, j: a.j };
   // Sevirrus holds the north camp
@@ -4837,7 +4853,7 @@ function startBattle() {
   G('c4Ko').textContent = '0'; G('c4Feed').innerHTML = ''; G('c4Big').textContent = '';
   updateC4Hud(); G('gHud').querySelector('.g-ch').textContent = 'Chapter IV · Enough is Enough'; hud.obj.textContent = 'Defeat Sevirrus'; hud.count.textContent = '3 enemy officers remain';
   setTimeout(() => game && game.ch === 4 && feed('<b class="a">Arixal Chompjak</b> has begun battle with <b class="e">Sevirrus</b>!', 'big'), 400);
-  M.song && M.song.play();
+  M.song && M.song.play('songKesh');
   return true;
 }
 M.startBattle = startBattle;
@@ -4896,14 +4912,16 @@ function manageTroops() {
     return true;
   });
   let nE = game.troops.filter(t => t.side === 'E' && t.state !== 'dead').length, nA = game.troops.filter(t => t.side === 'A' && t.state !== 'dead').length;
-  U.forEach(u => {
+  [...U, ...game.squads].forEach(u => {
     if (!u.alive || u === game.me || u.troops < 1) return;
-    const d = u.pos.distanceTo(p); if (d > 75) return;
-    const cap = u.side === 'E' ? 34 : 12;
+    const d = u.pos.distanceTo(p); if (d > (u.anon ? 115 : 75)) return;
+    const cap = u.side === 'E' ? 40 : 16;
     let here = game.troops.filter(t => t.officer === u && t.state !== 'dead').length;
-    while (here < Math.min(u.troops, u.side === 'E' ? 16 : 7) && (u.side === 'E' ? nE : nA) < cap) {
+    while (here < Math.min(u.troops, u.anon ? 10 : u.side === 'E' ? 16 : 7) && (u.side === 'E' ? nE : nA) < cap) {
       const tr = makeTrooper(u.side, u); const a = Math.random() * Math.PI * 2, r = 5 + Math.random() * 12;
-      tr.mover.position.set(u.pos.x + Math.cos(a) * r, 0, u.pos.z + Math.sin(a) * r);
+      // a far squad sends its men into the ground around him, so the field is never empty
+      const anchor = d < 40 ? u.pos : tmpB.subVectors(u.pos, p).setY(0).normalize().multiplyScalar(22 + Math.random() * 14).add(p);
+      tr.mover.position.set(anchor.x + Math.cos(a) * r, 0, anchor.z + Math.sin(a) * r);
       if (tr.mover.position.distanceTo(p) < 10) tr.mover.position.addScaledVector(tmpA.subVectors(tr.mover.position, p).setY(0).normalize(), 10);
       tr.mover.position.x = THREE.MathUtils.clamp(tr.mover.position.x, -K4.W + 2, K4.W - 2);
       u.troops -= 1; game.troops.push(tr); here++; if (u.side === 'E') nE++; else nA++;
@@ -5093,7 +5111,7 @@ function battleUpdate4(dt, time) {
 
   // labels, target panel, minimap
   updateTags(); updateTarget(); updateC4Hud();
-  game.mapT = (game.mapT || 0) - dt; if (game.mapT <= 0) { game.mapT = 0.1; drawStageMap(G('c4Mini'), game.units.map(u => ({ ...u, x: u.pos.x, z: u.pos.z })), time, { squads: true, player: { x: p.x, z: p.z, yaw: game.mover.rotation.y } }); }
+  game.mapT = (game.mapT || 0) - dt; if (game.mapT <= 0) { game.mapT = 0.1; drawStageMap(G('c4Mini'), game.units.map(u => ({ ...u, x: u.pos.x, z: u.pos.z })), time, { squads: true, extra: game.squads, player: { x: p.x, z: p.z, yaw: game.mover.rotation.y } }); }
   // warnings
   const sevU = game.units.find(u => u.id === 'sevirrus');
   if (!game.heard.has('sevnear') && p.distanceTo(sevU.pos) < 60) { game.heard.add('sevnear'); feed('<b class="e">Sevirrus</b>: Brother of a dead man. Come and kneel.', 'big'); M.voice && M.voice.play(92); }
