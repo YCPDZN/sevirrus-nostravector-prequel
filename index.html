@@ -196,6 +196,27 @@ body.c4screen #menu, body.c4screen .left, body.c4screen .right, body.c4screen he
 .c4-orders span { font-size: 9px; letter-spacing: .3em; text-transform: uppercase; color: var(--dim); }
 .c4-orders button { font: inherit; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; text-align: left; color: var(--bone); background: rgba(8,4,14,.6); border: 1px solid var(--line); padding: 6px 7px; cursor: pointer; }
 .c4-orders button kbd { font-family: var(--font-ui); color: #5ad0ff; margin-right: 6px; }
+.c4-mapbtn { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); top: calc(env(safe-area-inset-top, 0px) + 512px); z-index: 8; width: 108px; font: inherit; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; text-align: left; color: var(--bone); background: rgba(8,4,14,.6); border: 1px solid var(--line); padding: 6px 7px; cursor: pointer; }
+.c4-mapbtn kbd { font-family: var(--font-ui); color: #5ad0ff; margin-right: 6px; }
+#c4MapView { z-index: 24; background: rgba(4,2,8,.78); }
+#c4MapView .panel.c4-mv { width: min(880px, 100%); max-width: 880px; max-height: calc(100vh - 32px); overflow: auto; }
+.c4-mv .c4-map { width: 270px; height: 520px; }
+.c4-mv-legend { font-size: 10px; letter-spacing: .12em; color: var(--dim); margin-top: 6px; line-height: 1.8; max-width: 270px; }
+.c4-mv-legend b { font-weight: 400; }
+.c4-mor2 { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.c4-mrow .nm { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+.c4-mrow .nm em { font-style: normal; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; }
+.c4-mrow .mbar { display: block; height: 8px; background: rgba(255,255,255,.07); border: 1px solid var(--line); }
+.c4-mrow .mbar i { display: block; height: 100%; }
+.c4-mrow.ally .mbar i { background: linear-gradient(90deg, #2a7ac0, #5ad0ff); } .c4-mrow.foe .mbar i { background: linear-gradient(90deg, #8a0c1c, #ff3048); }
+.c4-mrow.ally em { color: #5ad0ff; } .c4-mrow.foe em { color: #ff6070; }
+.c4-mrow small { display: block; font-size: 11px; opacity: .6; margin-top: 3px; }
+.c4-olist { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 18px; font-size: 12px; }
+.c4-olist div { display: flex; justify-content: space-between; gap: 8px; } .c4-olist .dead { opacity: .4; text-decoration: line-through; }
+.c4-olist span { opacity: .6; font-variant-numeric: tabular-nums; }
+.c4-forts { display: grid; grid-template-columns: auto auto 1fr; gap: 3px 14px; font-size: 12px; align-items: baseline; }
+.c4-forts .a { color: #5ad0ff; } .c4-forts .e { color: #ff6070; } .c4-forts .sealed { color: #9a9aa6; } .c4-forts .open { color: #f0c060; }
+@media (max-width: 640px) { .c4-mapbtn { top: calc(env(safe-area-inset-top, 0px) + 400px); width: 80px; } .c4-mapbtn kbd { display: none; } .c4-mv .c4-map { width: 180px; height: 346px; } .c4-olist { grid-template-columns: 1fr; } }
 .c4-orders button.on { border-color: #5ad0ff; background: rgba(42,122,192,.3); }
 @media (max-width: 640px) { .c4-orders { top: calc(env(safe-area-inset-top, 0px) + 268px); width: 80px; } .c4-orders button kbd { display: none; } }
 @media (pointer: coarse) { body.c4 .c4-musou { display: block; bottom: calc(env(safe-area-inset-bottom, 0px) + 128px); } }
@@ -2347,7 +2368,7 @@ addEventListener('keydown', e => {
   if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(e.key.toLowerCase())) e.preventDefault();
   if (e.key === 'e' || e.key === 'E' || e.key === ' ') tryExamine();
   if (e.key === 'j' || e.key === 'J') toggleJournal();
-  if (e.key === 'Escape') togglePause();
+  if (e.key === 'Escape') { if (mapViewOpen()) { closeMapView(); return; } togglePause(); }
 });
 addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
 const G = id => document.getElementById(id);
@@ -4027,7 +4048,7 @@ function startEscape(st) {
 }
 M.playEscape = startEscape;
 M._game = () => game;   // test hooks
-M._setHp = v => { B.hp = v; }; M._dropTest = (x, z) => { dropItem(V(x, 0, z), 'rock', true); dropItem(V(x + 1.4, 0, z - 0.6), 'great', true); }; M._down = u => officerDown(u, game.me); M._reinforce = () => game && game.bases.forEach(b => reinforce(b));
+M._setHp = v => { B.hp = v; }; M._dropTest = (x, z) => { dropItem(V(x, 0, z), 'rock', true); dropItem(V(x + 1.4, 0, z - 0.6), 'great', true); }; M._down = u => officerDown(u, game.me); M._sim = t => simulate(t); M._reinforce = () => game && game.bases.forEach(b => reinforce(b));
 M._poses = POSES; M._fit = f => { fit = lastFit = f; fitT = 0; fitNext = 99; };
 M._step = (n, dt = 1 / 30) => { for (let i = 0; i < n && game; i++) gameUpdate(dt, performance.now() / 1000 + i * dt); return !!game; };
 function updateRunHud() {
@@ -4761,7 +4782,7 @@ const preEl = (() => {
         <div class="c4-side foe"><div class="c4-h">Enemies</div>
           <div class="c4-row"><span class="role">Leader</span><b>Sevirrus</b><i>${stars(8)}</i></div>
           <div class="c4-row"><span class="role">Officers</span><b>Zarkam · Almak · Tamix</b></div></div>
-        <p class="c4-note"><b style="color:#f0c060">◆ Gate Captains</b> keep each fort and camp sending out troops. Defeat one to seal its gates and stop the reinforcements.<br><b style="color:#7dffb0">■ Supply crates</b> hold space rocks that restore health. The great ones restore all of it.</p>
+        <p class="c4-note"><b style="color:#f0c060">◆ Gate Captains</b> keep each fort and camp sending out troops. Defeat one to seal its gates and stop the reinforcements. Each side’s new officers come from its main camp, so its gate captain is the one that matters most.<br><b style="color:#7dffb0">■ Supply crates</b> hold space rocks that restore health. The great ones restore all of it.</p>
         <div class="c4-btns"><button class="close" id="c4Begin">Begin</button><button class="close" id="c4Back">Return to menu</button></div>
       </div>
     </div></div>`;
@@ -4770,7 +4791,7 @@ const preEl = (() => {
 const loadEl = (() => { const d = document.createElement('div'); d.className = 'c4load'; d.id = 'c4Load'; d.hidden = true;
   d.innerHTML = '<div class="c4load-in"><div class="eyebrow">Chapter IV · Enough is Enough</div><h2 id="c4LoadT">The Plain of Kesh</h2><div class="c4load-bar"><i id="c4LoadBar"></i></div><p id="c4LoadTip"></p></div>';
   document.body.appendChild(d); return d; })();
-const C4_TIPS = ['Defeat a Gate Captain and his fort sends no more troops. They stand before the gates, marked ◆ on your map.', 'Break supply crates for space rocks. A space rock restores some health; a great space rock restores all of it.', 'Defeated officers drop a great space rock. Take it before Sevirrus finds you.', 'Arixal fells a soldier in three strikes. Sevirrus is another matter.', 'Your officers advance on their own. Help them, or they may fall back.', 'Strike to fill the gold bar, then press Q to unleash his Latent Powers.', 'Every soldier answers to an officer. Defeat the officer and his squad breaks.', 'Sevirrus will not leave his camp until you come for him, or until he tires of waiting.', 'Defeat a Base Captain to take his fort. Forts send fresh troops to whoever holds them.', 'Press 1 to 4 to order your officers: follow me, advance, hold, or fall back.', 'Every soldier and officer you cut down saps Sevirrus’s morale. A wavering army strikes weakly.'];
+const C4_TIPS = ['Press M to see the whole battle: every officer, every fort, and how each army’s morale is holding.', 'While the gate captain of Sevirrus’s camp lives, new officers keep riding out to replace the ones you defeat.', 'Defeat a Gate Captain and his fort sends no more troops. They stand before the gates, marked ◆ on your map.', 'Break supply crates for space rocks. A space rock restores some health; a great space rock restores all of it.', 'Defeated officers drop a great space rock. Take it before Sevirrus finds you.', 'Arixal fells a soldier in three strikes. Sevirrus is another matter.', 'Your officers advance on their own. Help them, or they may fall back.', 'Strike to fill the gold bar, then press Q to unleash his Latent Powers.', 'Every soldier answers to an officer. Defeat the officer and his squad breaks.', 'Sevirrus will not leave his camp until you come for him, or until he tires of waiting.', 'Defeat a Base Captain to take his fort. Forts send fresh troops to whoever holds them.', 'Press 1 to 4 to order your officers: follow me, advance, hold, or fall back.', 'Every soldier and officer you cut down saps Sevirrus’s morale. A wavering army strikes weakly.'];
 function c4Loading(next) {
   loadEl.hidden = false; document.body.classList.add('c4screen');
   G('c4LoadTip').textContent = C4_TIPS[Math.random() * C4_TIPS.length | 0];
@@ -4891,7 +4912,8 @@ const c4Hud = (() => {
     <div class="c4-tags" id="c4Tags"></div>
     <div class="c4-big" id="c4Big"></div>
     <button class="g-ex c4-musou" id="c4MuBtn">Latent Powers</button>
-    <div class="c4-orders" role="group" aria-label="Orders to your officers"><span>Orders</span><button data-o="follow"><kbd>1</kbd>Follow me</button><button data-o="advance" class="on"><kbd>2</kbd>Advance</button><button data-o="hold"><kbd>3</kbd>Hold</button><button data-o="fallback"><kbd>4</kbd>Fall back</button></div>`;
+    <div class="c4-orders" role="group" aria-label="Orders to your officers"><span>Orders</span><button data-o="follow"><kbd>1</kbd>Follow me</button><button data-o="advance" class="on"><kbd>2</kbd>Advance</button><button data-o="hold"><kbd>3</kbd>Hold</button><button data-o="fallback"><kbd>4</kbd>Fall back</button></div>
+    <button class="c4-mapbtn" id="c4MapBtn"><kbd>M</kbd>Map &amp; morale</button>`;
   document.body.appendChild(d); return d;
 })();
 // ------------------------------------------------------- space rocks on the field: they heal ----------
@@ -4968,6 +4990,58 @@ function pickupsUpdate(dt, time) {
     return true;
   });
 }
+// ------------------------------------------------------------- the map and morale screen ----------
+const mapView = (() => {
+  const d = document.createElement('div'); d.className = 'gwrap'; d.id = 'c4MapView'; d.hidden = true;
+  d.innerHTML = `<div class="panel c4-mv" role="dialog" aria-labelledby="hMv">
+    <div class="eyebrow" id="c4MvEyebrow">Chapter IV · Enough is Enough</div><h3 id="hMv">The Plain of Kesh</h3>
+    <div class="c4-cols">
+      <div><canvas class="c4-map" id="c4MvMap" width="270" height="520" aria-label="Battle map"></canvas>
+        <div class="c4-mv-legend"><b style="color:#fff">▲</b> Arixal · <b style="color:#5ad0ff">T</b>/<b style="color:#ff3048">T</b> officers · <b style="color:#f0c060">◆</b> gate captain · <b style="color:#9a9aa6">✕</b> sealed gate · <b style="color:#7dffb0">■</b> space rock</div></div>
+      <div class="c4-info">
+        <div><div class="c4-h">Morale</div><div class="c4-mor2" id="c4MvMorale"></div></div>
+        <div class="c4-side ally"><div class="c4-h">Allied officers</div><div class="c4-olist" id="c4MvA"></div></div>
+        <div class="c4-side foe"><div class="c4-h">Enemy officers</div><div class="c4-olist" id="c4MvE"></div></div>
+        <div><div class="c4-h">Forts and gates</div><div class="c4-forts" id="c4MvForts"></div></div>
+        <div class="c4-btns"><button class="close" id="c4MvClose">Back to battle</button></div>
+      </div>
+    </div></div>`;
+  document.body.appendChild(d); return d;
+})();
+let mvRaf = 0;
+function mapViewOpen() { return !mapView.hidden; }
+const moraleWord = v => v >= 80 ? 'Soaring' : v >= 60 ? 'High' : v >= 40 ? 'Steady' : v >= 20 ? 'Shaken' : 'Wavering';
+function renderMapView() {
+  const live = o => Math.round(o.troops + game.troops.filter(t => t.officer === o && t.state !== 'dead' && t.state !== 'flee').length);
+  const m = game.morale;
+  const row = (side, label) => `<div class="c4-mrow ${side === 'A' ? 'ally' : 'foe'}"><div class="nm"><span>${label}</span><em>${moraleWord(m[side])} · ${Math.round(m[side])}</em></div><div class="mbar"><i style="width:${m[side]}%"></i></div><small>Soldiers strike at ×${mf(side).toFixed(2)} strength</small></div>`;
+  G('c4MvMorale').innerHTML = row('A', 'Arixal Chompjak’s army') + row('E', 'Sevirrus’s army');
+  const list = side => game.units.filter(u => u.side === side && !u.captain).map(u => `<div class="${u.alive ? '' : 'dead'}"><b>${u.name}</b><span>${u === game.me ? Math.round(B.hp) + ' HP' : u.alive ? live(u) + ' troops' : (side === 'E' ? 'defeated' : 'retreated')}</span></div>`).join('');
+  G('c4MvA').innerHTML = list('A'); G('c4MvE').innerHTML = list('E');
+  G('c4MvForts').innerHTML = game.bases.map(b => { const g = gateOf(b), open = g && g.alive && g.side === b.side;
+    return `<span class="${b.side === 'A' ? 'a' : 'e'}">${b.name}</span><span class="${b.side === 'A' ? 'a' : 'e'}">${b.side === 'A' ? 'Allied' : 'Enemy'}</span><span class="${open ? 'open' : 'sealed'}">${open ? (b.main ? 'Gate open · sends officers and troops' : 'Gate open · sends troops') : 'Gate sealed'}</span>`; }).join('');
+  G('c4MvEyebrow').textContent = `Chapter IV · Enough is Enough · ${Math.floor(game.t / 60)}:${String(Math.floor(game.t % 60)).padStart(2, '0')} · ${game.ko} KO`;
+}
+function drawMapView() {
+  if (mapView.hidden || !game || !game.units) return;
+  const p = game.mover.position;
+  drawStageMap(G('c4MvMap'), game.units.map(u => ({ ...u, x: u.pos.x, z: u.pos.z })), performance.now() / 1000, { labels: true, squads: true, extra: game.squads, bases: game.bases,
+    gates: game.units.filter(u => u.gate).map(u => ({ x: u.post.x, z: u.post.z, side: u.side, alive: u.alive })), items: game.items.map(it => ({ x: it.m.position.x, z: it.m.position.z })), player: { x: p.x, z: p.z, yaw: game.mover.rotation.y } });
+  mvRaf = requestAnimationFrame(drawMapView);
+}
+function openMapView() {
+  if (!game || game.ch !== 4 || game.over || game.paused) return;
+  game.paused = true; keys.clear(); mapView.hidden = false;
+  renderMapView(); cancelAnimationFrame(mvRaf); drawMapView(); G('c4MvClose').focus({ preventScroll: true }); mapView.querySelector('.panel').scrollTop = 0;
+}
+function closeMapView() {
+  if (mapView.hidden) return;
+  mapView.hidden = true; cancelAnimationFrame(mvRaf);
+  if (game && game.ch === 4) game.paused = false;
+}
+G('c4MvClose').addEventListener('click', closeMapView);
+mapView.addEventListener('click', e => { if (e.target === mapView) closeMapView(); });
+G('c4MapBtn').addEventListener('click', openMapView);
 // morale: each army's spirit, 0 to 100. It tilts how hard and how often their soldiers strike.
 const mf = side => 0.6 + (game && game.morale ? game.morale[side] : 50) / 100 * 0.8;
 function morale(side, d) {
@@ -5019,7 +5093,7 @@ function startBattle(st) {
   document.body.classList.add('game', 'c4');
   G('c4Ko').textContent = '0'; G('c4Feed').innerHTML = ''; G('c4Big').textContent = '';
   if (st && st.phase === 'battle') restoreBattle(st);
-  updateC4Hud(); G('c4MA').style.width = (game.morale.A / (game.morale.A + game.morale.E || 1) * 100) + '%'; document.querySelectorAll('.c4-orders button').forEach(b => b.classList.toggle('on', b.dataset.o === 'advance')); G('gHud').querySelector('.g-ch').textContent = 'Chapter IV · Enough is Enough'; hud.obj.textContent = 'Defeat Sevirrus'; hud.count.textContent = '3 enemy officers remain';
+  updateC4Hud(); G('c4MA').style.width = (game.morale.A / (game.morale.A + game.morale.E || 1) * 100) + '%'; document.querySelectorAll('.c4-orders button').forEach(b => b.classList.toggle('on', b.dataset.o === 'advance')); G('gHud').querySelector('.g-ch').textContent = 'Chapter IV · Enough is Enough'; hud.obj.textContent = 'Defeat Sevirrus'; updateOfficerCount();
   setTimeout(() => game && game.ch === 4 && feed(game.restored ? '<b class="a">Arixal Chompjak</b> returns to the battle of Kesh.' : '<b class="a">Arixal Chompjak</b> has begun battle with <b class="e">Sevirrus</b>!', 'big'), 400);
   M.song && M.song.play('songKesh');
   return true;
@@ -5034,6 +5108,7 @@ function battleState() {
     units: game.units.filter(u => u !== game.me).map(u => ({ id: u.id, x: r2(u.pos.x), z: r2(u.pos.z), hp: r2(u.hp), troops: Math.round(u.troops + game.troops.filter(t => t.officer === u && t.state !== 'dead' && t.state !== 'flee').length), alive: u.alive, side: u.side })),
     bases: Object.fromEntries(game.bases.map(b => [b.id, b.side])),
     squads: game.squads.map(q => Math.round(q.troops + game.troops.filter(t => t.officer === q && t.state !== 'dead' && t.state !== 'flee').length)),
+    spawned: game.units.filter(u => u.spawned).map(u => ({ id: u.id, name: u.name, badge: u.badge, side: u.side })), rfN: game.rfN || 0, rfT: game.rfT || null,
     crates: game.crates.map((c, i) => c.broken ? i : -1).filter(i => i >= 0), items: game.items.map(it => [r2(it.m.position.x), r2(it.m.position.z), it.kind]) };
 }
 function restoreBattle(st) {
@@ -5043,6 +5118,7 @@ function restoreBattle(st) {
   game.morale = { A: st.morale.A, E: st.morale.E }; game.aOrder = st.aOrder || 'advance'; game.eOrder = st.eOrder || 'hold';
   game.sevAdvance = !!st.sevAdvance; game.eFallT = st.eFallT || 0; (st.heard || []).forEach(h => game.heard.add(h));
   game.bases.forEach(b => { if (st.bases && st.bases[b.id]) { b.side = st.bases[b.id]; const f = fieldSet.flags[b.id]; if (f) { f.color.set(b.side === 'A' ? 0x2a7ac0 : 0x8a0c1c); f.emissive.set(b.side === 'A' ? 0x0a2a44 : 0x2a0408); } } });
+  (st.spawned || []).forEach(sp => spawnOfficer(sp.side, sp)); game.rfN = st.rfN || game.rfN || 0; if (st.rfT) game.rfT = { ...st.rfT };
   (st.units || []).forEach(s2 => {
     const u = game.units.find(o => o.id === s2.id); if (!u) return;
     u.pos.set(s2.x, 0, s2.z); u.hp = s2.hp; u.troops = s2.troops; u.alive = s2.alive; u.side = s2.side;
@@ -5053,8 +5129,7 @@ function restoreBattle(st) {
   (st.items || []).forEach(([x, z, k]) => dropItem(V(x, 0, z), k, true));
   game.units.forEach(u => { if (u.gate) { if (u.pos.distanceTo(u.post) > 1) u.pos.copy(u.post); setGate(u.base, u.alive && u.side === u.base.side, true); } });
   document.querySelectorAll('.c4-orders button').forEach(b => b.classList.toggle('on', b.dataset.o === game.aOrder));
-  const left = game.units.filter(o => o.side === 'E' && !o.leader && !o.captain && o.alive).length;
-  hud.count.textContent = left ? `${left} enemy officer${left > 1 ? 's' : ''} remain${left > 1 ? '' : 's'}` : 'Only Sevirrus remains';
+  updateOfficerCount();
   game.restored = true;
 }
 function updateC4Hud() {
@@ -5115,8 +5190,45 @@ function simulate(dt) {
   // reinforcements: every base whose gate captain still lives sends fresh troops to its side
   game.reinT = (game.reinT || 0) + dt;
   if (game.reinT > 10) { game.reinT = 0; game.bases.forEach(b => reinforce(b)); }
+  officerReinforcements(dt);
 }
 function gateOf(b) { return game.units.find(o => o.gate && o.base === b); }
+// new officers march out of each main camp while its gate captain lives
+const OFFICER_POOL = {
+  E: [['Kraxis', 0xff8a2a], ['Vorlag', 0xb04aff], ['Drakmar', 0xff2a8a], ['Ozzak', 0xffa0a0], ['Thrax', 0x8affd0], ['Skarn', 0xfff07a], ['Morvek', 0xc0c0ff], ['Jaxar', 0xff5a5a]],
+  A: [['Captain Bezzo', 0x7ac8ff], ['Captain Lurra', 0x9ab0ff], ['Captain Mozz', 0x5affe0], ['Captain Tevik', 0xa0d8ff], ['Captain Orrin', 0x60a0ff], ['Captain Hessa', 0xb0f0ff]],
+};
+const OFFICERS_WANTED = 3, OFFICER_EVERY = 40;
+function fieldOfficers(side) { return game.units.filter(u => u.side === side && u.alive && !u.leader && !u.captain); }
+function updateOfficerCount() {
+  const left = fieldOfficers('E').length;
+  hud.count.textContent = left ? `${left} enemy officer${left > 1 ? 's' : ''} remain${left > 1 ? '' : 's'}` : 'Only Sevirrus remains';
+}
+function spawnOfficer(side, spec) {
+  const camp = game.bases.find(b => b.main && b.side === side), gp = gatePost(camp);
+  game.rfN = (game.rfN || 0) + 1;
+  const used = new Set(game.units.map(u => u.name)), pool = OFFICER_POOL[side];
+  const pick = spec ? [spec.name, spec.badge] : (pool.find(([n]) => !used.has(n)) || [pool[game.rfN % pool.length][0] + ' ' + ['II', 'III', 'IV', 'V'][(game.rfN / pool.length | 0) % 4], pool[game.rfN % pool.length][1]]);
+  const pos = new THREE.Vector3(gp.x + (Math.random() - 0.5) * 8, 0, gp.z);
+  const u = { id: spec ? spec.id : 'rf_' + side + game.rfN, name: pick[0], side, tpl: 'chompy', badge: pick[1], spawned: true, pos, x: pos.x, z: pos.z, troops: 60, maxTroops: 60, hp: 100, alive: true, engaged: null, model: null, homePos: pos.clone() };
+  if (side === 'A') u.holdAt = pos.clone();
+  game.units.push(u);
+  if (!spec) {
+    feed(side === 'E' ? `A new officer, <b class="e">${u.name}</b>, rides out of <b class="e">Sevirrus</b>’s camp!` : `<b class="a">${u.name}</b> rides out of our camp to join the battle!`, side === 'E' ? 'bad' : 'good');
+    updateOfficerCount();
+  }
+  return u;
+}
+function officerReinforcements(dt) {
+  game.rfT = game.rfT || { A: 0, E: 0 };
+  ['A', 'E'].forEach(side => {
+    const camp = game.bases.find(b => b.main && b.side === side), g = camp && gateOf(camp);
+    if (!g || !g.alive) { game.rfT[side] = 0; return; }
+    if (fieldOfficers(side).length >= OFFICERS_WANTED) { game.rfT[side] = 0; return; }
+    game.rfT[side] += dt;
+    if (game.rfT[side] >= OFFICER_EVERY) { game.rfT[side] = 0; spawnOfficer(side); }
+  });
+}
 function reinforce(b) {
   const g = gateOf(b); if (!g || !g.alive || g.side !== b.side) return;
   const me = game.me;
@@ -5137,8 +5249,10 @@ function gateDown(u, by) {
   u.alive = false; u.hp = 0;
   const b = u.base, foe = u.side === 'E';
   setGate(b, false);
-  feed(foe ? `The <b class="e">Gate Captain</b> of ${b.main ? '' : 'the '}${b.name} has fallen! Its gates are sealed. No more reinforcements.`
-           : `The <b class="a">Gate Captain</b> of ${b.main ? 'the ' : 'the '}${b.name} has fallen! Our reinforcements there have stopped.`, foe ? 'good' : 'bad');
+  if (b.main) feed(foe ? `The <b class="e">Gate Captain</b> of ${b.name} has fallen! No more officers or troops will come from Sevirrus’s camp.`
+                       : `The <b class="a">Gate Captain</b> of the ${b.name} has fallen! No more officers or troops will come from our camp.`, foe ? 'good' : 'bad');
+  else feed(foe ? `The <b class="e">Gate Captain</b> of the ${b.name} has fallen! Its gates are sealed. No more reinforcements.`
+                : `The <b class="a">Gate Captain</b> of the ${b.name} has fallen! Our reinforcements there have stopped.`, foe ? 'good' : 'bad');
   if (foe) { morale('A', 5); morale('E', -7); } else { morale('A', -5); morale('E', 4); }
   if (u.model) u.model.dead = 0.001;
   const t = tagEls.get(u.id); if (t) t.hidden = true;
@@ -5172,7 +5286,7 @@ function officerDown(u, by) {
   u.alive = false; u.hp = 0;
   if (by === game.me && !u.leader && u.side === 'E') dropItem(u.pos, 'great');
   if (u.leader && u.side === 'E') { battleWon(); return; }
-  const left = game.units.filter(o => o.side === 'E' && !o.leader && !o.captain && o.alive).length; hud.count.textContent = left ? `${left} enemy officer${left > 1 ? 's' : ''} remain${left > 1 ? '' : 's'}` : 'Only Sevirrus remains';
+  updateOfficerCount();
   if (u === game.me) return;
   const who = `<b class="${u.side === 'A' ? 'a' : 'e'}">${u.name}</b>`;
   feed(u.side === 'E' ? `${who} has been defeated!` : `${who} has retreated!`, u.side === 'E' ? 'good' : 'bad');
@@ -5323,10 +5437,12 @@ function c4Musou() {
   game.musou = 0; game.musouT = 0.001; feed('<b class="a">Arixal Chompjak</b> unleashes his Latent Powers!', 'big'); whiteEl.style.opacity = 0.4; setTimeout(() => { whiteEl.style.opacity = 0; }, 120);
 }
 addEventListener('keydown', e => {
+  if (game && game.ch === 4 && mapViewOpen() && (e.key.toLowerCase() === 'm' || e.key === 'Tab')) { e.preventDefault(); closeMapView(); return; }
   if (!game || game.ch !== 4 || game.paused) return;
   const k = e.key.toLowerCase();
   if (k === 'f' || k === 'k') c4Attack();
   if (k === 'q') c4Musou();
+  if (k === 'm' || e.key === 'Tab') { e.preventDefault(); openMapView(); }
   if (k === ' ' && !game.dodge && !game.over) { const fy = game.mover.rotation.y; game.dodge = { t: 0, dx: Math.sin(fy), dz: Math.cos(fy) }; }
 });
 canvasEl.addEventListener('pointerup', e => { if (game && game.ch === 4 && clickStart && Math.hypot(e.clientX - clickStart.x, e.clientY - clickStart.y) < 6 && e.pointerType !== 'touch') c4Attack(); });
@@ -5541,6 +5657,7 @@ const lostEl = (() => { const d = document.createElement('div'); d.className = '
 G('c4Retry').addEventListener('click', () => { lostEl.hidden = true; document.body.classList.add('c4screen'); M.quitChapter(true); c4Loading(showPreBattle); });
 G('c4LostMenu').addEventListener('click', () => { lostEl.hidden = true; M.quitChapter(true); M.onCh4End && M.onCh4End(false); });
 function endBattleCleanup() {
+  closeMapView();
   if (game.pickG) { scene.remove(game.pickG); game.pickG = null; } healEl.classList.remove('on');
   (game.troops || []).forEach(tr => scene.remove(tr.mover)); game.troops = [];
   game.units.forEach(u => { if (u.model && !u.model.sev && u !== game.me) scene.remove(u.model.mover); });
