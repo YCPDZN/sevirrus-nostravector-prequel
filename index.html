@@ -708,6 +708,17 @@ body.run .g-sev.near b { color: var(--crimson); }
 <script type="application/octet-stream" id="vo91" data-src="assets/vo91.mp3"></script>
 <script type="application/octet-stream" id="vo92" data-src="assets/vo92.mp3"></script>
 <script type="application/octet-stream" id="vo93" data-src="assets/vo93.mp3"></script>
+<script type="application/octet-stream" id="vo94" data-src="assets/vo94.mp3"></script>
+<script type="application/octet-stream" id="vo95" data-src="assets/vo95.mp3"></script>
+<script type="application/octet-stream" id="vo96" data-src="assets/vo96.mp3"></script>
+<script type="application/octet-stream" id="vo97" data-src="assets/vo97.mp3"></script>
+<script type="application/octet-stream" id="vo98" data-src="assets/vo98.mp3"></script>
+<script type="application/octet-stream" id="vo99" data-src="assets/vo99.mp3"></script>
+<script type="application/octet-stream" id="vo100" data-src="assets/vo100.mp3"></script>
+<script type="application/octet-stream" id="vo101" data-src="assets/vo101.mp3"></script>
+<script type="application/octet-stream" id="vo102" data-src="assets/vo102.mp3"></script>
+<script type="application/octet-stream" id="vo103" data-src="assets/vo103.mp3"></script>
+<script type="application/octet-stream" id="vo104" data-src="assets/vo104.mp3"></script>
 <script type="application/octet-stream" id="songDrive" data-src="assets/songDrive.mp3"></script>
 <script type="application/octet-stream" id="songKesh" data-src="assets/songKesh.mp3"></script>
 <script type="application/octet-stream" id="songAridaxx" data-src="assets/songAridaxx.mp3"></script>
@@ -825,6 +836,7 @@ body.run .g-sev.near b { color: var(--crimson); }
     },
     stop() { if (voSrc) try { voSrc.stop(); } catch (e) {} voSrc = null; },
     busy() { return !!voSrc; },
+    has(i) { return !!voBufs[i]; },
     // loudness of the line being spoken right now, 0..1
     level() { if (!voSrc || !voAn) return 0; voAn.getFloatTimeDomainData(voData); let e = 0; for (let k = 0; k < voData.length; k++) e += voData[k] * voData[k]; return Math.min(1, Math.sqrt(e / voData.length) * 5); },
   };
@@ -4746,7 +4758,7 @@ M._c4To = t => { let n = 0; while (cine && cine.ch4 && cine.ch4.t < t && n++ < 4
 
 // ============================================================ CHAPTER V: THE SIEGE OF ALPHINOS ==========
 // The opening: back in Alphinos after Kesh, Sevirrus comes apart in the throne hall.
-// [start, seconds, who, line, voice clip, delivery]   (CH5SEV1..10 and CH5GUARD1 go in vo94..vo104 when recorded)
+// [start, seconds, who, line, voice clip, delivery]   the layout; C5L below retimes it to the recordings (CH5SEVIRRUS1..11: vo94..vo104)
 const CH5_INTRO = [
   [4.2, 6.0, 'Sevirrus', 'Three strikes. He cuts my soldiers down in three strikes… and I could not land one. Not ONE.', 93],
   [11.0, 6.4, 'Sevirrus', 'I took my father’s head. I took Damix’s heart. And Arixal rode away from me… whole.', 94],
@@ -4760,6 +4772,12 @@ const CH5_INTRO = [
   [63.2, 5.0, 'Sevirrus', 'No. No. NO. I am not weak. I am NOT WEAK!', 101, 'scream'],
   [70.0, 9.2, 'Sevirrus', 'Let them come to Alphinos. Let them all come. I will paint these walls with every last Chompjak… and then it will finally be quiet.', 102],
 ];
+const CH5_CLIP = [7.55, 7.0, 3.55, 2.27, 7.39, 3.47, 4.68, 5.15, 4.75, 5.72, 10.68];   // the recordings, in seconds
+const C5L = [], C5W = [[0, 0]];   // each line's new start and length, and the warp from real time back to the layout
+{ let oPrev = 0, nPrev = 0;
+  CH5_INTRO.forEach((l, i) => { const s0 = nPrev + (l[0] - oPrev), d = Math.max(CH5_CLIP[i] + 0.3, i === 5 ? l[1] * 0.7 : 0); C5L.push({ s: s0, d }); C5W.push([l[0], s0], [l[0] + l[1], s0 + d]); oPrev = l[0] + l[1]; nPrev = s0 + d; });
+  C5W.push([83, nPrev + (83 - oPrev)]); }
+function c5Old(t) { for (let i = 1; i < C5W.length; i++) { const [o0, n0] = C5W[i - 1], [o1, n1] = C5W[i]; if (t <= n1) return n1 > n0 ? o0 + (o1 - o0) * (t - n0) / (n1 - n0) : o1; } const [o, n] = C5W[C5W.length - 1]; return o + (t - n); }
 const C5 = { KILL: 25.1, CHOPS: [26.2, 27.0], THRONE: [51.6, 52.8, 54.0], FLOOR: [64.4, 65.3, 66.2, 67.2], END: 83 };
 Object.assign(POSES, {
   clutchHead: mk(STANCE, { rootY: -0.06, spine: [0.38, 0, 0], neck: [0.25, 0, 0], head: [0.2, 0, 0], shoulderL: [-2.3, 0, 0.9], elbowL: [-2.1, 0, 0], wristL: [0, 0, -0.3], shoulderR: [-2.3, 0, -0.9], elbowR: [-2.1, 0, 0], wristR: [0, 0, 0.3] }),
@@ -4827,8 +4845,8 @@ function endCh5Intro(finished) {
 function bladeTip(out) { blade.updateMatrixWorld(); return blade.localToWorld(out.set(0, -0.95, 0)); }
 function ch5Update(dt, time) {
   const I = cine.ch5;
-  const slow = I.t > C5.KILL - 0.25 && I.t < C5.KILL + 0.7 ? 0.3 : 1;
-  const T = (I.t += dt * slow), sdt = dt * slow;
+  const k0 = c5Old(I.t), slow = k0 > C5.KILL - 0.25 && k0 < C5.KILL + 0.7 ? 0.3 : 1;
+  const Tn = (I.t += dt * slow), T = c5Old(Tn), sdt = dt * slow;   // Tn: real time, for the voices; T: the scene's layout
   // the light: a dying red hall, the braziers guttering
   [hemi, key, under, rimL, rimR, cineSpot, bhLight].forEach(l => { l.intensity = 0; });
   const dim = T > 56 && T < 62.5 ? 0.35 : 1;
@@ -4937,10 +4955,10 @@ function ch5Update(dt, time) {
   cineEls.card.style.opacity = card ? 1 : 0;
 
   // subtitles and voice
-  const li = CH5_INTRO.findIndex(l => T >= l[0] && T < l[0] + l[1]);
+  const li = C5L.findIndex(l => Tn >= l.s && Tn < l.s + l.d);
   if (li !== I.line) { I.line = li; if (li >= 0 && !(I.skipped && I.skipped.has(li))) { const [, , who, line, vo, how] = CH5_INTRO[li]; subsWho.textContent = who; subsLine.textContent = line; subsEl.className = 'subs' + (who === 'Sevirrus' ? '' : ' lead') + (how ? ' ' + how : ''); if (vo !== undefined) M.voice && M.voice.play(vo); } }
   subsEl.style.opacity = li >= 0 && !(I.skipped && I.skipped.has(li)) ? 1 : 0;
-  speak(sevTalking() ? 'sev' : null, true);
+  speak(sevTalking() ? 'sev' : null, li >= 0 && !(M.voice && M.voice.has && M.voice.has(CH5_INTRO[li][4])));
 
   // camera
   sev.j.head.getWorldPosition(tmpA); const sh = tmpA.clone();
@@ -4965,7 +4983,7 @@ function ch5Update(dt, time) {
 }
 M.playChapter5 = startCh5Intro;
 M._c5Crown = () => { const c = cine && cine.ch5 && cine.ch5.crown; if (!c) return null; const w = c.getWorldPosition(new THREE.Vector3()); return { parent: c.parent && (c.parent.name || c.parent.type), w: [w.x, w.y, w.z].map(v => +v.toFixed(2)), vis: c.visible }; };
-M._c5To = t => { let n = 0; while (cine && cine.ch5 && cine.ch5.t < t && n++ < 6000) ch5Update(1 / 30, cine.ch5.t); return cine && cine.ch5 ? cine.ch5.t : null; };
+M._c5To = t => { let n = 0; while (cine && cine.ch5 && c5Old(cine.ch5.t) < t && n++ < 8000) ch5Update(1 / 30, cine.ch5.t); return cine && cine.ch5 ? cine.ch5.t : null; };
 
 // ------------------------------------------------------------- pre-battle screen ----------
 function drawStageMap(cv, units, t, opts = {}) {
