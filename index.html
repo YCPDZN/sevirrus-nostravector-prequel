@@ -248,6 +248,7 @@ body.post3 .fx-vignette, body.post3 .vignette { box-shadow: inset 0 0 220px rgba
 body.post3 h1, body.post3 #title { color: #e9c9cf; text-shadow: 0 0 28px rgba(179,18,42,.7); }
 body.post3 .tagline { color: #e6b3bb; }
 body.post5 .fx-pulse { display: none; }
+body.zcine #gHud, body.zcine #gHp, body.zcine #gBoss, body.zcine .g-help, body.zcine #gPauseBtn, body.zcine #gDodge, body.zcine #gExamine { display: none !important; }
 body.post5 h1, body.post5 #title { text-shadow: 0 0 26px rgba(60,120,255,.45); }
 body.post5 .fx-vignette, body.post5 .vignette { box-shadow: inset 0 0 200px rgba(10,30,90,.45); }
 .crack { position: fixed; inset: 0; pointer-events: none; z-index: 4; clip-path: circle(160% at var(--cx) var(--cy)); transition: clip-path .8s cubic-bezier(.6,0,.4,1); background: radial-gradient(circle at var(--cx) var(--cy), rgba(255,255,255,.18), transparent 22%); }
@@ -256,6 +257,7 @@ body.post5 .fx-vignette, body.post5 .vignette { box-shadow: inset 0 0 200px rgba
 body.post3:not(.game):not(.cine):not(.c4screen)::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 1; background: radial-gradient(ellipse at 70% 40%, transparent 35%, rgba(110,0,16,.35) 100%); animation: bloodPulse 4.5s ease-in-out infinite; }
 @keyframes bloodPulse { 0%, 100% { opacity: .6; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { body.post3::after { animation: none; } }
+body.post6 .grid9 .ne { background: #2fae5a; border-color: #2fae5a; box-shadow: 0 0 14px rgba(47,174,90,.7); } body.post6 .align-val { color: #4fd47a; }
 .grid9 .ne { background: var(--crimson); border-color: var(--crimson); color: var(--bone); box-shadow: 0 0 14px rgba(179,18,42,.7); animation: pulse 3s ease-in-out infinite; }
 @keyframes pulse { 50% { box-shadow: 0 0 4px rgba(179,18,42,.3); } }
 .align-label { font-size: 10px; letter-spacing: .25em; text-transform: uppercase; color: var(--dim); }
@@ -528,7 +530,7 @@ body.run .g-sev.near b { color: var(--crimson); }
     </dl>
     <div class="align">
       <div class="grid9" aria-hidden="true">
-        <span>LG</span><span>NG</span><span>CG</span>
+        <span>LG</span><span>NG</span><span id="algCG">CG</span>
         <span>LN</span><span>TN</span><span id="algCN">CN</span>
         <span>LE</span><span id="algNE">NE</span><span class="ne" id="algCE">CE</span>
       </div>
@@ -597,6 +599,7 @@ body.run .g-sev.near b { color: var(--crimson); }
           <li id="archAssa" hidden><span class="when">1790 AD</span><div><b>The Assassination</b><p>In the throne hall of Alphinos Keep, Sevirrus murders Damix Chompjak and Emperor Jakal Chompjak XVI, and takes the crown.</p></div></li>
           <li id="archSiege" hidden><span class="when">1800 AD</span><div><b>The Siege of Alphinos</b><p>Driven from the plain of Kesh, the Emperor shuts himself inside Alphinos. Arixal’s army marches on it, and Jazmak Chompjak, brother of Jakal XVI and father of Arixal and Damix, camps his own host outside its walls, sworn to neither side, not even his son’s.</p></div></li>
           <li id="archZark" hidden><span class="when">1826 AD</span><div><b>The Cult of Zark</b><p>Released after twenty-six years beneath Alphinos, Hak Chompjak V returns to Carax in black and blue armour to end the cult that made him.</p></div></li>
+          <li id="archNv" hidden><span class="when">2125 AD</span><div><b>NOSTRAVECTOR</b><p>Blinded by Zark on Carax, Hak Chompjak V returns, and becomes the Emperor who saves the Milky Way from the Cult of Zark.</p></div></li>
     </ol>
     <div class="eyebrow">Archive · Lore article 02</div>
     <h3>Carax: A Chompy Mining Site</h3>
@@ -623,6 +626,7 @@ body.run .g-sev.near b { color: var(--crimson); }
 <script type="application/octet-stream" id="glbDamix" data-src="assets/glbDamix.glb"></script>
 <script type="application/octet-stream" id="glbChompy" data-src="assets/glbChompy.glb"></script>
 <script type="application/octet-stream" id="glbJazmak" data-src="assets/glbJazmak.glb"></script>
+<script type="application/octet-stream" id="glbNvHak" data-src="assets/glbNvHak.glb"></script>
 <script type="application/octet-stream" id="glbArixal" data-src="assets/glbArixal.glb"></script>
 <script type="application/octet-stream" id="glbAniz" data-src="assets/glbAniz.glb"></script>
 <script type="application/octet-stream" id="glbHanaxa" data-src="assets/glbHanaxa.glb"></script>
@@ -957,21 +961,22 @@ body.run .g-sev.near b { color: var(--crimson); }
     $('#curName').textContent = cur; contNote.dataset.base = cur.split(' · ')[1]; contNote.textContent = contNote.dataset.base;
     // after the Emperor dies, the menu is his
     // after Alphinos and twenty-six years in a cell, he comes out calm, in black and blue, with one enemy left
-    const post5 = ch >= 6 || (ch === 5 && !!st.complete);
+    const post5 = ch >= 6 || (ch === 5 && !!st.complete), post6 = ch === 6 && !!st.complete;
+    window.__menu.post6 = post6; document.body.classList.toggle('post6', post6);
     const post3 = ch >= 3 && !post5; window.__menu.post3 = post3; document.body.classList.toggle('post3', post3);
     window.__menu.post5 = post5; document.body.classList.toggle('post5', post5);
-    const yr = post5 ? 1826 : ch >= 5 || (ch === 4 && st.complete) ? 1800 : 1790; window.__menu.year = yr;
-    $('#yrIdx').innerHTML = `&nbsp;${yr} AD`; $('#yrRoman').textContent = 'Anno Domini ' + ({ 1826: 'MDCCCXXVI', 1800: 'MDCCC' }[yr] || 'MDCCXC');
-    $('#subLine').innerHTML = post5 ? 'Hak Chompjak V · <em>after the cell</em> · Carax' : post3 ? 'Emperor Hak · <em>after the throne</em> · Aridaxx' : 'Hak Chompjak · <em>before the throne</em> · Aridaxx';
-    $('#tagLine').textContent = post5 ? 'He served his time. Now the Cult of Zark will serve theirs.' : post3 ? 'The Emperor is dead. Long live the Emperor.' : 'He does not hate you. He simply needs what you have.';
+    const yr = post6 ? 2125 : post5 ? 1826 : ch >= 5 || (ch === 4 && st.complete) ? 1800 : 1790; window.__menu.year = yr;
+    $('#yrIdx').innerHTML = `&nbsp;${yr} AD`; $('#yrRoman').textContent = 'Anno Domini ' + ({ 2125: 'MMCXXV', 1826: 'MDCCCXXVI', 1800: 'MDCCC' }[yr] || 'MDCCXC');
+    $('#subLine').innerHTML = post6 ? 'Hak Chompjak V · <em>Emperor</em> · the Milky Way' : post5 ? 'Hak Chompjak V · <em>after the cell</em> · Carax' : post3 ? 'Emperor Hak · <em>after the throne</em> · Aridaxx' : 'Hak Chompjak · <em>before the throne</em> · Aridaxx';
+    $('#tagLine').textContent = post6 ? 'He never saw again. He never needed to.' : post5 ? 'He served his time. Now the Cult of Zark will serve theirs.' : post3 ? 'The Emperor is dead. Long live the Emperor.' : 'He does not hate you. He simply needs what you have.';
     $('#archAssa').hidden = !post3;
-    $('#archSiege').hidden = yr < 1800; $('#archZark').hidden = !post5;
-    $('#rankVal').textContent = post5 ? 'Former Emperor' : post3 ? 'Emperor' : 'Pre-Emperor';
+    $('#archSiege').hidden = yr < 1800; $('#archZark').hidden = !post5; $('#archNv').hidden = !post6;
+    $('#rankVal').textContent = post6 ? 'Emperor of the Milky Way' : post5 ? 'Former Emperor' : post3 ? 'Emperor' : 'Pre-Emperor';
     // alignment: Neutral Evil before the throne, Chaotic Evil after it
-    $('#algVal').textContent = post5 ? 'Chaotic Neutral' : post3 ? 'Chaotic Evil' : 'Neutral Evil'; $('#algCE').classList.toggle('ne', post3); $('#algNE').classList.toggle('ne', !post3 && !post5); $('#algCN').classList.toggle('ne', post5);
+    $('#algVal').textContent = post6 ? 'Chaotic Good' : post5 ? 'Chaotic Neutral' : post3 ? 'Chaotic Evil' : 'Neutral Evil'; $('#algCE').classList.toggle('ne', post3); $('#algNE').classList.toggle('ne', !post3 && !post5); $('#algCN').classList.toggle('ne', post5 && !post6); $('#algCG').classList.toggle('ne', post6);
     const done = ch > 1 || !!st.complete;
-    $('#threatTxt').textContent = 'Threat assessment · ' + (done ? '12' : '11') + ' / 12';
-    $('#threatLast').classList.toggle('f', done);
+    $('#threatTxt').textContent = 'Threat assessment · ' + (post6 ? '0' : done ? '12' : '11') + ' / 12';
+    $('#threatLast').classList.toggle('f', done && !post6); document.querySelectorAll('.threat .bar i:not(#threatLast)').forEach(i => i.classList.toggle('f', !post6));
   }
   function refreshMenu() {
     const L = latestSave(), c = $('#miContinue');
@@ -4687,13 +4692,14 @@ M._assaTo = t => { let n = 0; while (cine && cine.assa && cine.assa.t < t && n++
 // a mile of alien plain, hundreds of Chompy soldiers. You are Arixal Chompjak. Defeat Sevirrus.
 // The whole battle is simulated as squads; soldiers are only built near you.
 // ======================================================================================
-let arixalTpl = null, anizTpl = null, hanaxaTpl = null, jazmakTpl = null;
+let arixalTpl = null, anizTpl = null, hanaxaTpl = null, jazmakTpl = null, nvHakTpl = null;
 {
   const p = id => Uint8Array.from(atob(document.getElementById(id).textContent.trim()), c => c.charCodeAt(0)).buffer;
   new GLTFLoader().parse(p('glbArixal'), '', g => { arixalTpl = g.scene; }, () => {});
   new GLTFLoader().parse(p('glbAniz'), '', g => { anizTpl = g.scene; }, () => {});
   new GLTFLoader().parse(p('glbHanaxa'), '', g => { hanaxaTpl = g.scene; }, () => {});
   new GLTFLoader().parse(p('glbJazmak'), '', g => { jazmakTpl = g.scene; }, () => {});
+  new GLTFLoader().parse(p('glbNvHak'), '', g => { nvHakTpl = g.scene; }, () => {});
 }
 const K4 = { LEN: 1609, HALF: 804, W: 170, ALLY: 0x5ad0ff, FOE: 0xff3048 };
 // the armies: Arixal's (A), Sevirrus's (E) and, at Alphinos only, Jazmak's third party (T), hostile to both
@@ -5272,6 +5278,7 @@ const ZK = {
   dying: ['High Priest of Destruction', 'Zark… will remember… what you were…', 123, 4.5],
   last: [HAK_NAME, 'Let him remember. I never will again.', 124, 3.3],
   win: [HAK_NAME, 'For Damix. For my father. For all of them.', 125, 3.9],
+  zark: [[14.8, 4.6, 'Little Prince. You burn one priest, and you call it victory?', 127], [20.0, 5.6, 'I made you, Hak. Every scream you ever drew from another throat was a hymn to me.', 128], [26.2, 6.0, 'You came to see the end of Zark. Then you will never see anything again. Priest… his eyes.', 129]],
 };
 // the High Priest of Destruction: hooded, crowned, in black and crimson vestments; a book in one hand, the other raised
 function buildPriest() {
@@ -5415,31 +5422,78 @@ function zarkUpdate(dt, time) {
     if (T > 15.6) { game.lock = false; camYaw = 0; narrate('FIGHT<small>Defeat the High Priest of Destruction</small>', 'title'); updateZarkHud(); }
     return;
   }
-  // ---------- victory: he falls, the book burns, Hak has the last word
+  // ---------- victory, then Zark: the priest falls, Lord Zark speaks, the beam takes Hak's eyes, and the story goes on without him seeing it
   if (game.won) {
-    const W = game.won; W.t += dt;
-    P.g.position.y = 0.15 - ss(0.4, 3, W.t) * 0.5; P.body.rotation.x = -0.9 * ss(0.6, 2.4, W.t); P.eyeM.emissiveIntensity = 2.4 * (1 - ss(0.5, 2.5, W.t)); P.glow.intensity = 2.5 * (1 - ss(0.5, 2.5, W.t));
-    if (W.t < 2.5 && Math.random() < 0.6) { P.book.getWorldPosition(tmpA); sparks(tmpA, 6, 2); }
-    if (W.t > 0.5 && !game.heard.has('dying')) { game.heard.add('dying'); zarkLine(...ZK.dying.slice(0, 3), ZK.dying[3]); }
-    if (W.t > 5.6 && !game.heard.has('last')) { game.heard.add('last'); zarkLine(...ZK.last.slice(0, 3), ZK.last[3]); }
-    if (W.t > 9.6 && !game.heard.has('win')) { game.heard.add('win'); zarkLine(...ZK.win.slice(0, 3), ZK.win[3]); }
-    applyPose(sev.j, mixPose('guard', 'stand', ss(0.5, 2, W.t)));
+    const W = game.won; W.t += dt; const T = W.t;
+    if (!W.eye) {   // Lord Zark: a great red eye opening over the altar
+      const eg = new THREE.Group(); eg.position.set(0, 5.4, -7.6); scene.add(eg);
+      const ball = new THREE.Mesh(new THREE.SphereGeometry(1.3, 32, 20), new THREE.MeshBasicMaterial({ color: 0xff2030, transparent: true, opacity: 0, toneMapped: false })); ball.scale.set(1.5, 1, 0.4); eg.add(ball);
+      const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 12), new THREE.MeshBasicMaterial({ color: 0x050002, transparent: true, opacity: 0 })); pupil.scale.set(0.35, 2.6, 0.2); pupil.position.z = 0.5; eg.add(pupil);
+      const halo = new THREE.Mesh(new THREE.RingGeometry(2.2, 3.4, 64), new THREE.MeshBasicMaterial({ color: 0xff2a3a, transparent: true, opacity: 0, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false })); eg.add(halo);
+      const light = new THREE.PointLight(0xff1020, 0, 30, 1.2); light.position.set(0, -1, 2); eg.add(light);
+      const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.12, 1, 12, 1, true), new THREE.MeshBasicMaterial({ color: 0xffd0d8, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false })); scene.add(beam);
+      const beamOuter = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.3, 1, 12, 1, true), new THREE.MeshBasicMaterial({ color: 0xff1a2e, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false })); scene.add(beamOuter);
+      W.eye = { eg, ball, pupil, halo, light, beam, beamOuter };
+    }
+    const Z = W.eye, open = ss(14, 15.5, T); document.body.classList.add('zcine');
+    // the priest dies, Hak says his piece
+    if (T < 14) {
+      P.g.position.y = 0.15 - ss(0.4, 3, T) * 0.5; P.body.rotation.x = -0.9 * ss(0.6, 2.4, T); P.eyeM.emissiveIntensity = 2.4 * (1 - ss(0.5, 2.5, T)); P.glow.intensity = 2.5 * (1 - ss(0.5, 2.5, T));
+      if (T < 2.5 && Math.random() < 0.6) { P.book.getWorldPosition(tmpA); sparks(tmpA, 6, 2); }
+    }
+    if (T > 0.5 && !game.heard.has('dying')) { game.heard.add('dying'); zarkLine(...ZK.dying.slice(0, 3), ZK.dying[3]); }
+    if (T > 5.6 && !game.heard.has('last')) { game.heard.add('last'); zarkLine(...ZK.last.slice(0, 3), ZK.last[3]); }
+    if (T > 9.6 && !game.heard.has('win')) { game.heard.add('win'); zarkLine(...ZK.win.slice(0, 3), ZK.win[3]); }
+    ZK.zark.forEach((l, k) => { if (T >= l[0] && !game.heard.has('z' + k)) { game.heard.add('z' + k); zarkLine('Lord Zark', l[2], l[3], l[1]); } });
+    // a dip to black places them for the end: Hak before the altar, the priest at its foot
+    if (T > 13.5 && !W.placed) { W.placed = true; rig.position.set(0, 0, 1.6); rig.rotation.set(0, Math.PI, 0); pp.set(0, -0.35, -3.4); P.g.rotation.y = 0; P.body.rotation.x = -0.9; }
+    // the eye opens and stares; at his word the priest rises on his knees and the book turns on Hak
+    Z.ball.material.opacity = open; Z.pupil.material.opacity = open; Z.halo.material.opacity = open * (0.35 + Math.sin(time * 3) * 0.12); Z.light.intensity = open * 14;
+    Z.pupil.scale.x = 0.35 + 0.25 * ss(30, 32, T); Z.halo.rotation.z += dt * 0.3;
+    if (T > 14) game.shake = Math.max(game.shake || 0, 0.04 + (T > 32.4 && T < 36 ? 0.25 : 0));
+    if (T > 28) { const r = ss(28, 31, T); pp.y = -0.35 + r * 0.5; P.body.rotation.x = -0.9 * (1 - r); P.eyeM.emissiveIntensity = r * 4; P.bookGlow.material.opacity = r; P.armR.rotation.x = -1.0 - 0.7 * r; }
+    // the beam: from the book into Hak's eyes
+    const beamOn = T > 32.4 && T < 36.2 ? Math.min(1, (T - 32.4) * 4) * (1 - ss(35.6, 36.2, T)) : 0;
+    if (beamOn > 0) {
+      P.book.getWorldPosition(tmpA); sev.j.head.getWorldPosition(tmpB); tmpB.y += 0.2;
+      [Z.beam, Z.beamOuter].forEach(bm => { bm.position.lerpVectors(tmpA, tmpB, 0.5); bm.scale.set(1, tmpA.distanceTo(tmpB), 1); bm.lookAt(tmpB); bm.rotateX(Math.PI / 2); });
+      Z.beam.material.opacity = beamOn * 0.9; Z.beamOuter.material.opacity = beamOn * 0.3;
+      if (Math.random() < 0.7) sparks(tmpB, 8, 2.5);
+      cineEls.red.style.opacity = 0.08 + Math.random() * 0.1; if (Math.random() < 0.05) impactFrame(40);
+      eyeMats.forEach(m => { m.emissiveIntensity = 3 + Math.random() * 2; });
+    } else { Z.beam.material.opacity = 0; Z.beamOuter.material.opacity = 0; if (T > 36.2) { cineEls.red.style.opacity = 0; eyeMats.forEach(m => { m.emissiveIntensity = 0; }); } }
+    // Hak: lowers his blade; when the beam takes him he clutches his face and goes down
+    let hp = mixPose('guard', 'stand', ss(0.5, 2, T));
+    if (T > 32.4) { hp = mixPose(mixPose('stand', 'clutchHead', ss(32.4, 32.8, T)), mk(POSES.kneel, { shoulderL: [-2.3, 0, 0.9], elbowL: [-2.1, 0, 0], shoulderR: [-2.3, 0, -0.9], elbowR: [-2.1, 0, 0], head: [0.3, 0, 0] }), ss(35.4, 36.6, T)); hp = addPose(hp, tremor(0.12)); }
+    applyPose(sev.j, hp); setBlade(T < 32.4, 1);
     game.foes.forEach(f => foeUpdate(f, dt, time));
-    sev.j.head.getWorldPosition(tmpA);
-    if (W.t < 5) { camera.position.lerp(V(pp.x + 2.4, 1.6, pp.z + 3), 0.05); camera.lookAt(pp.x, 0.8, pp.z); }
-    else { camera.position.set(tmpA.x + 0.35, tmpA.y + 0.08, tmpA.z + (rig.rotation.y > 0 ? -1 : 1) * 1.1); camera.lookAt(tmpA.x, tmpA.y + 0.1, tmpA.z); }
+    // camera
+    sev.j.head.getWorldPosition(tmpA); const hh = tmpA.clone();
+    if (T < 5) { camera.position.lerp(V(pp.x + 2.4, 1.6, pp.z + 3), 0.05); camera.lookAt(pp.x, 0.8, pp.z); }
+    else if (T < 13.5) { camera.position.set(hh.x + 0.35, hh.y + 0.08, hh.z + (rig.rotation.y > 0 ? -1 : 1) * 1.1); camera.lookAt(hh.x, hh.y + 0.1, hh.z); }
+    else if (T < 20) { const k = ss(14, 20, T); camera.position.set(lerp(1.2, 0.6, k), lerp(0.7, 0.9, k), lerp(4.8, 4.2, k)); camera.lookAt(0, lerp(2.5, 4.2, k), -6); }
+    else if (T < 26.2) { camera.position.set(hh.x - 0.3, hh.y + 0.1, hh.z - 1.2); camera.lookAt(hh.x, hh.y + 0.12, hh.z); }
+    else if (T < 32.4) { camera.position.set(2.6, 1.3, -0.8); camera.lookAt(0, 0.9, -3.0); }
+    else if (T < 34.2) { camera.position.set(5.2, 1.7, -0.6); camera.lookAt(0, 1.3, -0.9); }
+    else { camera.position.set(hh.x + 0.9, hh.y + 0.2, hh.z - 1.6); camera.lookAt(hh.x, hh.y + 0.1, hh.z); }
+    if (game.shake > 0) { camera.position.x += (Math.random() - 0.5) * game.shake * 0.4; camera.position.y += (Math.random() - 0.5) * game.shake * 0.4; game.shake = Math.max(0, game.shake - dt); }
     speak(sevTalking() ? 'sev' : null, !(M.voice && M.voice.busy && M.voice.busy()));
-    cineEls.black.style.opacity = ss(14, 15.5, W.t);
-    let c = '', cls = 'cine-card title';
-    if (W.t > 16 && W.t < 20.5) c = 'THE CULT OF ZARK IS BROKEN<small>Carax · 1826 AD</small>';
-    if (W.t > 21 && W.t < 26) c = 'SEVIRRUS<small>will return in NOSTRAVECTOR</small>';
+    // blinding: a white-out, then black
+    whiteEl.style.opacity = T > 35.6 ? Math.max(0, 1 - ss(36.4, 37.6, T)) * ss(35.6, 36.0, T) : 0;
+    let black = T > 13.4 && T < 14.4 ? Math.sin((T - 13.4) * Math.PI) : 0; if (T > 36.4) black = Math.max(black, ss(36.4, 37.6, T));
+    cineEls.black.style.opacity = black;
+    let c = '', cls = 'cine-card';
+    if (T > 38.4 && T < 43) c = 'Hak Chompjak V never saw again.';
+    if (T > 43.6 && T < 50.2) c = 'But he would return,<small>and become an Emperor once more: the one who saved the Milky Way galaxy from the Cult of Zark.</small>';
+    if (T > 50.8 && T < 56.4) { c = 'NOSTRAVECTOR<small>2125 AD</small>'; cls = 'cine-card title'; }
     if (c && cineEls.card.dataset.html !== c) { cineEls.card.dataset.html = c; cineEls.card.innerHTML = c; cineEls.card.className = cls; }
     cineEls.card.style.opacity = c ? 1 : 0;
-    if (W.t > 26.5 && !game.done) {
+    if (T > 57 && !game.done) {
       game.done = true; game.paused = true; M.markCleared && M.markCleared(6);
+      [Z.eg, Z.beam, Z.beamOuter].forEach(o => scene.remove(o));
       M.renderDoneSlots && M.renderDoneSlots();
       G('gDone').querySelector('.eyebrow').textContent = `Chapter VI · The Cult of Zark · the end · ${Math.floor(game.t / 60)}:${String(Math.floor(game.t % 60)).padStart(2, '0')}`;
-      G('gDoneNext').hidden = true; G('gDone').hidden = false; G('gDoneMenu').focus();
+      G('gDoneNext').hidden = true; G('gDone').hidden = false; G('gDoneMenu').focus(); document.body.classList.remove('zcine');
     }
     return;
   }
@@ -5575,6 +5629,8 @@ function zarkFx(dt, time) {
 }
 function zarkCleanup() {
   const P = game.boss; if (P) scene.remove(P.g);
+  if (game.won && game.won.eye) [game.won.eye.eg, game.won.eye.beam, game.won.eye.beamOuter].forEach(o => scene.remove(o));
+  whiteEl.style.opacity = 0; document.body.classList.remove('zcine');
   (game.foes || []).forEach(f => scene.remove(f.mover));
   [game.orbs, game.sigils, game.novas, game.pillars].forEach(list => (list || []).forEach(o => scene.remove(o.m)));
   if (bast) bast.g.visible = false; bHud.boss.hidden = true; G('gJournalBtn').hidden = false; sevTrail.clear();
@@ -7003,6 +7059,8 @@ function hakLook(blue) {
   if (blade && blade.userData.ember && blade.userData.ember.color) blade.userData.ember.color.set(blue ? 0x2a8cff : 0xff1a2e);
   if (bladeLight) bladeLight.color.set(blue ? 0x3a8cff : 0xff2a3a);
 }
+let nvHak = null, nvWas = false;
+function nvHakIdle(t) { if (!nvHak || !nvHak.mover.visible) return; nvHak.mover.position.copy(rig.position); nvHak.mover.rotation.y = rig.rotation.y; applyPose(nvHak.j, addPose(POSES.stand, { spine: [Math.sin(t * 1.1) * 0.012, look.x * 0.06, 0], neck: [0, look.x * 0.1, 0], head: [-0.05, look.x * 0.15, 0] })); }
 function menuPost3Visibility() {
   const on = !!M.post3 && !cine && !game;
   if (!on && (empFx.crack || empFx.thrown || (menuCrown && head && menuCrown.parent !== head))) { empTidy(); fit = null; }
@@ -7011,6 +7069,11 @@ function menuPost3Visibility() {
   const calm = !!M.post5 && !cine && !game;
   rimL.color.set(on ? 0xb3122a : calm ? 0x3a7aff : 0x8f6ae0); ring1.material.color.set(on ? 0xb3122a : calm ? 0x4a8aff : 0xa993e6); dust.material.color.set(on ? 0xff3040 : calm ? 0xb8d0ff : 0xffffff);
   hakLook(calm || !!(game && game.phase === 'zark'));
+  const nv = !!M.post6 && !cine && !game;
+  if (nv && !nvHak && nvHakTpl) { nvHak = rigClone(nvHakTpl); scene.add(nvHak.mover); }
+  if (nvHak) nvHak.mover.visible = nv;
+  if (nv && nvHak) rig.visible = false; else if (nvWas && !cine && !game) rig.visible = true;
+  nvWas = nv;
   if (!cine && !game) { under.color.set(calm ? 0x2a5aff : 0xb3122a); rimR.color.set(calm ? 0x1a3a9a : 0x8a1022); }
 }
 function menuPost3(dt, t) {
@@ -7074,6 +7137,7 @@ function menuUpdate(dt, t) {
     }
     // tidy up after the Emperor's moves: crown on his head, blade in his hand, the screen whole
     if (!fit) empTidy();
+    nvHakIdle(t);
     const add = {
       spine: [Math.sin(t * 1.1) * 0.012, look.x * 0.08, 0],                                   // breathing, turning toward you
       neck: [look.y * 0.1, look.x * 0.18, 0],
