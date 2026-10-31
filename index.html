@@ -643,6 +643,14 @@ body.run .g-sev.near b { color: var(--crimson); }
 <script type="application/octet-stream" id="vo83" data-src="assets/vo83.mp3"></script>
 <script type="application/octet-stream" id="vo84" data-src="assets/vo84.mp3"></script>
 <script type="application/octet-stream" id="vo85" data-src="assets/vo85.mp3"></script>
+<script type="application/octet-stream" id="vo86" data-src="assets/vo86.mp3"></script>
+<script type="application/octet-stream" id="vo87" data-src="assets/vo87.mp3"></script>
+<script type="application/octet-stream" id="vo88" data-src="assets/vo88.mp3"></script>
+<script type="application/octet-stream" id="vo89" data-src="assets/vo89.mp3"></script>
+<script type="application/octet-stream" id="vo90" data-src="assets/vo90.mp3"></script>
+<script type="application/octet-stream" id="vo91" data-src="assets/vo91.mp3"></script>
+<script type="application/octet-stream" id="vo92" data-src="assets/vo92.mp3"></script>
+<script type="application/octet-stream" id="vo93" data-src="assets/vo93.mp3"></script>
 <script type="application/octet-stream" id="songDrive" data-src="assets/songDrive.mp3"></script>
 <script type="importmap">
 { "imports": {
@@ -708,7 +716,7 @@ body.run .g-sev.near b { color: var(--crimson); }
   }
   let voBufs = [], voSrc = null, musicGain = null, voAn = null, voData = null;
   function primeVoices() {
-    for (let i = 1; i <= 85; i++) {
+    for (let i = 1; i <= 93; i++) {
       const raw = Uint8Array.from(atob($('#vo' + i).textContent.trim()), c => c.charCodeAt(0)).buffer;
       actx.decodeAudioData(raw).then(b => { voBufs[i - 1] = b; }).catch(() => {});
     }
@@ -4543,13 +4551,13 @@ const C4_UNITS = [
   { id: 'almak', name: 'Almak', side: 'E', tpl: 'chompy', badge: 0x3adc5a, x: 100, z: -430, troops: 120 },
 ];
 const CH4_INTRO = [   // Hak alone in the throne hall (CH4SEV1..6, CH4GUARD1 when recorded)
-  [4.0, 3.2, 'Sevirrus', 'He said he loved me.'],
-  [8.6, 4.0, 'Sevirrus', 'He said it the way he said everything. Like an order.'],
-  [14.0, 4.4, 'Sevirrus', 'Damix ran at me. He always ran at things. Until he didn’t.'],
-  [20.0, 3.8, 'Sevirrus', 'It’s done. It’s done, and I would do it again.'],
-  [25.4, 2.2, 'Sevirrus', '…Wouldn’t I?'],
-  [30.0, 5.2, 'Chompy guard', 'Majesty. Arixal Chompjak marches on Kesh. Your mother and your sister ride with him.'],
-  [37.6, 2.4, 'Sevirrus', 'Enough is enough.'],
+  [4.0, 3.2, 'Sevirrus', 'He said he loved me.', 85],
+  [8.6, 4.25, 'Sevirrus', 'He said it the way he said everything. Like an order.', 86],
+  [14.0, 5.6, 'Sevirrus', 'Damix ran at me. He always ran at things. Until he didn’t.', 87],
+  [20.0, 4.6, 'Sevirrus', 'It’s done. It’s done, and I would do it again.', 88],
+  [25.4, 2.0, 'Sevirrus', '…Wouldn’t I?', 89],
+  [30.0, 7.4, 'Chompy guard', 'Majesty. Arixal Chompjak marches on Kesh. Your mother and your sister ride with him.', 91],
+  [37.6, 2.4, 'Sevirrus', 'Enough is enough.', 90],
 ];
 const C4I = { END: 43.5 };
 Object.assign(POSES, {
@@ -5058,7 +5066,7 @@ function battleUpdate4(dt, time) {
   game.mapT = (game.mapT || 0) - dt; if (game.mapT <= 0) { game.mapT = 0.1; drawStageMap(G('c4Mini'), game.units.map(u => ({ ...u, x: u.pos.x, z: u.pos.z })), time, { squads: true, player: { x: p.x, z: p.z, yaw: game.mover.rotation.y } }); }
   // warnings
   const sevU = game.units.find(u => u.id === 'sevirrus');
-  if (!game.heard.has('sevnear') && p.distanceTo(sevU.pos) < 60) { game.heard.add('sevnear'); feed('<b class="e">Sevirrus</b>: Brother of a dead man. Come and kneel.', 'big'); }
+  if (!game.heard.has('sevnear') && p.distanceTo(sevU.pos) < 60) { game.heard.add('sevnear'); feed('<b class="e">Sevirrus</b>: Brother of a dead man. Come and kneel.', 'big'); M.voice && M.voice.play(92); }
   battleCamera(dt);
 }
 function officerUpdate(u, dt, time) {
