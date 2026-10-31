@@ -1123,9 +1123,9 @@ function makeGait(obj) { return { obj, prev: obj.position.clone(), phase: 0, amt
 function stepGait(g, dt) {
   const sp = Math.hypot(g.obj.position.x - g.prev.x, g.obj.position.z - g.prev.z) / Math.max(dt, 1e-4);
   g.prev.copy(g.obj.position);
-  const target = sp > 6 ? g.amt : THREE.MathUtils.clamp((sp - 0.15) / 1.4, 0, 1);   // ignore teleports between camera cuts
+  const target = sp > 25 ? g.amt : THREE.MathUtils.clamp((sp - 0.15) / 1.4, 0, 1);   // ignore teleports between camera cuts
   g.amt += (target - g.amt) * 0.25;
-  g.phase += Math.min(sp, 6) * dt * 6;
+  g.phase += (sp > 25 ? 0 : Math.min(sp, 7)) * dt * 6;
   return gaitPose(g.phase, g.amt);
 }
 
@@ -4432,7 +4432,7 @@ function assaUpdate(dt, time) {
   else if (T < AS.CLASH[0] - 0.3) { const k = ss(AS.CHARGE, AS.CLASH[0] - 0.3, T); dp.set(lerp(0.8, 0.1, k), k < 0.25 ? 0.6 : 0, lerp(0.15, 3.65, k)); }
   D.mover.rotation.y = T < AS.CHARGE ? 0 : Math.atan2(sp.x - dp.x, sp.z - dp.z);
   let dpose = T < AS.BURST ? POSES.guard : mixPose('guard', 'damixFlinch', T < AS.CHARGE ? ss(AS.BURST, AS.BURST + 0.4, T) * 0.4 : 0);
-  if (T > AS.CHARGE) dpose = T < AS.CLASH[0] - 0.3 ? addPose(POSES.rifleCharge, stepGait(D.gait || (D.gait = makeGait(D.mover)), sdt)) : POSES.guard;
+  if (T > AS.CHARGE) dpose = T < AS.CLASH[0] - 0.3 ? addPose(POSES.guard, stepGait(D.gait || (D.gait = makeGait(D.mover)), sdt)) : POSES.guard;
   if (T > AS.CLASH[0] - 0.4 && T < AS.DISARM) { const w = ['slashWind', 'slashBack', 'overhead'], h = ['slashFollow', 'slashFollow', 'strikeDown']; const i = Math.max(0, AS.CLASH.findIndex(c => T < c + 0.3)); dpose = mixPose(w[i], h[i], ss(AS.CLASH[i] - 0.2, AS.CLASH[i], T)); }
   if (T > AS.DISARM) dpose = mixPose('disarmed', 'damixHorror', ss(AS.DISARM + 0.2, AS.STAB - 0.1, T));
   if (T > AS.STAB) dpose = addPose(POSES.impaled, { spine: [0, 0, Math.sin(time * 30) * 0.03 * (1 - ss(AS.STAB, AS.RIP, T))] });
@@ -5002,10 +5002,14 @@ function c4Swing(range = 3.0, cone = 0.0, dmg = 1) {
 }
 function c4Attack() {
   if (!game || game.ch !== 4 || game.over || game.paused || game.musouT) return;
-  const a = game.atk;
-  if (a && a.t < 0.12) { a.queued = true; return; }
-  game.combo = a && a.t < 0.45 ? (game.combo + 1) % 6 : 0;
-  game.atk = { t: 0, n: game.combo, hit: false };
+  if (game.atk && game.atk.t < 0.28) return;
+  game.combo = (game.combo || 0) + 1;
+  game.atk = { t: 0, hit: false, alt: game.combo % 2 === 0 };
+  // turn toward the nearest enemy in reach, as Jakal does
+  const p = game.mover.position; let best = null, bd = 3.2;
+  game.troops.forEach(t => { if (t.side === 'E' && t.state !== 'dead' && t.state !== 'flee') { const d = t.mover.position.distanceTo(p); if (d < bd) { bd = d; best = t.mover.position; } } });
+  game.units.forEach(u => { if (u.side === 'E' && u.alive && u.model) { const d = u.model.mover.position.distanceTo(p); if (d < bd) { bd = d; best = u.model.mover.position; } } });
+  if (best) game.mover.rotation.y = Math.atan2(best.x - p.x, best.z - p.z);
 }
 function c4Musou() {
   if (!game || game.ch !== 4 || game.over || game.paused || game.musou < 100 || game.musouT) return;
@@ -5045,8 +5049,8 @@ function battleUpdate4(dt, time) {
   mx += stickVec.x; mz -= stickVec.y;
   const len = Math.hypot(mx, mz);
   if (game.dodge) { game.dodge.t += dt; const s = 13 * (1 - game.dodge.t / 0.3); p.x += game.dodge.dx * s * dt; p.z += game.dodge.dz * s * dt; if (game.dodge.t > 0.3) game.dodge = null; }
-  else if (len > 0.05 && !(game.atk && game.atk.t < 0.12) && !game.musouT) {
-    const speed = (keys.has('shift') ? 6 : 10) * Math.min(1, len);
+  else if (len > 0.05 && !(game.atk && game.atk.t < 0.3) && !game.musouT) {
+    const speed = (keys.has('shift') ? 2.6 : 6.4) * Math.min(1, len);
     const fx = Math.sin(camYaw + Math.PI), fz = Math.cos(camYaw + Math.PI);
     const dx = (fx * mz - fz * mx) / Math.max(1, len), dz = (fz * mz + fx * mx) / Math.max(1, len);
     p.x += dx * speed * dt; p.z += dz * speed * dt;
@@ -5057,11 +5061,12 @@ function battleUpdate4(dt, time) {
   // Arixal's body: six-swing combo, very fast
   let pose = addPose('guard', stepGait(game.gait, dt));
   if (game.atk) {
-    const a = game.atk; a.t += dt; const [w, h] = ARIX_COMBO[a.n];
-    pose = a.t < 0.06 ? mixPose('guard', w, a.t / 0.06) : a.t < 0.13 ? mixPose(w, h, (a.t - 0.06) / 0.07) : mixPose(h, 'guard', Math.min(1, (a.t - 0.13) / 0.2));
-    if (!a.hit && a.t >= 0.1) { a.hit = true; c4Swing(a.n === 5 ? 3.6 : 3.0, a.n === 5 ? -0.3 : 0.0, a.n === 5 ? 2 : 1); }
-    if (a.queued && a.t > 0.16) { game.combo = (game.combo + 1) % 6; game.atk = { t: 0, n: game.combo, hit: false }; }
-    else if (a.t > 0.42) game.atk = null;
+    // the same two-strike rhythm as Jakal in the bastion
+    const a = game.atk; a.t += dt;
+    const wind = a.alt ? 'slashBack' : 'slashWind', hit = a.alt ? 'slashFollow' : 'strikeDown';
+    pose = a.t < 0.1 ? mixPose('guard', wind, a.t / 0.1) : a.t < 0.22 ? mixPose(wind, hit, (a.t - 0.1) / 0.12) : mixPose(hit, 'guard', Math.min(1, (a.t - 0.22) / 0.25));
+    if (!a.hit && a.t >= 0.17) { a.hit = true; c4Swing(2.6, 0.25, 1); }
+    if (a.t > 0.5) game.atk = null;
   }
   if (game.musouT) {
     game.musouT += dt; pose = addPose(POSES.musou, { spine: [0, game.musouT * 40, 0] }); game.mover.rotation.y += dt * 18;
