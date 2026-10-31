@@ -140,6 +140,14 @@ nav { display: flex; flex-direction: column; gap: 4px; }
 .grid9 span { height: 22px; display: grid; place-items: center; font-size: 8px; letter-spacing: .05em; color: var(--dim); border: 1px solid var(--line); }
 .ch-panel { width: min(860px, 100%); }
 .c4-panel { width: min(780px, 100%); }
+.c4load { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 60%, #14202a 0%, #07040c 70%); }
+.c4load-in { width: min(480px, 86vw); text-align: center; }
+.c4load h2 { margin: 10px 0 22px; font-family: var(--font-display); font-size: clamp(22px, 5vw, 36px); letter-spacing: .1em; color: var(--bone); }
+.c4load-bar { height: 4px; background: rgba(255,255,255,.08); border: 1px solid var(--line); }
+.c4load-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #2a7ac0, #5ad0ff); }
+.c4load p { margin: 18px 0 0; font-size: 13px; line-height: 1.6; color: var(--bone); opacity: .7; }
+#c4Pre { background: radial-gradient(ellipse at 50% 40%, #121a24 0%, #06030b 75%); z-index: 25; }
+body.c4screen #menu, body.c4screen .left, body.c4screen .right, body.c4screen header, body.c4screen aside { visibility: hidden; }
 .c4-cols { display: flex; gap: 18px; flex-wrap: wrap; }
 .c4-map { width: 230px; height: 420px; max-width: 100%; border: 1px solid var(--line); background: #0a0612; }
 .c4-info { flex: 1; min-width: 260px; display: flex; flex-direction: column; gap: 16px; }
@@ -2445,7 +2453,7 @@ M.getState = () => {
 };
 // rebuild the chapter from a save
 M.loadState = st => {
-  if (st.chapter === 4) { if (game || st.complete) return false; showPreBattle(); return true; }
+  if (st.chapter === 4) { if (game || st.complete) return false; c4Loading(showPreBattle); return true; }
   if (st.chapter === 2) { if (game) return false; return startEscape(st); }
   if (!startChapter()) return false;
   game.restored = true;
@@ -4595,7 +4603,7 @@ function endCh4Intro(toBattleScreen) {
   rig.position.set(0, 0, 0); rig.rotation.set(0, 0, 0); rig.rotation.order = 'XYZ'; applyPose(sev.j, POSES.stand); eyeMats.forEach(m => { m.emissiveIntensity = 0; });
   subsEl.style.opacity = 0; cineEls.black.style.opacity = 0; cineEls.card.style.opacity = 0; cineEls.skip.hidden = true;
   document.body.classList.remove('cine'); M.voice && M.voice.stop(); speak(null);
-  if (toBattleScreen) setTimeout(() => showPreBattle(), 0); else M.onCh4End && M.onCh4End(false);
+  if (toBattleScreen) { document.body.classList.add('c4screen'); setTimeout(() => c4Loading(showPreBattle), 0); } else M.onCh4End && M.onCh4End(false);
 }
 function ch4IntroUpdate(dt, time) {
   const I = cine.ch4, T = (I.t += dt);
@@ -4691,16 +4699,33 @@ const preEl = (() => {
     </div></div>`;
   document.body.appendChild(d); return d;
 })();
+const loadEl = (() => { const d = document.createElement('div'); d.className = 'c4load'; d.id = 'c4Load'; d.hidden = true;
+  d.innerHTML = '<div class="c4load-in"><div class="eyebrow">Chapter IV · Enough is Enough</div><h2 id="c4LoadT">The Plain of Kesh</h2><div class="c4load-bar"><i id="c4LoadBar"></i></div><p id="c4LoadTip"></p></div>';
+  document.body.appendChild(d); return d; })();
+const C4_TIPS = ['Arixal fells a soldier in three strikes. Sevirrus is another matter.', 'Your officers advance on their own. Help them, or they may fall back.', 'Strike to fill the gold bar, then press Q to unleash a Musou.', 'Every soldier answers to an officer. Defeat the officer and his squad breaks.', 'Sevirrus will not leave his camp until you come for him.'];
+function c4Loading(next) {
+  loadEl.hidden = false; document.body.classList.add('c4screen');
+  G('c4LoadTip').textContent = C4_TIPS[Math.random() * C4_TIPS.length | 0];
+  const t0 = performance.now(); let built = false;
+  const step = () => {
+    const k = Math.min(1, (performance.now() - t0) / 2400); G('c4LoadBar').style.width = (k * 100) + '%';
+    if (k > 0.35 && !built) { built = true; if (!fieldSet) fieldSet = buildField(); }
+    if (k < 1) requestAnimationFrame(step); else { loadEl.hidden = true; next(); }
+  };
+  requestAnimationFrame(step);
+}
+M.c4Loading = c4Loading;
 let preRaf = 0;
 function showPreBattle() {
+  document.body.classList.add('c4screen');
   preEl.hidden = false; G('c4Begin').focus();
   const units = C4_UNITS.map(u => ({ ...u, alive: true }));
   const draw = () => { if (preEl.hidden) return; drawStageMap(G('c4Map'), units, performance.now() / 1000, { labels: true, squads: true }); preRaf = requestAnimationFrame(draw); };
   cancelAnimationFrame(preRaf); draw();
 }
 M.showPreBattle = showPreBattle;
-G('c4Begin').addEventListener('click', () => { preEl.hidden = true; startBattle(); });
-G('c4Back').addEventListener('click', () => { preEl.hidden = true; M.onCh4End && M.onCh4End(false); });
+G('c4Begin').addEventListener('click', () => { preEl.hidden = true; c4Loading(() => { document.body.classList.remove('c4screen'); startBattle(); }); });
+G('c4Back').addEventListener('click', () => { preEl.hidden = true; document.body.classList.remove('c4screen'); M.onCh4End && M.onCh4End(false); });
 
 // --------------------------------------------------------------------- the field ----------
 let fieldSet = null;
@@ -5171,7 +5196,7 @@ function overUpdate(dt, time) {
 const lostEl = (() => { const d = document.createElement('div'); d.className = 'gwrap'; d.id = 'c4Lost'; d.hidden = true;
   d.innerHTML = '<div class="panel" role="dialog" aria-labelledby="hLost"><div class="eyebrow">Chapter IV · Enough is Enough</div><h3 id="hLost">Defeat</h3><p>Arixal Chompjak has fallen. Sevirrus holds Kesh.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="close" id="c4Retry">Retry</button><button class="close" id="c4LostMenu">Return to menu</button></div></div>';
   document.body.appendChild(d); return d; })();
-G('c4Retry').addEventListener('click', () => { lostEl.hidden = true; M.quitChapter(true); showPreBattle(); });
+G('c4Retry').addEventListener('click', () => { lostEl.hidden = true; document.body.classList.add('c4screen'); M.quitChapter(true); c4Loading(showPreBattle); });
 G('c4LostMenu').addEventListener('click', () => { lostEl.hidden = true; M.quitChapter(true); M.onCh4End && M.onCh4End(false); });
 function endBattleCleanup() {
   (game.troops || []).forEach(tr => scene.remove(tr.mover)); game.troops = [];
@@ -5181,7 +5206,7 @@ function endBattleCleanup() {
   hemi.color.set(0x4a2f72); hemi.groundColor.set(0x0a0410); key.angle = Math.PI / 7; key.distance = 12; key.decay = 1.6;
   scene.fog.color.set(0x0f0819); scene.fog.density = baseFog; camera.far = 60; camera.updateProjectionMatrix();
   rig.rotation.order = 'XYZ'; M.song && M.song.stop(); G('c4Target').hidden = true; G('gHud').querySelector('.g-ch').textContent = 'Chapter I · Investigation'; G('c4Big').textContent = '';
-  document.body.classList.remove('c4');
+  document.body.classList.remove('c4', 'c4screen');
 }
 
 // ---------- after Chapter III the menu belongs to the Emperor: crown, drawn blade, blood ----------
