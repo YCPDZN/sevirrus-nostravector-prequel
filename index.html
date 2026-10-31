@@ -724,6 +724,12 @@ body.run .g-sev.near b { color: var(--crimson); }
 <script type="application/octet-stream" id="vo102" data-src="assets/vo102.mp3"></script>
 <script type="application/octet-stream" id="vo103" data-src="assets/vo103.mp3"></script>
 <script type="application/octet-stream" id="vo104" data-src="assets/vo104.mp3"></script>
+<script type="application/octet-stream" id="vo105" data-src="assets/vo105.mp3"></script>
+<script type="application/octet-stream" id="vo106" data-src="assets/vo106.mp3"></script>
+<script type="application/octet-stream" id="vo107" data-src="assets/vo107.mp3"></script>
+<script type="application/octet-stream" id="vo108" data-src="assets/vo108.mp3"></script>
+<script type="application/octet-stream" id="vo109" data-src="assets/vo109.mp3"></script>
+<script type="application/octet-stream" id="vo110" data-src="assets/vo110.mp3"></script>
 <script type="application/octet-stream" id="songDrive" data-src="assets/songDrive.mp3"></script>
 <script type="application/octet-stream" id="songKesh" data-src="assets/songKesh.mp3"></script>
 <script type="application/octet-stream" id="songAridaxx" data-src="assets/songAridaxx.mp3"></script>
@@ -5012,7 +5018,7 @@ function ch5Update(dt, time) {
 M.playChapter5 = startCh5Intro;
 
 // ------------------------------------------------------- Jazmak on the plain below Alphinos ----------
-// [start, seconds, line, voice clip]   (CH5JAZMAK1..6 go in vo105..vo110 when recorded)
+// [start, seconds, line, voice clip]   the layout; JZL retimes it to the recordings (CH5JAZMAK6 is the first line, CH5JAZMAK1-5 the rest: vo105..vo110)
 const JAZ_LINES = [
   [5.2, 2.6, 'The enemy is at Alphinos.', 104],
   [9.6, 6.2, 'That little bastard took his own father’s head and parked his arse on a dead man’s throne.', 105],
@@ -5022,6 +5028,12 @@ const JAZ_LINES = [
   [39.2, 6.2, 'Sharpen everything you own. By tomorrow night I want that son of a bitch’s crown in the mud.', 109],
 ];
 const JZ = { END: 51 };
+const JAZ_CLIP = [2.35, 6.27, 9.25, 7.81, 8.52, 6.77];
+const JZL = [], JZW = [[0, 0]];
+{ let oPrev = 0, nPrev = 0;
+  JAZ_LINES.forEach((l, i) => { const s0 = nPrev + (l[0] - oPrev), d = JAZ_CLIP[i] + 0.3; JZL.push({ s: s0, d }); JZW.push([l[0], s0], [l[0] + l[1], s0 + d]); oPrev = l[0] + l[1]; nPrev = s0 + d; });
+  JZW.push([JZ.END, nPrev + (JZ.END - oPrev)]); }
+function jzOld(t) { for (let i = 1; i < JZW.length; i++) { const [o0, n0] = JZW[i - 1], [o1, n1] = JZW[i]; if (t <= n1) return n1 > n0 ? o0 + (o1 - o0) * (t - n0) / (n1 - n0) : o1; } const [o, n] = JZW[JZW.length - 1]; return o + (t - n); }
 Object.assign(POSES, {
   jzPoint: { spine: [-0.04, 0.12, 0], head: [-0.06, 0, 0], shoulderR: [-1.55, 0, -0.12], elbowR: [-0.05, 0, 0], wristR: [0.05, 0, 0], shoulderL: [0.05, 0, 0.12] },
   jzChop: { spine: [0.14, -0.1, 0], neck: [0.05, 0, 0], shoulderR: [-1.15, 0, -0.45], elbowR: [-0.85, 0, 0], wristR: [0.3, 0, 0], shoulderL: [-0.2, 0, 0.2], elbowL: [-0.4, 0, 0] },
@@ -5123,7 +5135,7 @@ function endJaz(finished) {
   M.onCh5End && M.onCh5End(true);
 }
 function jazUpdate(dt, time) {
-  const S = cine.jaz, T = (S.t += dt), J = S.J;
+  const S = cine.jaz, Tn = (S.t += dt), T = jzOld(Tn), J = S.J;   // Tn: real time, for the voices; T: the scene's layout
   // the light: the black hole's glow behind Alphinos, a cold fill on the company
   [hemi, key, under, rimL, rimR, cineSpot, bhLight].forEach(l => { l.intensity = 0; });
   hemi.color.set(0x6a4aa0); hemi.intensity = 0.7;
@@ -5159,7 +5171,7 @@ function jazUpdate(dt, time) {
   if (T > 0.6 && T < 3.4) card = 'ARIDAXX<small>1800 AD · The plain below Alphinos</small>';
   if (card && cineEls.card.dataset.html !== card) { cineEls.card.dataset.html = card; cineEls.card.innerHTML = card; cineEls.card.className = cls; }
   cineEls.card.style.opacity = card ? 1 : 0;
-  const li = JAZ_LINES.findIndex(l => T >= l[0] && T < l[0] + l[1]);
+  const li = JZL.findIndex(l => Tn >= l.s && Tn < l.s + l.d);
   if (li !== S.line) { S.line = li; if (li >= 0 && !(S.skipped && S.skipped.has(li))) { const [, , line, vo] = JAZ_LINES[li]; subsWho.textContent = 'Jazmak Chompjak'; subsLine.textContent = line; subsEl.className = 'subs lead'; if (vo !== undefined) M.voice && M.voice.play(vo); } }
   const showing = li >= 0 && !(S.skipped && S.skipped.has(li));
   subsEl.style.opacity = showing ? 1 : 0;
@@ -5181,7 +5193,7 @@ function jazUpdate(dt, time) {
   camera.position.copy(cp); camera.lookAt(cl); if (Math.abs(camera.fov - fov) > 0.05) { camera.fov = fov; camera.updateProjectionMatrix(); }
   if (T >= JZ.END) endJaz(true);
 }
-M._jazTo = t => { let n = 0; while (cine && cine.jaz && cine.jaz.t < t && n++ < 6000) jazUpdate(1 / 30, cine.jaz.t); return cine && cine.jaz ? cine.jaz.t : null; };
+M._jazTo = t => { let n = 0; while (cine && cine.jaz && jzOld(cine.jaz.t) < t && n++ < 8000) jazUpdate(1 / 30, cine.jaz.t); return cine && cine.jaz ? cine.jaz.t : null; };
 M._jazStart = () => startJaz();
 M._c5Crown = () => { const c = cine && cine.ch5 && cine.ch5.crown; if (!c) return null; const w = c.getWorldPosition(new THREE.Vector3()); return { parent: c.parent && (c.parent.name || c.parent.type), w: [w.x, w.y, w.z].map(v => +v.toFixed(2)), vis: c.visible }; };
 M._c5To = t => { let n = 0; while (cine && cine.ch5 && c5Old(cine.ch5.t) < t && n++ < 8000) ch5Update(1 / 30, cine.ch5.t); return cine && cine.ch5 ? cine.ch5.t : null; };
