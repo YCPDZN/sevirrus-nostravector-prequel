@@ -407,7 +407,7 @@ body.run .g-sev.near b { color: var(--crimson); }
   <div class="g-obj"><span class="g-ch">Chapter I · Investigation</span><b id="gObjective"></b><span id="gCount"></span></div>
   <div class="g-btns"><button id="gJournalBtn">Journal</button><button id="gPauseBtn">Pause</button></div>
   <div class="g-prompt" id="gPrompt"><kbd>E</kbd><span></span></div>
-  <div class="g-help"><span class="h-site">WASD to walk · Shift to run · drag to look · E to examine · J for journal · Esc to pause</span><span class="h-c4">WASD to move · Shift to walk · click or F to strike (fast combos) · Q for Musou when the gold bar is full · Space to dodge · drag to look · Esc to pause</span><span class="h-combat">WASD to move · click or F to strike · Space to dodge · E to climb · drag to look · Esc to pause</span></div>
+  <div class="g-help"><span class="h-site">WASD to walk · Shift to run · drag to look · E to examine · J for journal · Esc to pause</span><span class="h-c4">WASD to move · Shift to walk · click or F to strike (fast combos) · Q for Latent Powers when the gold bar is full · Space to dodge · drag to look · Esc to pause</span><span class="h-combat">WASD to move · click or F to strike · Space to dodge · E to climb · drag to look · Esc to pause</span></div>
   <div class="g-hp" id="gHp"><span>Jakal Chompjak XVI</span><div class="g-bar"><i id="gHpFill"></i></div></div>
   <div class="g-boss" id="gBoss" hidden><span id="gBossName">Herald of Zark</span><div class="g-bar"><i id="gBossFill"></i></div></div>
   <button class="g-ex g-dodge" id="gDodge">Dodge</button>
@@ -4702,7 +4702,7 @@ const preEl = (() => {
 const loadEl = (() => { const d = document.createElement('div'); d.className = 'c4load'; d.id = 'c4Load'; d.hidden = true;
   d.innerHTML = '<div class="c4load-in"><div class="eyebrow">Chapter IV · Enough is Enough</div><h2 id="c4LoadT">The Plain of Kesh</h2><div class="c4load-bar"><i id="c4LoadBar"></i></div><p id="c4LoadTip"></p></div>';
   document.body.appendChild(d); return d; })();
-const C4_TIPS = ['Arixal fells a soldier in three strikes. Sevirrus is another matter.', 'Your officers advance on their own. Help them, or they may fall back.', 'Strike to fill the gold bar, then press Q to unleash a Musou.', 'Every soldier answers to an officer. Defeat the officer and his squad breaks.', 'Sevirrus will not leave his camp until you come for him.'];
+const C4_TIPS = ['Arixal fells a soldier in three strikes. Sevirrus is another matter.', 'Your officers advance on their own. Help them, or they may fall back.', 'Strike to fill the gold bar, then press Q to unleash his Latent Powers.', 'Every soldier answers to an officer. Defeat the officer and his squad breaks.', 'Sevirrus will not leave his camp until you come for him.'];
 function c4Loading(next) {
   loadEl.hidden = false; document.body.classList.add('c4screen');
   G('c4LoadTip').textContent = C4_TIPS[Math.random() * C4_TIPS.length | 0];
@@ -4804,7 +4804,7 @@ const c4Hud = (() => {
     <div class="c4-feed" id="c4Feed" aria-live="polite"></div>
     <div class="c4-tags" id="c4Tags"></div>
     <div class="c4-big" id="c4Big"></div>
-    <button class="g-ex c4-musou" id="c4MuBtn">Musou</button>`;
+    <button class="g-ex c4-musou" id="c4MuBtn">Latent Powers</button>`;
   document.body.appendChild(d); return d;
 })();
 function feed(html, cls = '') { const el = document.createElement('div'); el.className = 'c4-msg ' + cls; el.innerHTML = html; G('c4Feed').prepend(el); setTimeout(() => el.classList.add('out'), 5200); setTimeout(() => el.remove(), 6200); while (G('c4Feed').children.length > 6) G('c4Feed').lastChild.remove(); }
@@ -5009,7 +5009,7 @@ function c4Attack() {
 }
 function c4Musou() {
   if (!game || game.ch !== 4 || game.over || game.paused || game.musou < 100 || game.musouT) return;
-  game.musou = 0; game.musouT = 0.001; feed('<b class="a">Arixal Chompjak</b> unleashes his fury!', 'big'); whiteEl.style.opacity = 0.4; setTimeout(() => { whiteEl.style.opacity = 0; }, 120);
+  game.musou = 0; game.musouT = 0.001; feed('<b class="a">Arixal Chompjak</b> unleashes his Latent Powers!', 'big'); whiteEl.style.opacity = 0.4; setTimeout(() => { whiteEl.style.opacity = 0; }, 120);
 }
 addEventListener('keydown', e => {
   if (!game || game.ch !== 4 || game.paused) return;

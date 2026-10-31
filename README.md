@@ -36,7 +36,7 @@ The game saves only when the player chooses to (pause menu, or at the end of a c
 | Examine / enter / climb | E | Examine / Drive / Climb button |
 | Strike | click or F | Strike button |
 | Dodge | Space | Dodge button |
-| Musou (Arixal) | Q | Musou button |
+| Latent Powers (Arixal) | Q | Latent Powers button |
 | Force blast (Damix) | Q | Blast button |
 | Seal the gates (Damix) | hold E | hold Seal |
 | Journal / Pause | J / Esc | buttons, top right |
