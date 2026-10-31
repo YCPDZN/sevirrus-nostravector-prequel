@@ -814,7 +814,7 @@ body.run .g-sev.near b { color: var(--crimson); }
   const dropSave = i => { try { localStorage.removeItem(skey(i)); } catch (e) {} };
   function latestSave() { let best = null; for (let i = 1; i <= SLOTS; i++) { const sv = readSave(i); if (sv && (!best || sv.t > best.s.t)) best = { s: sv, i }; } return best; }
   function describe(sv) {
-    if (sv.chapter === 4) return sv.complete ? 'Chapter IV complete · Kesh' : 'Chapter IV · before the battle of Kesh';
+    if (sv.chapter === 4) return sv.complete ? 'Chapter IV complete · Kesh' : sv.phase === 'battle' ? `Battle of Kesh · ${sv.ko || 0} KO · ${Math.floor((sv.time || 0) / 60)}:${String(Math.floor((sv.time || 0) % 60)).padStart(2, '0')}` : 'Chapter IV · before the battle of Kesh';
     if (sv.chapter === 3) return 'Chapter III complete · Emperor Hak';
     if (sv.chapter === 2) return sv.complete ? 'Chapter II complete' : `The road to Alphinos · ${Math.max(0, Math.round(sv.pos[1] + 204))} m to the gates`;
     if (sv.complete) return 'Chapter I complete · on to Chapter II';
@@ -2453,7 +2453,7 @@ function startChapter() {
 M.playChapter = startChapter;
 // snapshot of the chapter for a save (only ever taken when the player picks a slot)
 M.getState = () => {
-  if (game && game.ch === 4) return { v: 1, t: Date.now(), chapter: 4, phase: 'prebattle', complete: !!game.done };
+  if (game && game.ch === 4) return game.done ? { v: 1, t: Date.now(), chapter: 4, phase: 'prebattle', complete: true } : battleState();
   if (!game) return M.ch3Save ? { v: 1, t: Date.now(), chapter: 3, complete: true } : null;
   if (game.phase === 'escape') { const p = game.mover.position; return { v: 1, t: Date.now(), chapter: 2, phase: 'escape', complete: !!game.done, pos: [+p.x.toFixed(2), +p.z.toFixed(2)], yaw: +game.mover.rotation.y.toFixed(3), hp: Math.round(B.hp), check: game.check, sevZ: +rig.position.z.toFixed(2), heard: [...game.heard] }; }
   const phase = game.phase === 'toCar' || game.phase === 'drive' || game.phase === 'bastion' ? game.phase : 'site';
@@ -2467,7 +2467,7 @@ M.getState = () => {
 };
 // rebuild the chapter from a save
 M.loadState = st => {
-  if (st.chapter === 4) { if (game || st.complete) return false; c4Loading(showPreBattle); return true; }
+  if (st.chapter === 4) { if (game || st.complete) return false; if (st.phase === 'battle') c4Loading(() => { document.body.classList.remove('c4screen'); startBattle(st); }); else c4Loading(showPreBattle); return true; }
   if (st.chapter === 2) { if (game) return false; return startEscape(st); }
   if (!startChapter()) return false;
   game.restored = true;
@@ -4879,7 +4879,7 @@ function tagFor(u) {
 }
 
 // -------------------------------------------------------------------- the battle ----------
-function startBattle() {
+function startBattle(st) {
   if (game || !arixalTpl || !anizTpl || !hanaxaTpl || !chompyTpl || !sev) return false;
   if (!fieldSet) fieldSet = buildField();
   fieldSet.g.visible = true;
@@ -4905,12 +4905,41 @@ function startBattle() {
   camYaw = 0; camPitch = 0.3;
   document.body.classList.add('game', 'c4');
   G('c4Ko').textContent = '0'; G('c4Feed').innerHTML = ''; G('c4Big').textContent = '';
-  updateC4Hud(); G('c4MA').style.width = '50%'; document.querySelectorAll('.c4-orders button').forEach(b => b.classList.toggle('on', b.dataset.o === 'advance')); G('gHud').querySelector('.g-ch').textContent = 'Chapter IV · Enough is Enough'; hud.obj.textContent = 'Defeat Sevirrus'; hud.count.textContent = '3 enemy officers remain';
-  setTimeout(() => game && game.ch === 4 && feed('<b class="a">Arixal Chompjak</b> has begun battle with <b class="e">Sevirrus</b>!', 'big'), 400);
+  if (st && st.phase === 'battle') restoreBattle(st);
+  updateC4Hud(); G('c4MA').style.width = (game.morale.A / (game.morale.A + game.morale.E || 1) * 100) + '%'; document.querySelectorAll('.c4-orders button').forEach(b => b.classList.toggle('on', b.dataset.o === 'advance')); G('gHud').querySelector('.g-ch').textContent = 'Chapter IV · Enough is Enough'; hud.obj.textContent = 'Defeat Sevirrus'; hud.count.textContent = '3 enemy officers remain';
+  setTimeout(() => game && game.ch === 4 && feed(game.restored ? '<b class="a">Arixal Chompjak</b> returns to the battle of Kesh.' : '<b class="a">Arixal Chompjak</b> has begun battle with <b class="e">Sevirrus</b>!', 'big'), 400);
   M.song && M.song.play('songKesh');
   return true;
 }
 M.startBattle = startBattle;
+// a save taken mid-battle: everything needed to put the battle back exactly as it was
+function battleState() {
+  const p = game.mover.position, r2 = v => Math.round(v * 100) / 100;
+  return { v: 1, t: Date.now(), chapter: 4, phase: 'battle', complete: false, time: r2(game.t), ko: game.ko, musou: Math.round(game.musou), hp: Math.round(B.hp),
+    pos: [r2(p.x), r2(p.z)], yaw: r2(game.mover.rotation.y), morale: { A: r2(game.morale.A), E: r2(game.morale.E) },
+    aOrder: game.aOrder, eOrder: game.eOrder, sevAdvance: !!game.sevAdvance, eFallT: game.eFallT || 0, heard: [...game.heard],
+    units: game.units.filter(u => u !== game.me).map(u => ({ id: u.id, x: r2(u.pos.x), z: r2(u.pos.z), hp: r2(u.hp), troops: Math.round(u.troops + game.troops.filter(t => t.officer === u && t.state !== 'dead' && t.state !== 'flee').length), alive: u.alive, side: u.side })),
+    bases: Object.fromEntries(game.bases.map(b => [b.id, b.side])),
+    squads: game.squads.map(q => Math.round(q.troops + game.troops.filter(t => t.officer === q && t.state !== 'dead' && t.state !== 'flee').length)) };
+}
+function restoreBattle(st) {
+  const p = game.mover.position;
+  p.set(st.pos[0], 0, st.pos[1]); game.mover.rotation.y = st.yaw; camYaw = st.yaw + Math.PI;
+  B.hp = st.hp || 100; game.t = st.time || 0; game.ko = st.ko || 0; game.musou = st.musou || 0; G('c4Ko').textContent = game.ko;
+  game.morale = { A: st.morale.A, E: st.morale.E }; game.aOrder = st.aOrder || 'advance'; game.eOrder = st.eOrder || 'hold';
+  game.sevAdvance = !!st.sevAdvance; game.eFallT = st.eFallT || 0; (st.heard || []).forEach(h => game.heard.add(h));
+  game.bases.forEach(b => { if (st.bases && st.bases[b.id]) { b.side = st.bases[b.id]; const f = fieldSet.flags[b.id]; if (f) { f.color.set(b.side === 'A' ? 0x2a7ac0 : 0x8a0c1c); f.emissive.set(b.side === 'A' ? 0x0a2a44 : 0x2a0408); } } });
+  (st.units || []).forEach(s2 => {
+    const u = game.units.find(o => o.id === s2.id); if (!u) return;
+    u.pos.set(s2.x, 0, s2.z); u.hp = s2.hp; u.troops = s2.troops; u.alive = s2.alive; u.side = s2.side;
+    if (u.id === 'sevirrus') rig.position.set(s2.x, 0, s2.z);
+  });
+  (st.squads || []).forEach((n, i) => { if (game.squads[i]) game.squads[i].troops = n; });
+  document.querySelectorAll('.c4-orders button').forEach(b => b.classList.toggle('on', b.dataset.o === game.aOrder));
+  const left = game.units.filter(o => o.side === 'E' && !o.leader && !o.captain && o.alive).length;
+  hud.count.textContent = left ? `${left} enemy officer${left > 1 ? 's' : ''} remain${left > 1 ? '' : 's'}` : 'Only Sevirrus remains';
+  game.restored = true;
+}
 function updateC4Hud() {
   G('c4Hp').style.width = Math.max(0, B.hp / B.maxHp * 100) + '%';
   G('c4Mu').style.width = Math.min(100, game.musou) + '%';
