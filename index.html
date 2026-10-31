@@ -418,7 +418,7 @@ body.run .g-sev.near b { color: var(--crimson); }
     <dl class="dl">
       <dt>Designation</dt><dd>SEVIRRUS</dd>
       <dt>Name</dt><dd>Hak Chompjak</dd>
-      <dt>Rank</dt><dd>Pre-Emperor</dd>
+      <dt>Rank</dt><dd id="rankVal">Pre-Emperor</dd>
       <dt>World</dt><dd>Aridaxx</dd>
     </dl>
     <div class="align">
@@ -742,6 +742,7 @@ body.run .g-sev.near b { color: var(--crimson); }
   const dropSave = i => { try { localStorage.removeItem(skey(i)); } catch (e) {} };
   function latestSave() { let best = null; for (let i = 1; i <= SLOTS; i++) { const sv = readSave(i); if (sv && (!best || sv.t > best.s.t)) best = { s: sv, i }; } return best; }
   function describe(sv) {
+    if (sv.chapter === 3) return 'Chapter III complete · Emperor Hak';
     if (sv.chapter === 2) return sv.complete ? 'Chapter II complete' : `The road to Alphinos · ${Math.max(0, Math.round(sv.pos[1] + 204))} m to the gates`;
     if (sv.complete) return 'Chapter I complete · on to Chapter II';
     if (sv.phase === 'bastion') return `Bastion of Carax · floor ${sv.floor + 1} of 5`;
@@ -753,7 +754,7 @@ body.run .g-sev.near b { color: var(--crimson); }
   const PKEY = 'sevirrus.progress';
   function progress() {
     let p = {}; try { p = JSON.parse(localStorage.getItem(PKEY) || '{}') || {}; } catch (e) {}
-    for (let i = 1; i <= SLOTS; i++) { const sv = readSave(i); if (!sv) continue; if (sv.complete || sv.chapter === 2) p.c1 = true; if (sv.chapter === 2 && sv.complete) p.c2 = true; }
+    for (let i = 1; i <= SLOTS; i++) { const sv = readSave(i); if (!sv) continue; if (sv.complete || sv.chapter >= 2) p.c1 = true; if ((sv.chapter === 2 && sv.complete) || sv.chapter === 3) p.c2 = true; if (sv.chapter === 3) p.c3 = true; }
     return p;
   }
   const chOpen = (n, p) => n <= 1 || !!p['c' + (n - 1)];
@@ -781,6 +782,7 @@ body.run .g-sev.near b { color: var(--crimson); }
     $('#subLine').innerHTML = post3 ? 'Emperor Hak · <em>after the throne</em> · Aridaxx' : 'Hak Chompjak · <em>before the throne</em> · Aridaxx';
     $('#tagLine').textContent = post3 ? 'The Emperor is dead. Long live the Emperor.' : 'He does not hate you. He simply needs what you have.';
     $('#archAssa').hidden = !post3;
+    $('#rankVal').textContent = post3 ? 'Emperor' : 'Pre-Emperor';
     const done = !!(sv && sv.complete) || !!p.c1;
     $('#threatTxt').textContent = 'Threat assessment · ' + (done ? '12' : '11') + ' / 12';
     $('#threatLast').classList.toggle('f', done);
@@ -796,7 +798,7 @@ body.run .g-sev.near b { color: var(--crimson); }
     el.innerHTML = '';
     for (let i = 1; i <= SLOTS; i++) {
       const sv = readSave(i), li = document.createElement('li');
-      li.innerHTML = `<span class="sn">Slot ${i}</span><span class="sd${sv ? '' : ' empty'}">${sv ? describe(sv) + `<small>Chapter ${sv.chapter === 2 ? 'II' : 'I'} · saved ${when(sv.t)}</small>` : 'Empty'}</span><span class="sb"></span>`;
+      li.innerHTML = `<span class="sn">Slot ${i}</span><span class="sd${sv ? '' : ' empty'}">${sv ? describe(sv) + `<small>Chapter ${['I', 'I', 'II', 'III'][sv.chapter] || 'I'} · saved ${when(sv.t)}</small>` : 'Empty'}</span><span class="sb"></span>`;
       const box = li.querySelector('.sb'), btn = (label, fn, cls) => { const b = document.createElement('button'); b.textContent = label; if (cls) b.className = cls; b.addEventListener('click', fn); box.appendChild(b); return b; };
       if (mode === 'load') {
         const l = btn('Load', () => loadSlot(i)); l.disabled = !sv;
@@ -818,6 +820,7 @@ body.run .g-sev.near b { color: var(--crimson); }
     $('#pSaves').hidden = true;
     if (window.__menu.quitChapter) window.__menu.quitChapter(true);
     primeAudio();
+    if (sv.chapter === 3) { applyProgress(sv); say('Chapter III is complete in this save. The Emperor is dead. Chapter IV is not written yet.'); items[0].focus(); return; }
     if (sv.complete && sv.chapter === 2) { applyProgress(sv); if (window.__menu.playChapter3 && window.__menu.playChapter3()) say('Chapter III: Assassination'); else { say('Still loading. Try again in a moment.'); items[0].focus(); } return; }
     if (sv.complete) { applyProgress(sv); if (window.__menu.playChapter2 && window.__menu.playChapter2()) say('Chapter II: The Siege of Aridaxx'); else { say('Chapter I is complete in this save. Chapter II is still loading.'); items[0].focus(); } return; }
     if (window.__menu.loadState && window.__menu.loadState(sv)) say('Game loaded'); else say('Still loading. Try again in a moment.');
@@ -2275,7 +2278,11 @@ G('gLoad').addEventListener('click', () => { const w = G('gLoadWrap'); w.hidden 
 M.quitChapter = quiet => { if (!game) return; quietEnd = quiet; endChapter(); quietEnd = false; };
 let quietEnd = false;
 G('gJClose').addEventListener('click', () => toggleJournal());
-G('gDoneMenu').addEventListener('click', () => { G('gDone').hidden = true; endChapter(); });
+G('gDoneMenu').addEventListener('click', () => {
+  G('gDone').hidden = true;
+  if (!game && M.ch3Save) { M.ch3Save = false; G('gDone').querySelector('.eyebrow').textContent = 'Chapter I · Investigation'; G('gDoneNext').hidden = false; M.onAssaEnd && M.onAssaEnd(true); return; }
+  endChapter();
+});
 G('gDoneNext').addEventListener('click', () => { const ch = game && game.ch; G('gDone').hidden = true; M.quitChapter(true); M.refreshMenu && M.refreshMenu(); if (ch === 2) startAssassination(); else startSiege(); });
 
 function buildCrimeScene() {
@@ -2355,7 +2362,7 @@ function startChapter() {
 M.playChapter = startChapter;
 // snapshot of the chapter for a save (only ever taken when the player picks a slot)
 M.getState = () => {
-  if (!game) return null;
+  if (!game) return M.ch3Save ? { v: 1, t: Date.now(), chapter: 3, complete: true } : null;
   if (game.phase === 'escape') { const p = game.mover.position; return { v: 1, t: Date.now(), chapter: 2, phase: 'escape', complete: !!game.done, pos: [+p.x.toFixed(2), +p.z.toFixed(2)], yaw: +game.mover.rotation.y.toFixed(3), hp: Math.round(B.hp), check: game.check, sevZ: +rig.position.z.toFixed(2), heard: [...game.heard] }; }
   const phase = game.phase === 'toCar' || game.phase === 'drive' || game.phase === 'bastion' ? game.phase : 'site';
   const p = game.mover.position;
@@ -4263,8 +4270,12 @@ function endAssassination(finished) {
   rig.position.set(0, 0, 0); rig.rotation.set(0, 0, 0); rig.rotation.order = 'XYZ'; rig.visible = true; applyPose(sev.j, POSES.stand); setBlade(false); eyeMats.forEach(m => { m.emissiveIntensity = 0; });
   subsEl.style.opacity = 0; cineEls.black.style.opacity = 0; cineEls.red.style.opacity = 0; cineEls.card.style.opacity = 0; cineEls.skip.hidden = true;
   document.body.classList.remove('cine'); M.voice && M.voice.stop(); speak(null);
-  if (finished) M.markCleared && M.markCleared(3);
-  M.onAssaEnd && M.onAssaEnd(!!finished);
+  if (finished) {
+    // the end of Chapter III: offer to save before going back to the menu
+    M.markCleared && M.markCleared(3); M.ch3Save = true;
+    G('gDone').querySelector('.eyebrow').textContent = 'Chapter III · Assassination'; G('gDoneNext').hidden = true;
+    M.renderDoneSlots && M.renderDoneSlots(); G('gDone').hidden = false; G('gDoneMenu').focus();
+  } else M.onAssaEnd && M.onAssaEnd(false);
 }
 function detachHead(c, vel, spin) {
   const hd = c.j.head; hd.getWorldPosition(tmpA); scene.attach(hd); c.headFree = true;
