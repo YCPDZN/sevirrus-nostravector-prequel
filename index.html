@@ -305,6 +305,9 @@ body.cine .ui, body.cine .fx-pulse { opacity: 0; pointer-events: none; }
 .ghud { display: none; }
 body.game .ghud { display: block; }
 body.game .ui, body.game .fx-pulse { opacity: 0; pointer-events: none; }
+/* gameplay, cutscenes and the Chapter IV screens cut the menu away at once: no fade, so it never shows over the first frame */
+body.game .ui, body.game .fx-pulse, body.cine .ui, body.cine .fx-pulse, body.c4screen .ui, body.c4screen .fx-pulse { transition: none; }
+body.c4screen .ui, body.c4screen .fx-pulse { opacity: 0; pointer-events: none; }
 body.game #stage { touch-action: none; cursor: grab; }
 .g-obj { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 16px); left: max(16px, env(safe-area-inset-left, 0px)); z-index: 8; display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; background: rgba(10,6,18,.62); border: 1px solid var(--line); max-width: calc(100% - 200px); }
 .g-ch { font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--crimson); }
@@ -935,9 +938,9 @@ body.run .g-sev.near b { color: var(--crimson); }
     b.addEventListener('click', () => {
       const a = b.dataset.act;
       if (a === 'begin') {
-        active = { chapter: 1, complete: false }; refreshMenu();
         if (musicOn) primeAudio();
-        if (window.__menu.playIntro && window.__menu.playIntro()) say('Intro playing');
+        // a new game: the menu goes back to Chapter I, but only once it has faded out, so the old menu never flashes up
+        if (window.__menu.playIntro && window.__menu.playIntro()) { active = { chapter: 1, complete: false }; setTimeout(refreshMenu, 800); say('Intro playing'); }
         else { doFlash(); say('He is still taking shape. Try again in a moment.'); }
       }
       if (a === 'chapter1') { primeAudio(); if (window.__menu.playChapter && window.__menu.playChapter()) say('Chapter I: Investigation'); else say('Still loading. Try again in a moment.'); }
