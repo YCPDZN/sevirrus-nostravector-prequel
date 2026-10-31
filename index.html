@@ -611,6 +611,7 @@ body.run .g-sev.near b { color: var(--crimson); }
 <script type="application/octet-stream" id="glbAlien" data-src="assets/glbAlien.glb"></script>
 <script type="application/octet-stream" id="glbDamix" data-src="assets/glbDamix.glb"></script>
 <script type="application/octet-stream" id="glbChompy" data-src="assets/glbChompy.glb"></script>
+<script type="application/octet-stream" id="glbJazmak" data-src="assets/glbJazmak.glb"></script>
 <script type="application/octet-stream" id="glbArixal" data-src="assets/glbArixal.glb"></script>
 <script type="application/octet-stream" id="glbAniz" data-src="assets/glbAniz.glb"></script>
 <script type="application/octet-stream" id="glbHanaxa" data-src="assets/glbHanaxa.glb"></script>
@@ -1349,7 +1350,7 @@ function makeMouth(root, rx, mouthY, maxOpen = 0.022) {
     },
   };
 }
-let sevMouth = null;
+let sevMouth = null, jazMouth = null;   // Jazmak's jaw is its own mesh in his rig (rig_hier --mouth)
 function speak(who, unvoiced) {          // who is speaking right now: drive their mouth, close the others
   let v = M.voice && M.voice.level ? M.voice.level() : 0;
   // a line not recorded yet: move the mouth with the subtitle so the scene still reads
@@ -1357,6 +1358,7 @@ function speak(who, unvoiced) {          // who is speaking right now: drive the
   sevMouth && sevMouth.set(who === 'sev' ? v : 0);
   cine && cine.battle && cine.battle.mouth && cine.battle.mouth.set(who === 'lead' ? v : 0);
   const jm = (hall && hall.mouth) || jakalMouth(); jm && jm.set(who === 'jakal' ? v : 0);
+  jazMouth && jazMouth.set(who === 'jazmak' ? v : 0);
 }
 // Jakal's mouth: every clone of his model shares the template's geometry, so one mouth drives them all
 let jMouth = null;
@@ -2215,7 +2217,8 @@ function endCine() {
   if (!cine) return;
   if (cine.siege) { endSiege(false); return; }
   if (cine.assa) { endAssassination(false); return; }
-  if (cine.ch5) { endCh5Intro(false); return; }
+  if (cine.jaz) { endJaz(false); return; }
+  if (cine.ch5) { endCh5Intro(true); return; }
   if (cine.ch4) { endCh4Intro(true); return; }
   speak(null);
   const L = cine.battle;
@@ -2256,6 +2259,7 @@ function execPose(T) {
 }
 
 function cineUpdate(dt, time) {
+  if (cine.jaz) { jazUpdate(dt, time); return; }
   if (cine.ch5) { ch5Update(dt, time); return; }
   if (cine.ch4) { ch4IntroUpdate(dt, time); return; }
   if (cine.assa) { assaUpdate(dt, time); return; }
@@ -2630,6 +2634,7 @@ addEventListener('keydown', e => {
   if (e.key !== 'Enter' || e.repeat) return;
   const ae = document.activeElement; if (ae && /INPUT|TEXTAREA|SELECT/.test(ae.tagName)) return;
   if (ae && ae.tagName === 'BUTTON') ae.blur();
+  if (cine && cine.jaz) { const S = cine.jaz; if (S.line >= 0) { (S.skipped = S.skipped || new Set()).add(S.line); M.voice && M.voice.stop(); subsEl.style.opacity = 0; } e.preventDefault(); return; }
   if (cine && cine.ch5) { const S = cine.ch5; if (S.line >= 0) { (S.skipped = S.skipped || new Set()).add(S.line); M.voice && M.voice.stop(); subsEl.style.opacity = 0; } e.preventDefault(); return; }
   if (cine && cine.ch4) { const S = cine.ch4; if (S.line >= 0) { (S.skipped = S.skipped || new Set()).add(S.line); M.voice && M.voice.stop(); subsEl.style.opacity = 0; } e.preventDefault(); return; }
   if (cine && cine.assa) { const S = cine.assa; if (S.line >= 0) { (S.skipped = S.skipped || new Set()).add(S.line); M.voice && M.voice.stop(); subsEl.style.opacity = 0; } e.preventDefault(); return; }
@@ -4622,12 +4627,13 @@ M._assaTo = t => { let n = 0; while (cine && cine.assa && cine.assa.t < t && n++
 // a mile of alien plain, hundreds of Chompy soldiers. You are Arixal Chompjak. Defeat Sevirrus.
 // The whole battle is simulated as squads; soldiers are only built near you.
 // ======================================================================================
-let arixalTpl = null, anizTpl = null, hanaxaTpl = null;
+let arixalTpl = null, anizTpl = null, hanaxaTpl = null, jazmakTpl = null;
 {
   const p = id => Uint8Array.from(atob(document.getElementById(id).textContent.trim()), c => c.charCodeAt(0)).buffer;
   new GLTFLoader().parse(p('glbArixal'), '', g => { arixalTpl = g.scene; }, () => {});
   new GLTFLoader().parse(p('glbAniz'), '', g => { anizTpl = g.scene; }, () => {});
   new GLTFLoader().parse(p('glbHanaxa'), '', g => { hanaxaTpl = g.scene; }, () => {});
+  new GLTFLoader().parse(p('glbJazmak'), '', g => { jazmakTpl = g.scene; }, () => {});
 }
 const K4 = { LEN: 1609, HALF: 804, W: 170, ALLY: 0x5ad0ff, FOE: 0xff3048 };
 const C4_BASES = [
@@ -4844,6 +4850,7 @@ function endCh5Intro(finished) {
   clearBlood(); clearGore(); clearSparks(); clearShards(); canvasEl.classList.remove('impact', 'glitch'); impactUntil = 0;
   subsEl.style.opacity = 0; subsEl.className = 'subs'; subsWho.classList.remove('flip'); cineEls.black.style.opacity = 0; cineEls.red.style.opacity = 0; cineEls.card.style.opacity = 0; cineEls.skip.hidden = true;
   document.body.classList.remove('cine'); M.voice && M.voice.stop(); speak(null);
+  if (finished && startJaz()) return;
   M.onCh5End && M.onCh5End(finished);
 }
 function bladeTip(out) { blade.updateMatrixWorld(); return blade.localToWorld(out.set(0, -0.95, 0)); }
@@ -4999,6 +5006,142 @@ function ch5Update(dt, time) {
   if (T >= C5.END) endCh5Intro(true);
 }
 M.playChapter5 = startCh5Intro;
+
+// ------------------------------------------------------- Jazmak on the plain below Alphinos ----------
+// [start, seconds, line, voice clip]   (CH5JAZMAK1..6 go in vo105..vo110 when recorded)
+const JAZ_LINES = [
+  [5.2, 2.6, 'The enemy is at Alphinos.', 104],
+  [9.6, 6.2, 'That little bastard took his own father’s head and parked his arse on a dead man’s throne.', 105],
+  [16.6, 7.2, 'I watched him run at Kesh. Five hundred years I’ve lived, and I swear to hell it’s the best damn thing I’ve ever seen.', 106],
+  [24.6, 6.2, 'He’s hiding behind my brother’s walls like a rat in a bloody drain. So we go down the drain.', 107],
+  [31.6, 6.8, 'Sevirrus. Hak. Emperor. I don’t give a damn what he calls himself. He bleeds the same as the rest of us.', 108],
+  [39.2, 6.2, 'Sharpen everything you own. By tomorrow night I want that son of a bitch’s crown in the mud.', 109],
+];
+const JZ = { END: 51 };
+Object.assign(POSES, {
+  jzPoint: { spine: [-0.04, 0.12, 0], head: [-0.06, 0, 0], shoulderR: [-1.55, 0, -0.12], elbowR: [-0.05, 0, 0], wristR: [0.05, 0, 0], shoulderL: [0.05, 0, 0.12] },
+  jzChop: { spine: [0.14, -0.1, 0], neck: [0.05, 0, 0], shoulderR: [-1.15, 0, -0.45], elbowR: [-0.85, 0, 0], wristR: [0.3, 0, 0], shoulderL: [-0.2, 0, 0.2], elbowL: [-0.4, 0, 0] },
+  jzOpen: { spine: [-0.03, 0, 0], shoulderL: [-0.7, 0, 0.6], elbowL: [-0.5, 0, 0], shoulderR: [-0.7, 0, -0.6], elbowR: [-0.5, 0, 0] },
+  jzLaugh: { spine: [-0.14, 0, 0], neck: [-0.12, 0, 0], head: [-0.22, 0, 0], shoulderL: [0.05, 0, 0.2], elbowL: [-0.4, 0, 0], shoulderR: [0.05, 0, -0.2], elbowR: [-0.4, 0, 0] },
+  jzFist: { spine: [-0.08, 0, 0], neck: [-0.1, 0, 0], head: [-0.12, 0, 0], shoulderR: [-2.9, 0, -0.25], elbowR: [-0.35, 0, 0], wristR: [0, 0, 0], shoulderL: [-0.1, 0, 0.15], elbowL: [-0.3, 0, 0] },
+});
+let jazSet = null;
+function buildJazSet() {
+  const g = new THREE.Group(); g.visible = false; scene.add(g);
+  // Alphinos on the far ridge: a black castle against the haze, its windows burning red
+  const sil = new THREE.MeshBasicMaterial({ color: 0x0b0610, fog: false }), win = new THREE.MeshBasicMaterial({ color: 0xff3a2a, fog: false });
+  const cz = -116, cy = terrainH(-6, cz) + 6, castle = new THREE.Group(); castle.position.set(-14, cy, cz); castle.scale.setScalar(0.5); g.add(castle);
+  const box = (w, h, d, x, y, z) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), sil); m.position.set(x, y, z); castle.add(m); return m; };
+  box(70, 12, 6, 0, 6, 0); box(16, 34, 12, 0, 17, -6); box(8, 46, 8, 0, 23, -6);
+  for (const x of [-34, -22, 22, 34]) { const t = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 3.6, 22, 10), sil); t.position.set(x, 11, 0); castle.add(t); const c = new THREE.Mesh(new THREE.ConeGeometry(4.2, 9, 10), sil); c.position.set(x, 26.5, 0); castle.add(c); }
+  for (const x of [-9, 9]) { const t = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 3, 40, 10), sil); t.position.set(x, 20, -6); castle.add(t); const c = new THREE.Mesh(new THREE.ConeGeometry(3.4, 10, 10), sil); c.position.set(x, 45, -6); castle.add(c); }
+  const spire = new THREE.Mesh(new THREE.ConeGeometry(4.6, 16, 10), sil); spire.position.set(0, 54, -6); castle.add(spire);
+  let seed = 3; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  for (let k = 0; k < 46; k++) { const w = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.6), win); const onKeep = k < 18; w.position.set(onKeep ? (rnd() - 0.5) * 14 : (rnd() - 0.5) * 66, onKeep ? 14 + rnd() * 26 : 3 + rnd() * 7, onKeep ? 0.1 : 3.05); castle.add(w); }
+  const beacon = new THREE.Mesh(new THREE.SphereGeometry(1.4, 12, 8), win); beacon.position.set(0, 63, -6); castle.add(beacon);
+  // the company: two ranks of Arixal's soldiers before him, and more on the slope behind them
+  const ranks = [];
+  for (let k = 0; k < 16; k++) { const r = k < 8 ? 0 : 1, x = (k % 8 - 3.5) * 0.95 + (r ? 0.45 : 0), z = 4.4 + r * 1.3;
+    const c = rigClone(chompyTpl); const mats = factionMats('A'); let n = 0; c.mover.traverse(o => { if (o.isMesh) o.material = mats[n++ % mats.length]; });
+    c.mover.position.set(x, 0, z); c.mover.rotation.y = Math.PI + (Math.random() - 0.5) * 0.15; c.ph = Math.random() * 6; g.add(c.mover); ranks.push(c); }
+  const far = new THREE.MeshStandardMaterial({ color: 0x1a2436, roughness: 0.9 });
+  for (let k = 0; k < 60; k++) { const x = (Math.random() - 0.5) * 16, z = 8 + Math.random() * 9, y = terrainH(x, z);
+    const b = new THREE.Mesh(new THREE.CapsuleGeometry(0.22, 0.95, 3, 6), far); b.position.set(x, y + 0.7, z); g.add(b);
+    const h = new THREE.Mesh(new THREE.SphereGeometry(0.17, 8, 6), far); h.position.set(x, y + 1.5, z); g.add(h); }
+  // their banners: Arixal's blue
+  const flagM = new THREE.MeshStandardMaterial({ color: 0x2a7ac0, emissive: 0x0a2a44, side: THREE.DoubleSide, roughness: 0.7 }), poleM = new THREE.MeshStandardMaterial({ color: 0x18141c });
+  const flags = [];
+  for (const [x, z] of [[-4.6, 5.2], [4.6, 5.2], [-2.5, 9.5], [3, 10.5]]) { const y = terrainH(x, z); const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 5, 6), poleM); pole.position.set(x, y + 2.5, z); g.add(pole);
+    const f = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 2.2, 8, 1), flagM); f.position.set(x + 0.72, y + 3.8, z); g.add(f); flags.push(f); }
+  castle.updateMatrixWorld(true); const top = beacon.getWorldPosition(new THREE.Vector3());
+  return { g, ranks, flags, castleTop: top };
+}
+function startJaz() {
+  if (!jazmakTpl || !chompyTpl) return false;
+  if (!jazSet) jazSet = buildJazSet();
+  cine = { jaz: { t: 0, line: -1 }, t: 0, fired: new Set() };
+  const J = rigClone(jazmakTpl); J.mover.position.set(0, 0, 0); J.mover.rotation.y = Math.PI; scene.add(J.mover); J.gait = makeGait(J.mover); cine.jaz.J = J;
+  if (!jazMouth) jazMouth = makeMouth(jazmakTpl, /^Jaw mouth/, 1.4269, 0.03);
+  jazSet.g.visible = true; rig.visible = false; hall && (hall.g.visible = false);
+  setPlanet(true); blackHole.visible = stars.visible = true; dust.visible = false;
+  [hemi, key, under, rimL, rimR, cineSpot, bhLight].forEach(l => { l.userData.was = l.intensity; l.intensity = 0; });
+  document.body.classList.add('cine'); cineEls.skip.hidden = false; cineEls.skip.focus();
+  return true;
+}
+function endJaz(finished) {
+  const S = cine && cine.jaz; if (!S) return;
+  cine = null;
+  scene.remove(S.J.mover); jazSet.g.visible = false; rig.visible = true;
+  setPlanet(false); blackHole.visible = stars.visible = false; dust.visible = true; bhLight.intensity = 0;
+  [hemi, key, under, rimL, rimR, cineSpot].forEach(l => { if (l.userData.was !== undefined) l.intensity = l.userData.was; });
+  key.position.set(0.9, 4.2, 2.6); keyTarget.position.set(0, 1.2, 0); key.color.set(0xffffff); cineSpot.color.set(0xffffff); hemi.color.set(0x4a2f72);
+  camera.fov = 32; camera.far = 60; camera.updateProjectionMatrix(); blackHole.position.set(60, 110, -300);
+  subsEl.style.opacity = 0; subsEl.className = 'subs'; cineEls.black.style.opacity = 0; cineEls.card.style.opacity = 0; cineEls.skip.hidden = true;
+  document.body.classList.remove('cine'); M.voice && M.voice.stop(); speak(null);
+  M.onCh5End && M.onCh5End(true);
+}
+function jazUpdate(dt, time) {
+  const S = cine.jaz, T = (S.t += dt), J = S.J;
+  // the light: the black hole's glow behind Alphinos, a cold fill on the company
+  [hemi, key, under, rimL, rimR, cineSpot, bhLight].forEach(l => { l.intensity = 0; });
+  hemi.color.set(0x7a5aa8); hemi.intensity = 0.75;
+  key.color.set(0xffb48a); key.intensity = 22; key.position.set(-3, 6, -6); keyTarget.position.set(0, 1.2, 0);
+  cineSpot.color.set(0xe0d4ff); cineSpot.intensity = 14; cineSpot.position.set(0.8, 4.5, 6); cineTarget.position.set(0, 1.4, 0);
+  planetTick(time); bhMat.uniforms.uTime.value = time; blackHole.position.set(60, 110, -300); blackHole.quaternion.copy(camera.quaternion);
+  jazSet.flags.forEach((f, i) => { const a = f.geometry.attributes.position; for (let k = 0; k < a.count; k++) { const x = a.getX(k) + 0.7; a.setZ(k, Math.sin(time * 4 + x * 3 + i) * 0.12 * x); } a.needsUpdate = true; });
+
+  // Jazmak: facing the castle to name the enemy, then round to his soldiers
+  J.mover.rotation.y = lerp(Math.PI, 0, ss(8.0, 9.2, T)) + (T > 8 && T < 9.2 ? 0 : 0);
+  const breathe = { spine: [Math.sin(time * 1.6) * 0.015, 0, 0], head: [0, Math.sin(time * 0.5) * 0.05, 0] };
+  let pose = POSES.stand;
+  if (T < 8.2) pose = mixPose('stand', 'jzPoint', ss(4.6, 5.2, T) * (1 - ss(7.8, 8.2, T)));
+  else if (T < 9.6) pose = addPose(POSES.stand, { spine: [0, Math.sin((T - 8) * 6) * 0.05, 0] });
+  else if (T < 16.6) pose = mixPose('stand', 'gesture', ss(10.6, 11.2, T) * (1 - ss(13.8, 14.4, T)));
+  else if (T < 24.6) pose = mixPose('stand', 'jzLaugh', ss(19.0, 19.5, T) * (1 - ss(21.2, 21.8, T)));
+  else if (T < 31.6) pose = mixPose('stand', 'jzChop', Math.max(ss(26.2, 26.5, T) * (1 - ss(26.9, 27.3, T)), ss(28.6, 28.9, T) * (1 - ss(29.4, 29.9, T))));
+  else if (T < 39.2) pose = mixPose('stand', T < 35 ? 'jzOpen' : 'jzChop', T < 35 ? ss(31.8, 32.4, T) * (1 - ss(34.4, 35, T)) : ss(35.6, 35.9, T) * (1 - ss(37.4, 38, T)));
+  else pose = mixPose('stand', 'jzFist', ss(43.4, 44.0, T));
+  applyPose(J.j, addPose(pose, breathe));
+  // the company: at ease, then rifles in the air
+  jazSet.ranks.forEach((c, i) => {
+    const up = ss(44.0 + (i % 5) * 0.08, 44.6 + (i % 5) * 0.08, T);
+    let p = addPose(POSES.rifleRest, { spine: [Math.sin(time * 1.3 + c.ph) * 0.02, 0, 0], head: [0, Math.sin(time * 0.4 + c.ph) * 0.06, 0] });
+    if (T > 19 && T < 21.8) p = addPose(p, { spine: [-0.08 + Math.sin(time * 9 + c.ph) * 0.04, 0, 0], head: [-0.15, 0, 0] });   // they laugh with him
+    if (up > 0) p = mixPose(p, addPose(POSES.rifleSwing, { spine: [0, Math.sin(time * 10 + c.ph) * 0.06, 0] }), up);
+    applyPose(c.j, p); c.mover.position.y = up > 0.9 ? Math.abs(Math.sin(time * 7 + c.ph)) * 0.08 : 0;
+  });
+
+  // overlays
+  let black = T < 1.8 ? 1 - T / 1.8 : 0; if (T > JZ.END - 2.0) black = Math.min(1, (T - JZ.END + 2.0) / 1.6);
+  cineEls.black.style.opacity = black; cineEls.red.style.opacity = 0;
+  let card = '', cls = 'cine-card';
+  if (T > 0.6 && T < 3.4) card = 'ARIDAXX<small>The plain below Alphinos</small>';
+  if (card && cineEls.card.dataset.html !== card) { cineEls.card.dataset.html = card; cineEls.card.innerHTML = card; cineEls.card.className = cls; }
+  cineEls.card.style.opacity = card ? 1 : 0;
+  const li = JAZ_LINES.findIndex(l => T >= l[0] && T < l[0] + l[1]);
+  if (li !== S.line) { S.line = li; if (li >= 0 && !(S.skipped && S.skipped.has(li))) { const [, , line, vo] = JAZ_LINES[li]; subsWho.textContent = 'Jazmak Chompjak'; subsLine.textContent = line; subsEl.className = 'subs lead'; if (vo !== undefined) M.voice && M.voice.play(vo); } }
+  const showing = li >= 0 && !(S.skipped && S.skipped.has(li));
+  subsEl.style.opacity = showing ? 1 : 0;
+  speak(showing ? 'jazmak' : null, showing && !(M.voice && M.voice.has && M.voice.has(JAZ_LINES[li][3])));
+
+  // camera
+  J.j.head.getWorldPosition(tmpA); const hd = tmpA.clone();
+  let cp, cl, fov = 38;
+  if (T < 4.6) { const k = ss(0, 4.6, T); cp = V(lerp(1.8, 0.8, k), lerp(5, 3.4, k), lerp(15, 11.5, k)); cl = V(-1, lerp(3, 1.6, k), -40); fov = 44; }
+  else if (T < 8.0) { const ct = jazSet.castleTop; cp = V(0.75, 1.5, 1.7); cl = V(ct.x, ct.y - 12, ct.z); fov = 44; }
+  else if (T < 9.6) { cp = V(0.3, 1.25, 3.1); cl = V(0, 1.45, 0); fov = 40; }
+  else if (T < 16.6) { cp = V(0.85, 1.7, 2.3); cl = hd; fov = 36; }
+  else if (T < 20.4) { cp = V(-1.1, 1.95, -1.9); cl = V(0.4, 1.2, 5.2); fov = 44; }
+  else if (T < 24.6) { cp = V(hd.x + 0.45, hd.y - 0.02, hd.z + 1.75); cl = V(hd.x, hd.y + 0.02, hd.z); fov = 34; }
+  else if (T < 31.6) { const k = ss(24.6, 31.6, T); cp = V(hd.x - 0.3, hd.y + 0.02, hd.z + lerp(1.9, 1.4, k)); cl = V(hd.x, hd.y + 0.04, hd.z); fov = 34; }
+  else if (T < 39.2) { cp = V(2.1, 1.65, 1.7); cl = V(0, 1.5, 0.3); fov = 40; }
+  else if (T < 45.4) { cp = V(0.7, 1.05, 2.3); cl = V(0, 1.9, 0); fov = 46; }
+  else { const k = ss(45.4, JZ.END, T); cp = V(lerp(1.2, 0, k), lerp(2.6, 11, k), lerp(3.2, 24, k)); cl = V(0, lerp(1.7, 2, k), lerp(0, -30, k)); fov = 46; }
+  camera.position.copy(cp); camera.lookAt(cl); if (Math.abs(camera.fov - fov) > 0.05) { camera.fov = fov; camera.updateProjectionMatrix(); }
+  if (T >= JZ.END) endJaz(true);
+}
+M._jazTo = t => { let n = 0; while (cine && cine.jaz && cine.jaz.t < t && n++ < 6000) jazUpdate(1 / 30, cine.jaz.t); return cine && cine.jaz ? cine.jaz.t : null; };
+M._jazStart = () => startJaz();
 M._c5Crown = () => { const c = cine && cine.ch5 && cine.ch5.crown; if (!c) return null; const w = c.getWorldPosition(new THREE.Vector3()); return { parent: c.parent && (c.parent.name || c.parent.type), w: [w.x, w.y, w.z].map(v => +v.toFixed(2)), vis: c.visible }; };
 M._c5To = t => { let n = 0; while (cine && cine.ch5 && c5Old(cine.ch5.t) < t && n++ < 8000) ch5Update(1 / 30, cine.ch5.t); return cine && cine.ch5 ? cine.ch5.t : null; };
 

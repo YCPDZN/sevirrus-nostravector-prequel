@@ -7,7 +7,8 @@ This tool:
   3. merges all parts that share a material look into one primitive, carrying base colour as
      vertex colour, so a whole soldier draws in a handful of calls instead of ~160.
 
-usage: python3 rig_hier.py in.glb out.glb [height_m]
+usage: python3 rig_hier.py in.glb out.glb [height_m] [--mouth]
+  --mouth keeps the jaw, mouth and lower beard as their own skinned mesh ("Jaw mouth"), so the game can move it for lip sync
 """
 import json, re, struct, sys
 import numpy as np
@@ -38,7 +39,10 @@ def local(nd):
     m[:3, :3] = r * s; m[:3, 3] = nd.get("translation", [0, 0, 0]); return m
 
 
-def main(src, dst, height=1.8):
+MOUTH = re.compile(r"^(Jaw|Mouth interior|Tongue|Lower lip)$|Beard chin|Beard carved strand", re.I)
+
+
+def main(src, dst, height=1.8, mouth=False):
     data = open(src, "rb").read()
     jl = struct.unpack("<I", data[12:16])[0]; gl = json.loads(data[20:20 + jl])
     bo = 20 + jl; bl = struct.unpack("<I", data[bo:bo + 4])[0]; bin_ = data[bo + 8:bo + 8 + bl]
@@ -79,6 +83,8 @@ def main(src, dst, height=1.8):
         if p["group"]: continue
         m = re.search(r"(leftLeg|rightLeg|leftArm|rightArm)", p["name"])
         if m: p["group"] = m.group(1)
+        elif re.search(r"\b(Beard|Moustache|forehead|age line)\b", p["name"], re.I):
+            p["group"] = "head"
         elif re.match(r"^(Face|Jaw|Nose|Eye|Iris|Pupil|Ear|Brow|Eyebrow|Mouth|Tongue|Nostril|Hair|Long hair|Parted fringe|Beard|Moustache|Lip|Teeth|Cheek|Forehead|Scar|War paint|Crest|Helm)", p["name"], re.I):
             p["group"] = "eyes" if re.match(r"^(Iris|Pupil)", p["name"]) else "head"
 
@@ -215,7 +221,7 @@ def main(src, dst, height=1.8):
         key = (round(pbr.get("metallicFactor", 1), 1), round(pbr.get("roughnessFactor", 1), 1), em != (0, 0, 0) and em, col[3] < 0.999 and round(col[3], 2))
         b = bone_for(p); jt, wt = weights(p, b)
         nm = p["n"] if p["n"] is not None else np.tile([0, 1, 0], (len(p["v"]), 1))
-        groups.setdefault(key, []).append((p["v"], nm, p["i"], np.tile(col[:3], (len(p["v"]), 1)), jt, wt, em))
+        groups.setdefault((bool(mouth and MOUTH.search(p["name"])),) + key, []).append((p["v"], nm, p["i"], np.tile(col[:3], (len(p["v"]), 1)), jt, wt, em))
 
     bin_out = bytearray(); views, accs, prims, mats = [], [], [], []
     def view(raw, target=None):
@@ -225,7 +231,9 @@ def main(src, dst, height=1.8):
         views.append(bv); return len(views) - 1
     def acc(raw, ctype, count, typ, target=None, **kw):
         a = {"bufferView": view(raw, target), "componentType": ctype, "count": count, "type": typ}; a.update(kw); accs.append(a); return len(accs) - 1
+    prims_m = []
     for key, items in groups.items():
+        in_mouth, key = key[0], key[1:]
         V = np.vstack([x[0] for x in items]).astype(np.float32); Nn = np.vstack([x[1] for x in items]).astype(np.float32)
         C = np.vstack([x[3] for x in items]).astype(np.float32); J = np.vstack([x[4] for x in items]); W = np.vstack([x[5] for x in items])
         I, base = [], 0
@@ -244,10 +252,11 @@ def main(src, dst, height=1.8):
         mat = {"name": "m%d" % len(mats), "pbrMetallicRoughness": {"baseColorFactor": [1, 1, 1, alpha or 1], "metallicFactor": met, "roughnessFactor": rough}}
         if em: mat["emissiveFactor"] = list(em)
         if alpha: mat["alphaMode"] = "BLEND"
-        mats.append(mat); prims.append({"attributes": attrs, "indices": ind, "material": len(mats) - 1})
+        mats.append(mat); (prims_m if in_mouth else prims).append({"attributes": attrs, "indices": ind, "material": len(mats) - 1})
 
     nodes = [{"name": N[root_i].get("name", "Character"), "children": [1, 2]}, {"name": "Body", "mesh": 0, "skin": 0}]
-    first = 2
+    if prims_m: nodes[0]["children"] = [1, 2, 3]; nodes.append({"name": "Jaw mouth", "mesh": 1, "skin": 0})
+    first = len(nodes)
     for b in BONES:
         p = PARENT[b]; t = piv[b] - (piv[p] if p else 0)
         nodes.append({"name": b, "translation": [round(float(x), 6) for x in t]})
@@ -258,7 +267,7 @@ def main(src, dst, height=1.8):
         m = np.eye(4, dtype=np.float32); m[0:3, 3] = -piv[b]; ibm[k2] = m.T.reshape(-1)
     ibm_a = acc(ibm.tobytes(), 5126, len(BONES), "MAT4")
     out = {"asset": {"version": "2.0", "generator": gl["asset"].get("generator", "") + " + rig_hier (merged, 18 bones)"},
-           "scene": 0, "scenes": [{"nodes": [0]}], "nodes": nodes, "meshes": [{"name": "Body", "primitives": prims}],
+           "scene": 0, "scenes": [{"nodes": [0]}], "nodes": nodes, "meshes": [{"name": "Body", "primitives": prims}] + ([{"name": "Jaw mouth", "primitives": prims_m}] if prims_m else []),
            "materials": mats, "skins": [{"name": "Armature", "joints": [first + k2 for k2 in range(len(BONES))], "skeleton": first, "inverseBindMatrices": ibm_a}],
            "accessors": accs, "bufferViews": views, "buffers": [{"byteLength": 0}]}
     while len(bin_out) % 4: bin_out.append(0)
@@ -269,7 +278,11 @@ def main(src, dst, height=1.8):
     open(dst, "wb").write(glb)
     print(f"{dst}: {len(parts)} parts -> {len(prims)} primitives, {len(glb)} bytes")
     for b in BONES: print(f"  {b:11s} {np.round(piv[b], 3)}")
+    if mouth:
+        mi = [p for p in parts if re.match(r"^Mouth interior", p["name"])]
+        if mi: print("  mouth line y =", round(float(np.vstack([q["v"] for q in mi])[:, 1].mean()), 4))
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], float(sys.argv[3]) if len(sys.argv) > 3 else 1.8)
+    a = [x for x in sys.argv[1:] if not x.startswith("--")]
+    main(a[0], a[1], float(a[2]) if len(a) > 2 else 1.8, mouth="--mouth" in sys.argv)
