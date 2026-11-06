@@ -342,6 +342,8 @@ body.cine .ui, body.cine .fx-pulse { opacity: 0; pointer-events: none; }
 .ghud { display: none; }
 body.game .ghud { display: block; }
 body.game .ui, body.game .fx-pulse { opacity: 0; pointer-events: none; }
+body.hold .ui, body.hold .fx-pulse { opacity: 0 !important; visibility: hidden !important; transition: none !important; }
+body.hold::after { content: ''; position: fixed; inset: 0; background: #000; opacity: 1; animation: none; transform: none; filter: none; z-index: 2147483000; pointer-events: none; }
 /* gameplay, cutscenes and the Chapter IV screens cut the menu away at once: no fade, so it never shows over the first frame */
 body.game .ui, body.game .fx-pulse, body.cine .ui, body.cine .fx-pulse, body.c4screen .ui, body.c4screen .fx-pulse { transition: none; }
 body.c4screen .ui, body.c4screen .fx-pulse { opacity: 0; pointer-events: none; }
@@ -943,12 +945,21 @@ body.run .g-sev.near b { color: var(--crimson); }
     document.querySelectorAll('.ch-card').forEach(c => { const n = +c.dataset.ch, open = chOpen(n, p); c.classList.toggle('locked', !open); c.classList.toggle('cleared', n >= 1 && !!p['c' + n]); c.setAttribute('aria-disabled', String(!open)); });
     $('#chEyebrow').textContent = `Chapters · ${[0, 1, 2, 3, 4, 5, 6].filter(n => chOpen(n, p)).length} of 7 open`;
   }
+
+  // no menu flash between a chapter's pieces: while the game moves from one mode to the next
+  // (chapter card -> cutscene, cutscene -> mission), the menu stays hidden behind black
+  (function () {
+    const B = document.body, MODE = /\b(cine|game|c4screen|zcine)\b/; let tm = 0, had = MODE.test(B.className);
+    const hold = ms => { B.classList.add('hold'); clearTimeout(tm); tm = setTimeout(() => B.classList.remove('hold'), ms); };
+    window.__menu.hold = hold;
+    new MutationObserver(() => { const has = MODE.test(B.className); if (has && B.classList.contains('hold')) { clearTimeout(tm); B.classList.remove('hold'); } else if (had && !has) hold(450); had = has; }).observe(B, { attributes: true, attributeFilter: ['class'] });
+  })();
   document.querySelectorAll('.ch-card').forEach(c => c.addEventListener('click', () => {
     const n = +c.dataset.ch, p = progress();
     if (!chOpen(n, p)) { doFlash(); say(c.querySelector('.ch-lock').textContent); return; }
-    $('#pChapters').hidden = true; primeAudio(); active = { chapter: Math.max(1, n), complete: false };
+    $('#pChapters').hidden = true; primeAudio(); active = { chapter: Math.max(1, n), complete: false }; window.__menu.hold(6000);
     const M = window.__menu, run = [M.playIntro, M.playChapter, M.playChapter2, M.playChapter3, M.playChapter4, M.playChapter5, M.playChapter6][n];
-    if (run && run()) say(c.querySelector('.ch-n').textContent + ': ' + c.querySelector('b').textContent); else say('Still loading. Try again in a moment.');
+    if (run && run()) say(c.querySelector('.ch-n').textContent + ': ' + c.querySelector('b').textContent); else { document.body.classList.remove('hold'); say('Still loading. Try again in a moment.'); }
   }));
   const when = t => new Date(t).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   // the menu reflects the most recent save: Continue, and his threat assessment once Chapter I is done
@@ -1046,12 +1057,12 @@ body.run .g-sev.near b { color: var(--crimson); }
       if (a === 'begin') {
         if (musicOn) primeAudio();
         // a new game: the menu goes back to Chapter I, but only once it has faded out, so the old menu never flashes up
-        if (window.__menu.playIntro && window.__menu.playIntro()) { active = { chapter: 1, complete: false }; setTimeout(refreshMenu, 800); say('Intro playing'); }
-        else { doFlash(); say('He is still taking shape. Try again in a moment.'); }
+        window.__menu.hold(6000); if (window.__menu.playIntro && window.__menu.playIntro()) { active = { chapter: 1, complete: false }; setTimeout(refreshMenu, 800); say('Intro playing'); }
+        else { document.body.classList.remove('hold'); doFlash(); say('He is still taking shape. Try again in a moment.'); }
       }
       if (a === 'chapter1') { primeAudio(); if (window.__menu.playChapter && window.__menu.playChapter()) say('Chapter I: Investigation'); else say('Still loading. Try again in a moment.'); }
       if (a === 'chapter2') { primeAudio(); if (window.__menu.playChapter2 && window.__menu.playChapter2()) say('Chapter II: The Siege of Aridaxx'); else say('Still loading. Try again in a moment.'); }
-      if (a === 'continue') { const L = latestSave(); if (L) loadSlot(L.i); }
+      if (a === 'continue') { const L = latestSave(); if (L) { window.__menu.hold(6000); loadSlot(L.i); setTimeout(() => { if (!/\b(cine|game|c4screen|zcine)\b/.test(document.body.className)) document.body.classList.remove('hold'); }, 1500); } }
       if (a === 'chapters') { renderChapters(); open('#pChapters'); say('Chapters'); }
       if (a === 'saves') { renderSlots($('#slotList'), 'load'); open('#pSaves'); say('Save / Load'); }
       if (a === 'archive') { open('#pArchive'); say('Archive opened'); }
@@ -6243,7 +6254,7 @@ function alphSquads() {
   return out;
 }
 STAGES.alphinos = { id: 'alphinos', ch: 5, title: 'Chapter V · The Siege of Alphinos', name: 'The Siege of Alphinos', place: 'Alphinos', bases: ALPH_BASES, units: ALPH_UNITS, squads: alphSquads,
-  sides: ['A', 'E', 'T'], newOfficers: false, caps: { A: 14, E: 26, T: 22 }, sevHit: 7, song: 'songAridaxx', objective: 'Defeat Sevirrus and Jazmak Chompjak',
+  sides: ['A', 'E', 'T'], newOfficers: false, caps: { A: 14, E: 26, T: 22 }, sevHit: 7, song: 'songKesh', objective: 'Defeat Sevirrus and Jazmak Chompjak',
   win: 'Jazmak Chompjak and Sevirrus are both defeated', lose: 'Arixal Chompjak is defeated', lost: 'Arixal Chompjak has fallen. Alphinos stands, and Aridaxx burns.',
   winMsg: '<b class="a">Arixal Chompjak</b> has taken Alphinos!',
   startMsg: '<b class="a">Arixal Chompjak</b> has begun battle with <b class="e">Sevirrus</b> and <b class="t">Jazmak Chompjak</b>!',
@@ -6858,6 +6869,7 @@ function officerHit(u, f, dmg) {
 function officerUpdate(u, dt, time) {
   const m = u.model, op = m.mover.position, p = game.mover.position;
   if (m.dead) { m.dead += dt; m.mover.rotation.x = -1.45 * Math.min(1, m.dead * 2); applyPose(m.j, POSES.collapse); return; }
+  if (m.sev && (!u.alive || game.routed.E)) { m.atk = null; return; }
   if (m.sev) {
     // Sevirrus: in his camp until Arixal comes or he takes the field; then he hunts
     const d = op.distanceTo(p);
