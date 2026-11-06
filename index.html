@@ -6405,7 +6405,7 @@ function restoreBattle(st) {
   const p = game.mover.position;
   p.set(st.pos[0], 0, st.pos[1]); game.mover.rotation.y = st.yaw; camYaw = st.yaw + Math.PI;
   B.hp = st.hp || 100; game.t = st.time || 0; game.ko = st.ko || 0; game.musou = st.musou || 0; G('c4Ko').textContent = game.ko;
-  STAGE.sides.forEach(sd => { if (st.morale && st.morale[sd] !== undefined) game.morale[sd] = st.morale[sd]; }); game.aOrder = st.aOrder || 'advance'; game.eOrder = st.eOrder || 'hold'; game.tOrder = st.tOrder || 'hold';
+  STAGE.sides.forEach(sd => { if (st.morale && st.morale[sd] !== undefined) game.morale[sd] = st.morale[sd]; }); game.aOrder = st.aOrder || 'advance'; game.eOrder = st.eOrder || 'hold'; game.tOrder = st.tOrder === 'fallback' ? 'advance' : st.tOrder || 'hold';
   game.adv = { ...(st.adv || {}) }; if (st.sevAdvance) game.adv.E = true; game.fallT = { ...(st.fallT || {}) }; if (st.eFallT) game.fallT.E = st.eFallT; game.routed = { ...(st.routed || {}) }; (st.heard || []).forEach(h => game.heard.add(h));
   game.bases.forEach(b => { if (st.bases && st.bases[b.id]) { b.side = st.bases[b.id]; setFlag(b); } });
   ['leadName', 'chiefOut', 'sideKos', 'waitFor', 'advAt', 'blitz'].forEach(k => { if (st[k]) game[k] = { ...game[k], ...st[k] }; });
@@ -6440,6 +6440,8 @@ function setAllyOrder(o) {
 }
 function setFactionOrder(side, o) {
   if (side === 'E') { setEnemyOrder(o); return; }
+  // Jazmak never calls his army back to camp: he holds or he advances
+  if (side === 'T' && o === 'fallback') { if (game.tOrder !== 'advance') { game.tOrder = 'advance'; feed(`${nameOf('T', leadOf('T'))} orders his officers to advance!`, 'bad'); } return; }
   game.tOrder = o;
   const t = { advance: 'orders his officers to advance!', hold: 'orders his officers to hold their forts!', fallback: 'calls his officers back to his camp!' }[o];
   feed(`${nameOf(side, leadOf(side))} ${t}`, 'bad');
