@@ -231,6 +231,8 @@ body.c4screen #menu, body.c4screen .left, body.c4screen .right, body.c4screen he
 .c4-forts .a { color: #5ad0ff; } .c4-forts .e { color: #ff6070; } .c4-forts .sealed { color: #9a9aa6; } .c4-forts .open { color: #f0c060; }
 @media (max-width: 640px) { .c4-mapbtn { top: calc(env(safe-area-inset-top, 0px) + 400px); width: 80px; } .c4-mapbtn kbd { display: none; } .c4-mv .c4-map { width: 180px; height: 346px; } .c4-olist { grid-template-columns: 1fr; } }
 .c4-orders button.on { border-color: #5ad0ff; background: rgba(42,122,192,.3); }
+.c4-torders { top: calc(env(safe-area-inset-top, 0px) + 556px); } .c4-torders span { color: #ffd23a; } .c4-torders button kbd { color: #ffd23a; } .c4-torders button.on { border-color: #ffd23a; background: rgba(176,138,24,.3); }
+@media (max-width: 640px) { .c4-torders { top: calc(env(safe-area-inset-top, 0px) + 470px) !important; } }
 @media (max-width: 640px) { .c4-orders { top: calc(env(safe-area-inset-top, 0px) + 268px); width: 80px; } .c4-orders button kbd { display: none; } }
 @media (pointer: coarse) { body.c4 .c4-musou { display: block; bottom: calc(env(safe-area-inset-bottom, 0px) + 128px); } }
 @media (max-width: 640px) { .c4-map { width: 160px; height: 292px; } .c4-mini { width: 80px; height: 200px; } }
@@ -4753,6 +4755,10 @@ const nameOf = (side, name) => `<b class="${SIDE[side].cls}">${name}</b>`;
 // who leads each army right now: its commander, or once he has fallen, the officer who took over
 const leadOf = sd => (typeof game !== 'undefined' && game && game.leadName && game.leadName[sd]) || SIDE[sd].lead;
 const HOME_CAMP = { A: 'campA', E: 'campE', T: 'campT' };
+// once Jazmak lays down his arms, his yellow army fights beside Arixal's
+const friendly = (a, b) => a === b || (!!game && !!game.alliedT && ((a === 'A' && b === 'T') || (a === 'T' && b === 'A')));
+const hostileTo = (a, b) => !friendly(a, b);
+const isAllySide = sd => sd === 'A' || (!!game && !!game.alliedT && sd === 'T');
 // officer rank: one to eight stars. Defeating enemy officers raises it; being defeated lowers it
 const STAR_MAX = 8;
 const starHtml = n => '★'.repeat(n) + '<span class="st-off">' + '★'.repeat(Math.max(0, STAR_MAX - n)) + '</span>';
@@ -6036,6 +6042,7 @@ const c4Hud = (() => {
     <div class="c4-big" id="c4Big"></div>
     <button class="g-ex c4-musou" id="c4MuBtn">Latent Powers</button>
     <div class="c4-orders" role="group" aria-label="Orders to your officers"><span>Orders</span><button data-o="follow"><kbd>1</kbd>Follow me</button><button data-o="advance" class="on"><kbd>2</kbd>Advance</button><button data-o="hold"><kbd>3</kbd>Hold</button><button data-o="fallback"><kbd>4</kbd>Fall back</button></div>
+    <div class="c4-orders c4-torders" id="c4TOrders" role="group" aria-label="Orders to Jazmak’s army" hidden><span>Jazmak’s army</span><button data-to="follow"><kbd>5</kbd>Follow me</button><button data-to="advance"><kbd>6</kbd>Advance</button><button data-to="hold"><kbd>7</kbd>Hold</button><button data-to="fallback"><kbd>8</kbd>Fall back</button></div>
     <button class="c4-mapbtn" id="c4MapBtn"><kbd>M</kbd>Map &amp; morale</button>`;
   document.body.appendChild(d); return d;
 })();
@@ -6232,7 +6239,7 @@ function startBattle(st) {
   document.body.classList.add('game', 'c4');
   G('c4Ko').textContent = '0'; G('c4Feed').innerHTML = ''; hud.exBtn.textContent = 'Strike'; hud.exBtn.disabled = false; G('c4Big').textContent = '';
   if (st && st.phase === 'battle') restoreBattle(st);
-  updateC4Hud(); updateMoraleBar(); updateMeStars(); document.querySelectorAll('.c4-orders button').forEach(b => b.classList.toggle('on', b.dataset.o === 'advance')); G('gHud').querySelector('.g-ch').textContent = STAGE.title; hud.obj.textContent = STAGE.objective; updateOfficerCount();
+  updateC4Hud(); updateMoraleBar(); updateMeStars(); document.querySelectorAll('.c4-orders button[data-o]').forEach(b => b.classList.toggle('on', b.dataset.o === 'advance')); G('c4TOrders').hidden = !game.alliedT; markTOrder(); if (game.alliedT) setTimeout(() => { if (game && game.bt) hud.obj.textContent = 'Defeat Sevirrus · Jazmak has laid down his arms'; }, 0); G('gHud').querySelector('.g-ch').textContent = STAGE.title; hud.obj.textContent = STAGE.objective; updateOfficerCount();
   setTimeout(() => game && game.bt && feed(game.restored ? `<b class="a">Arixal Chompjak</b> returns to the battle of ${STAGE.place}.` : STAGE.startMsg, 'big'), 400);
   M.song && M.song.play(STAGE.song);
   return true;
@@ -6394,7 +6401,7 @@ function battleState() {
   return { v: 1, t: Date.now(), chapter: STAGE.ch, stage: STAGE.id, phase: 'battle', complete: false, time: r2(game.t), ko: game.ko, musou: Math.round(game.musou), hp: Math.round(B.hp),
     pos: [r2(p.x), r2(p.z)], yaw: r2(game.mover.rotation.y), morale: Object.fromEntries(Object.entries(game.morale).map(([k, v]) => [k, r2(v)])), tOrder: game.tOrder, adv: game.adv, fallT: game.fallT, routed: game.routed,
     aOrder: game.aOrder, eOrder: game.eOrder, sevAdvance: !!game.adv.E, heard: [...game.heard],
-    leadName: game.leadName, chiefOut: game.chiefOut, sideKos: game.sideKos, waitFor: game.waitFor, advAt: game.advAt, blitz: game.blitz, jazRaid: !!game.jazRaid, jazSouth: !!game.jazSouth, meStars: game.me.stars, meKos: game.me.kos,
+    leadName: game.leadName, chiefOut: game.chiefOut, sideKos: game.sideKos, waitFor: game.waitFor, advAt: game.advAt, blitz: game.blitz, jazRaid: !!game.jazRaid, jazSouth: !!game.jazSouth, alliedT: !!game.alliedT, tOrderSaved: game.tOrder, meStars: game.me.stars, meKos: game.me.kos,
     units: game.units.filter(u => u !== game.me).map(u => ({ id: u.id, downAt: u.downAt, x: r2(u.pos.x), z: r2(u.pos.z), hp: r2(u.hp), troops: Math.round(u.troops + game.troops.filter(t => t.officer === u && t.state !== 'dead' && t.state !== 'flee').length), alive: u.alive, side: u.side, stars: u.stars, kos: u.kos || 0, fl: !!u.factionLead })),
     bases: Object.fromEntries(game.bases.map(b => [b.id, b.side])),
     squads: game.squads.map(q => Math.round(q.troops + game.troops.filter(t => t.officer === q && t.state !== 'dead' && t.state !== 'flee').length)),
@@ -6405,11 +6412,11 @@ function restoreBattle(st) {
   const p = game.mover.position;
   p.set(st.pos[0], 0, st.pos[1]); game.mover.rotation.y = st.yaw; camYaw = st.yaw + Math.PI;
   B.hp = st.hp || 100; game.t = st.time || 0; game.ko = st.ko || 0; game.musou = st.musou || 0; G('c4Ko').textContent = game.ko;
-  STAGE.sides.forEach(sd => { if (st.morale && st.morale[sd] !== undefined) game.morale[sd] = st.morale[sd]; }); game.aOrder = st.aOrder || 'advance'; game.eOrder = st.eOrder || 'hold'; game.tOrder = st.tOrder === 'fallback' ? 'advance' : st.tOrder || 'hold';
+  STAGE.sides.forEach(sd => { if (st.morale && st.morale[sd] !== undefined) game.morale[sd] = st.morale[sd]; }); game.aOrder = st.aOrder || 'advance'; game.eOrder = st.eOrder || 'hold'; game.tOrder = st.alliedT ? (st.tOrder || 'follow') : st.tOrder === 'fallback' ? 'advance' : st.tOrder || 'hold';
   game.adv = { ...(st.adv || {}) }; if (st.sevAdvance) game.adv.E = true; game.fallT = { ...(st.fallT || {}) }; if (st.eFallT) game.fallT.E = st.eFallT; game.routed = { ...(st.routed || {}) }; (st.heard || []).forEach(h => game.heard.add(h));
   game.bases.forEach(b => { if (st.bases && st.bases[b.id]) { b.side = st.bases[b.id]; setFlag(b); } });
   ['leadName', 'chiefOut', 'sideKos', 'waitFor', 'advAt', 'blitz'].forEach(k => { if (st[k]) game[k] = { ...game[k], ...st[k] }; });
-  game.jazRaid = !!st.jazRaid; game.jazSouth = !!st.jazSouth; if (st.meStars) game.me.stars = st.meStars; game.me.kos = st.meKos || 0;
+  game.jazRaid = !!st.jazRaid; game.jazSouth = !!st.jazSouth; game.alliedT = !!st.alliedT; if (st.meStars) game.me.stars = st.meStars; game.me.kos = st.meKos || 0;
   (st.spawned || []).forEach(sp => spawnOfficer(sp.side, sp)); game.rfN = st.rfN || game.rfN || 0; if (st.rfT) game.rfT = { ...st.rfT };
   (st.units || []).forEach(s2 => {
     const u = game.units.find(o => o.id === s2.id); if (!u) return;
@@ -6421,7 +6428,7 @@ function restoreBattle(st) {
   (st.crates || []).forEach(i => { const c = game.crates[i]; if (c) { c.broken = true; c.m.visible = false; } });
   (st.items || []).forEach(([x, z, k]) => dropItem(V(x, 0, z), k, true));
   game.units.forEach(u => { if (u.gate) { if (u.pos.distanceTo(u.post) > 1) u.pos.copy(u.post); setGate(u.base, u.alive && u.side === u.base.side, true); } });
-  document.querySelectorAll('.c4-orders button').forEach(b => b.classList.toggle('on', b.dataset.o === game.aOrder));
+  document.querySelectorAll('.c4-orders button[data-o]').forEach(b => b.classList.toggle('on', b.dataset.o === game.aOrder));
   if (game.routed.E || game.chiefOut.E) rig.visible = false;
   updateMoraleBar(); updateOfficerCount(); updateMeStars();
   game.restored = true;
@@ -6436,7 +6443,7 @@ function setAllyOrder(o) {
   if (!game || !game.bt || game.over) return;
   game.aOrder = o; game.units.forEach(u => { if (u.side === 'A' && !u.captain) u.holdAt = u.pos.clone(); });
   feed(`<b class="a">Arixal Chompjak</b>: ${ORDER_TEXT[o]}`, 'good');
-  document.querySelectorAll('.c4-orders button').forEach(b => b.classList.toggle('on', b.dataset.o === o));
+  document.querySelectorAll('.c4-orders button[data-o]').forEach(b => b.classList.toggle('on', b.dataset.o === o));
 }
 function setFactionOrder(side, o) {
   if (side === 'E') { setEnemyOrder(o); return; }
@@ -6458,7 +6465,7 @@ function simulate(dt) {
   const U = game.units, me = game.me;
   // each hostile army's orders: hold the forts, then advance; pull back when its leader is hurt; later the leader takes the field himself
   for (const sd of STAGE.sides) {
-    if (sd === 'A' || game.routed[sd]) continue;
+    if (sd === 'A' || game.routed[sd] || (sd === 'T' && game.alliedT)) continue;
     const L = U.find(u => u.chief && u.side === sd && u.alive) || U.find(u => u.factionLead && u.side === sd && u.alive); if (!L) continue;
     const ord = orderOf(sd), wait = (game.waitFor && game.waitFor[sd]) || (sd === 'E' ? 55 : 70), feinting = (game.feintEnd[sd] || 0) > game.t;
     if (ord === 'hold' && game.t > wait && !feinting) setFactionOrder(sd, 'advance');
@@ -6478,23 +6485,24 @@ function simulate(dt) {
   }
   blitzTick();
   balanceArmies(dt);
+  jazSurrender();
   U.forEach(u => {
     if (!u.alive || u === me) return;
-    const hostile = U.filter(o => o.side !== u.side && o.alive);
+    const hostile = U.filter(o => hostileTo(o.side, u.side) && o.alive);
     const t = nearestOf(hostile, u.pos);
     u.engaged = t && t.pos.distanceTo(u.pos) < 28 ? t : null;
     // where this unit is trying to be
-    const order = u.captain ? 'hold' : u.side === 'A' ? game.aOrder : u.chief ? (game.adv[u.side] && orderOf(u.side) !== 'fallback' ? 'advance' : 'hold') : orderOf(u.side);
+    const order = u.captain ? 'hold' : u.side === 'A' ? game.aOrder : u.side === 'T' && game.alliedT ? game.tOrder : u.chief ? (game.adv[u.side] && orderOf(u.side) !== 'fallback' ? 'advance' : 'hold') : orderOf(u.side);
     let dest = null;
     if (u.captain) dest = u.post || u.base.pos;
     else if (order === 'follow') dest = tmpB.subVectors(u.pos, me.pos).setY(0).length() > 9 ? me.pos : null;
-    else if (order === 'fallback') dest = campOf(u.side).pos;
+    else if (order === 'fallback') dest = (u.side === 'T' && game.alliedT && campOf('T').side !== 'T' ? campOf('A') : campOf(u.side)).pos;
     else if (order === 'hold') dest = u.side !== 'A' ? (u.homePos || (u.chief ? campOf(u.side).pos : null)) : u.holdAt || null;
     else {
       // each officer picks his own aim among the nearest few forts and enemy officers, and keeps it a while; he comes in from the flank
-      const bad = a => !a || (a.alive === false) || (game.bases.includes(a) && a.side === u.side);
+      const bad = a => !a || (a.alive === false) || (game.bases.includes(a) && friendly(a.side, u.side));
       if (bad(u.aim) || !(game.t < (u.aimT || 0))) {
-        const cands = [...game.bases.filter(b => !b.main && b.side !== u.side).map(b => ({ o: b, d: b.pos.distanceTo(u.pos) })),
+        const cands = [...game.bases.filter(b => !b.main && hostileTo(b.side, u.side)).map(b => ({ o: b, d: b.pos.distanceTo(u.pos) })),
                        ...hostile.filter(o => !o.captain).map(o => ({ o, d: o.pos.distanceTo(u.pos) + 60 }))].sort((a, b) => a.d - b.d).slice(0, 3);
         const r = Math.random(), k = r < 0.55 ? 0 : r < 0.85 ? 1 : 2;
         u.aim = cands.length ? cands[Math.min(k, cands.length - 1)].o : null; u.aimT = game.t + 14 + Math.random() * 22; u.flank = (Math.random() - 0.5) * 70;
@@ -6502,14 +6510,14 @@ function simulate(dt) {
       if (u.aim) { u.destV = u.destV || new THREE.Vector3(); const far = u.aim.pos.distanceTo(u.pos) > 70 ? 1 : 0; dest = u.destV.set(THREE.MathUtils.clamp(u.aim.pos.x + u.flank * far, -K4.W + 6, K4.W - 6), 0, u.aim.pos.z); }
     }
     // Jazmak, once Sevirrus has left the keep: he goes for Alphinos itself, and stays to hold it
-    if (u.chief && u.side === 'T' && game.jazSouth) { const ours = game.bases.find(b => b.id === 'campA'); if (ours) { dest = ours.pos; if (ours.side !== 'T' && u.pos.distanceTo(ours.pos) < 18) raidCapture(u, ours); } }
-    if (u.chief && u.side === 'T' && game.jazRaid) { const keep = game.bases.find(b => b.id === 'campE'); if (keep) { dest = keep.pos; if (keep.side !== 'T' && u.pos.distanceTo(keep.pos) < 18) raidCapture(u, keep); } }
+    if (u.chief && u.side === 'T' && game.jazSouth && !game.alliedT) { const ours = game.bases.find(b => b.id === 'campA'); if (ours) { dest = ours.pos; if (ours.side !== 'T' && u.pos.distanceTo(ours.pos) < 18) raidCapture(u, ours); } }
+    if (u.chief && u.side === 'T' && game.jazRaid && !game.alliedT) { const keep = game.bases.find(b => b.id === 'campE'); if (keep) { dest = keep.pos; if (keep.side !== 'T' && u.pos.distanceTo(keep.pos) < 18) raidCapture(u, keep); } }
     // a sub officer stays with the leader he serves
     if (u.follows && order !== 'fallback' && order !== 'follow') { const L = U.find(o => o.id === u.follows && o.alive); if (L) dest = L.pos.distanceTo(u.pos) > 9 ? L.pos : null; }
-    if (u.engaged && order !== 'fallback' && !(u.chief && u.side === 'T' && ((game.jazRaid && !u.engaged.chief) || game.jazSouth) && u.engaged !== me)) dest = u.engaged.pos;
+    if (u.engaged && order !== 'fallback' && !(u.chief && u.side === 'T' && ((game.jazRaid && !u.engaged.chief) || game.jazSouth) && !game.alliedT && u.engaged !== me)) dest = u.engaged.pos;
     u.dest = dest;
     // units out of his sight move on the map; the ones near him are walked by their bodies
-    if (!u.model && dest) { const dd = tmpA.subVectors(dest, u.pos).setY(0).length(); if (dd > 4) { tmpA.normalize(); u.pos.addScaledVector(tmpA, (u.chief && u.side === 'T' && game.jazRaid ? 7 : u.chief && u.side === 'T' && game.jazSouth ? 1.3 : u.leader ? 1.8 : 2.4) * dt); } }
+    if (!u.model && dest) { const dd = tmpA.subVectors(dest, u.pos).setY(0).length(); if (dd > 4) { tmpA.normalize(); u.pos.addScaledVector(tmpA, (u.chief && u.side === 'T' && game.jazRaid ? 7 : u.chief && u.side === 'T' && game.jazSouth && !game.alliedT ? 1.3 : u.leader ? 1.8 : 2.4) * dt); } }
     // squads grinding against each other, officer against officer once a squad is spent
     const e = u.engaged;
     if (e && e !== me && e.alive && u.pos.distanceTo(me.pos) > 60) {
@@ -6551,7 +6559,7 @@ function officerReturns(dt) {
 function fieldOfficers(side) { return game.units.filter(u => u.side === side && u.alive && !u.leader && !u.captain); }
 function updateOfficerCount() {
   if (STAGE.sides.includes('T')) {
-    const left = fieldOfficers('E').length + fieldOfficers('T').length;
+    const left = fieldOfficers('E').length + (game.alliedT ? 0 : fieldOfficers('T').length);
     hud.count.textContent = left ? `${left} hostile officer${left > 1 ? 's' : ''} remain${left > 1 ? '' : 's'}` : 'Only the leaders remain';
     return;
   }
@@ -6681,7 +6689,7 @@ function newFactionLead(sd) {
 function creditKill(by, v) {
   if (!v || v.captain) return;
   const k = by === game.me ? game.me : by && by.alive !== undefined && by.pos ? by : by && by.officer && by.officer.alive !== undefined && by.officer.pos ? by.officer : null;
-  const ks = killerSide(by); if (!ks || ks === v.side) return;
+  const ks = killerSide(by); if (!ks || friendly(ks, v.side)) return;
   const up = (o, why) => { if (!o || (o.stars || 1) >= STAR_MAX) return; o.stars = (o.stars || 1) + 1; feed(`${nameOf(o.side, o.name)} ${why} <span class="st-up">${'★'.repeat(o.stars)}</span>`, o.side === 'A' ? 'good' : 'bad'); if (o === game.me) updateMeStars(); };
   if (k && !k.captain && !k.anon) { k.kos = (k.kos || 0) + 1; if (k.kos % 2 === 0) up(k, 'rises in rank!'); }
   game.sideKos[ks] = (game.sideKos[ks] || 0) + 1;
@@ -6709,6 +6717,28 @@ function balanceArmies(dt) {
   // the weakest army's squads near its camps fill back up a little faster
   game.squads.forEach(q => { if (q.side === lo && q.max && q.troops < q.max) q.troops = Math.min(q.max, q.troops + 2); });
 }
+// in retreat and stripped of every sub officer, Jazmak lays down his arms. He counts as defeated, but he stays on the field,
+// and his whole yellow army, and every officer who rides back out later, now fights for Arixal
+function jazSurrender() {
+  if (!game.jazSouth || game.alliedT || game.chiefOut.T) return;
+  const jz = game.units.find(u => u.id === 'jazmak'); if (!jz || !jz.alive) return;
+  if (fieldOfficers('T').length > 0) return;
+  game.alliedT = true; game.chiefOut.T = true; game.jazSouth = false; game.tOrder = 'follow';
+  game.units.forEach(u => { if (u.side === 'T') { u.aim = null; u.engaged = null; if (u.model) u.model.atk = null; } });
+  game.troops.forEach(tr => { if (tr.side === 'T' && tr.target && (tr.target === game.me || isAllySide(tr.target.side || (tr.target.officer && tr.target.officer.side)))) tr.target = null; });
+  feed('<b class="t">Jazmak Chompjak</b> lays down his arms! <b class="t">Jazmak Chompjak</b> is defeated.', 'big');
+  setTimeout(() => game && game.bt && !game.over && feed('His yellow army joins forces with <b class="a">Arixal Chompjak</b>! You can now command them.', 'big'), 1600);
+  morale('A', 15); morale('T', 10); morale('E', -10);
+  G('c4TOrders').hidden = false; markTOrder(); hud.obj.textContent = 'Defeat Sevirrus · Jazmak has laid down his arms';
+  updateOfficerCount();
+  if (STAGE.sides.every(sd => sd === 'A' || game.routed[sd] || game.chiefOut[sd])) battleWon();
+}
+function setThirdOrder(o) {
+  if (!game || !game.bt || game.over || !game.alliedT) return;
+  game.tOrder = o; game.units.forEach(u => { if (u.side === 'T' && !u.captain) { u.holdAt = u.pos.clone(); u.homePos = o === 'hold' ? u.pos.clone() : u.homePos; u.aimT = 0; } });
+  feed(`<b class="a">Arixal Chompjak</b> to <b class="t">Jazmak’s army</b>: ${ORDER_TEXT[o]}`, 'good'); markTOrder();
+}
+function markTOrder() { document.querySelectorAll('#c4TOrders button').forEach(b => b.classList.toggle('on', b.dataset.to === game.tOrder)); }
 function blitzTick() {
   const S = game.blitz; if (!S) return;
   const su = game.units.find(u => u.id === 'sevirrus'), tb = blitzBase();
@@ -6745,7 +6775,7 @@ function officerDown(u, by) {
   if (u.captain) { if (by === game.me) dropItem(u.pos, 'rock'); captureBase(u, by); return; }
   u.alive = false; u.hp = 0;
   if (by === game.me && !u.leader && u.side !== 'A') dropItem(u.pos, 'great');
-  if (u.chief && u.side !== 'A') { chiefDown(u, by); return; }
+  if (u.chief && u.side !== 'A' && !(u.side === 'T' && game.alliedT)) { chiefDown(u, by); return; }
   u.downAt = game.t;
   updateOfficerCount();
   if (u === game.me) return;
@@ -6796,9 +6826,9 @@ function manageTroops() {
 function nearestHostile(tr, range) {
   let best = null, bd = range;
   const consider = (o, pos) => { const d = pos.distanceTo(tr.mover.position); if (d < bd) { bd = d; best = o; } };
-  if (tr.side !== 'A') consider(game.me, game.mover.position);
-  game.units.forEach(u => { if (u.side !== tr.side && u.alive && u.model && u !== game.me) consider(u, u.model.mover.position); });
-  game.troops.forEach(o => { if (o.side !== tr.side && o.state !== 'dead' && o.state !== 'flee') consider(o, o.mover.position); });
+  if (!isAllySide(tr.side)) consider(game.me, game.mover.position);
+  game.units.forEach(u => { if (hostileTo(u.side, tr.side) && u.alive && u.model && u !== game.me) consider(u, u.model.mover.position); });
+  game.troops.forEach(o => { if (hostileTo(o.side, tr.side) && o.state !== 'dead' && o.state !== 'flee') consider(o, o.mover.position); });
   return best;
 }
 const posOf = o => o === game.me ? game.mover.position : o.mover ? o.mover.position : o.model ? o.model.mover.position : o.pos;
@@ -6826,7 +6856,7 @@ function trooperUpdate(tr, dt) {
       if (!tr.struck && tr.t > 0.08) {
         tr.struck = true;
         if (d < 2.2) {
-          if (tr.target === game.me) hurtPlayer(tr.side !== 'A' ? 2.2 * mf(tr.side) : 0, tr);
+          if (tr.target === game.me) hurtPlayer(!isAllySide(tr.side) ? 2.2 * mf(tr.side) : 0, tr);
           else if (tr.target.hp !== undefined && tr.target.state !== undefined) { tr.target.hp -= 1; if (tr.target.hp <= 0) killTrooper(tr.target, false); }
           else if (tr.target.alive) { tr.target.hp -= tr.target.leader ? 0.05 : 0.4; if (tr.target.hp <= 0 && !tr.target.leader) officerDown(tr.target, tr.officer); }
         }
@@ -6858,7 +6888,7 @@ function c4Swing(range = 3.0, cone = 0.0, dmg = 1) {
   const p = game.mover.position, fy = game.mover.rotation.y, fx = Math.sin(fy), fz = Math.cos(fy);
   let hitAny = false;
   game.troops.forEach(tr => {
-    if (tr.side === 'A' || tr.state === 'dead' || tr.state === 'flee') return;
+    if (isAllySide(tr.side) || tr.state === 'dead' || tr.state === 'flee') return;
     const dx = tr.mover.position.x - p.x, dz = tr.mover.position.z - p.z, d = Math.hypot(dx, dz);
     if (d > range || (dx * fx + dz * fz) / Math.max(d, 1e-3) < cone) return;
     tr.hp -= dmg; hitAny = true; tr.state = 'idle'; tr.t = 0; tr.cd = Math.max(tr.cd, 0.5);
@@ -6868,7 +6898,7 @@ function c4Swing(range = 3.0, cone = 0.0, dmg = 1) {
     if (tr.hp <= 0) killTrooper(tr, true);
   });
   game.units.forEach(u => {
-    if (u.side === 'A' || !u.alive || !u.model) return;
+    if (isAllySide(u.side) || !u.alive || !u.model) return;
     const op = u.model.mover.position, dx = op.x - p.x, dz = op.z - p.z, d = Math.hypot(dx, dz);
     if (d > range + 0.4 || (dx * fx + dz * fz) / Math.max(d, 1e-3) < cone) return;
     if (u.id === 'sevirrus' && !game.musouT && (game.sevBlock || 0) <= 0 && Math.random() < 0.35 * mf('E') && !(u.model.atk)) { game.sevBlock = 0.4; sev.j.wristR.getWorldPosition(tmpA); sparks(tmpA, 40, 3); feed('<b class="e">Sevirrus</b> blocks.', ''); return; }
@@ -6892,8 +6922,8 @@ function c4Attack() {
   game.atk = { t: 0, hit: false, alt: game.combo % 2 === 0 };
   // turn toward the nearest enemy in reach, as Jakal does
   const p = game.mover.position; let best = null, bd = 3.2;
-  game.troops.forEach(t => { if (t.side !== 'A' && t.state !== 'dead' && t.state !== 'flee') { const d = t.mover.position.distanceTo(p); if (d < bd) { bd = d; best = t.mover.position; } } });
-  game.units.forEach(u => { if (u.side !== 'A' && u.alive && u.model) { const d = u.model.mover.position.distanceTo(p); if (d < bd) { bd = d; best = u.model.mover.position; } } });
+  game.troops.forEach(t => { if (!isAllySide(t.side) && t.state !== 'dead' && t.state !== 'flee') { const d = t.mover.position.distanceTo(p); if (d < bd) { bd = d; best = t.mover.position; } } });
+  game.units.forEach(u => { if (!isAllySide(u.side) && u.alive && u.model) { const d = u.model.mover.position.distanceTo(p); if (d < bd) { bd = d; best = u.model.mover.position; } } });
   if (!best) game.crates.forEach(c => { if (!c.broken) { const d = c.m.position.distanceTo(p); if (d < bd) { bd = d; best = c.m.position; } } });
   if (best) game.mover.rotation.y = Math.atan2(best.x - p.x, best.z - p.z);
 }
@@ -6913,8 +6943,9 @@ addEventListener('keydown', e => {
 canvasEl.addEventListener('pointerup', e => { if (game && game.bt && clickStart && Math.hypot(e.clientX - clickStart.x, e.clientY - clickStart.y) < 6 && e.pointerType !== 'touch') c4Attack(); });
 hud.exBtn.addEventListener('click', () => { if (game && game.bt) c4Attack(); });
 G('c4MuBtn').addEventListener('click', c4Musou);
-document.querySelectorAll('.c4-orders button').forEach(b => b.addEventListener('click', () => setAllyOrder(b.dataset.o)));
-addEventListener('keydown', e => { if (!game || !game.bt || game.paused) return; const o = { 1: 'follow', 2: 'advance', 3: 'hold', 4: 'fallback' }[e.key]; if (o) setAllyOrder(o); });
+document.querySelectorAll('.c4-orders button[data-o]').forEach(b => b.addEventListener('click', () => setAllyOrder(b.dataset.o)));
+document.querySelectorAll('#c4TOrders button').forEach(b => b.addEventListener('click', () => setThirdOrder(b.dataset.to)));
+addEventListener('keydown', e => { if (!game || !game.bt || game.paused) return; const o = { 1: 'follow', 2: 'advance', 3: 'hold', 4: 'fallback' }[e.key]; if (o) setAllyOrder(o); const to = { 5: 'follow', 6: 'advance', 7: 'hold', 8: 'fallback' }[e.key]; if (to) setThirdOrder(to); });
 
 const ARIX_COMBO = [['slashWind', 'slashFollow'], ['slashBack', 'slashFollow'], ['overhead', 'strikeDown'], ['slashWind', 'slashFollow'], ['thrustWind', 'thrust'], ['overhead', 'strikeLow']];
 function battleUpdate4(dt, time) {
@@ -6996,9 +7027,9 @@ function battleUpdate4(dt, time) {
 function officerFoe(u, op, range) {
   let best = null, bd = range;
   const take = (o, pos) => { const d = pos.distanceTo(op); if (d < bd) { bd = d; best = { o, pos }; } };
-  if (u.side !== 'A') take(game.me, game.mover.position);
-  game.units.forEach(o => { if (o.side !== u.side && o.alive && o.model && o !== game.me) take(o, o.model.mover.position); });
-  game.troops.forEach(t => { if (t.side !== u.side && t.state !== 'dead' && t.state !== 'flee') take(t, t.mover.position); });
+  if (!isAllySide(u.side)) take(game.me, game.mover.position);
+  game.units.forEach(o => { if (hostileTo(o.side, u.side) && o.alive && o.model && o !== game.me) take(o, o.model.mover.position); });
+  game.troops.forEach(t => { if (hostileTo(t.side, u.side) && t.state !== 'dead' && t.state !== 'flee') take(t, t.mover.position); });
   return best;
 }
 function officerHit(u, f, dmg) {
@@ -7064,7 +7095,7 @@ function officerUpdate(u, dt, time) {
     m.cd -= dt;
     if (!m.atk && m.cd <= 0 && ed < 2.4) m.atk = { t: 0, f };
   } else if (u.dest && op.distanceTo(u.dest) > 4) {
-    tmpA.subVectors(u.dest, op).setY(0).normalize(); op.addScaledVector(tmpA, (u.chief && u.side === 'T' && game.jazSouth ? 1.6 : 3.2) * dt); m.mover.rotation.y = Math.atan2(tmpA.x, tmpA.z); moving = true;
+    tmpA.subVectors(u.dest, op).setY(0).normalize(); op.addScaledVector(tmpA, (u.chief && u.side === 'T' && game.jazSouth && !game.alliedT ? 1.6 : 3.2) * dt); m.mover.rotation.y = Math.atan2(tmpA.x, tmpA.z); moving = true;
   }
   op.x = THREE.MathUtils.clamp(op.x, -K4.W + 1, K4.W - 1);
   u.pos.copy(op);
