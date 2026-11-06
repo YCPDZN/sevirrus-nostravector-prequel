@@ -4777,11 +4777,11 @@ function crateSpots() {
 }
 const ORDER_TEXT = { follow: 'Follow me!', advance: 'Advance!', hold: 'Hold your positions!', fallback: 'Fall back to the main camp!' };
 const C4_UNITS = [
-  { id: 'arixal', name: 'Arixal Chompjak', side: 'A', leader: true, chief: true, stars: 4, tpl: 'arixal', x: 0, z: 770, troops: 0 },
-  { id: 'hanaxa', name: 'Hanaxa Chompjak', side: 'A', tpl: 'hanaxa', x: -70, z: 715, troops: 70 },
-  { id: 'aniz', name: 'Aniz Chompjak', side: 'A', tpl: 'aniz', x: 70, z: 715, troops: 70 },
-  { id: 'haplok', name: 'Marshal Haplok', side: 'A', tpl: 'chompy', badge: 0x3aa0ff, x: 0, z: 660, troops: 90 },
-  { id: 'sevirrus', name: 'Sevirrus', side: 'E', leader: true, chief: true, stars: 8, tpl: 'sev', x: 0, z: -770, troops: 140 },
+  { id: 'arixal', name: 'Arixal Chompjak', side: 'A', leader: true, chief: true, stars: 5, tpl: 'arixal', x: 0, z: 770, troops: 0 },
+  { id: 'hanaxa', name: 'Hanaxa Chompjak', side: 'A', stars: 4, tpl: 'hanaxa', x: -70, z: 715, troops: 115 },
+  { id: 'aniz', name: 'Aniz Chompjak', side: 'A', stars: 4, tpl: 'aniz', x: 70, z: 715, troops: 115 },
+  { id: 'haplok', name: 'Marshal Haplok', side: 'A', stars: 4, tpl: 'chompy', badge: 0x3aa0ff, x: 0, z: 660, troops: 125 },
+  { id: 'sevirrus', name: 'Sevirrus', side: 'E', leader: true, chief: true, stars: 7, tpl: 'sev', x: 0, z: -770, troops: 140 },
   { id: 'tamix', name: 'Tamix', side: 'E', tpl: 'chompy', badge: 0xffd23a, x: 65, z: 176, troops: 110, home: 'fortC' },
   { id: 'zarkam', name: 'Zarkam', side: 'E', tpl: 'chompy', badge: 0xff2a2a, x: -70, z: -144, troops: 120, home: 'fortA' },
   { id: 'almak', name: 'Almak', side: 'E', tpl: 'chompy', badge: 0x3adc5a, x: 70, z: -434, troops: 120, home: 'fortP' },
@@ -4798,12 +4798,12 @@ function fieldSquads() {
 }
 const STAGES = {
   kesh: { id: 'kesh', ch: 4, title: 'Chapter IV · Enough is Enough', name: 'The Plain of Kesh', place: 'Kesh', bases: C4_BASES, units: C4_UNITS, squads: fieldSquads,
-    sides: ['A', 'E'], newOfficers: true, caps: { A: 16, E: 40 }, sevHit: 11, song: 'songKesh', objective: 'Defeat Sevirrus',
+    sides: ['A', 'E'], newOfficers: true, caps: { A: 28, E: 32 }, squadMul: { A: 2.2, E: 0.8 }, sevHit: 11, song: 'songKesh', objective: 'Defeat Sevirrus',
     win: 'Sevirrus is defeated', lose: 'Arixal Chompjak is defeated', lost: 'Arixal Chompjak has fallen. Sevirrus holds Kesh.', winMsg: '<b class="e">Sevirrus</b> has been driven back!',
     startMsg: '<b class="a">Arixal Chompjak</b> has begun battle with <b class="e">Sevirrus</b>!',
     near: [{ id: 'sevirrus', text: '<b class="e">Sevirrus</b>: Brother of a dead man. Come and kneel.', vo: 92 }],
-    pre: [{ cls: 'ally', h: 'Allies', rows: [['Leader', 'Arixal Chompjak', 4], ['Officers', 'Hanaxa Chompjak · Aniz Chompjak · Marshal Haplok']], note: 'Sub officers advance on their own.' },
-          { cls: 'foe', h: 'Enemies', rows: [['Leader', 'Sevirrus', 8], ['Officers', 'Zarkam · Almak · Tamix']] }],
+    pre: [{ cls: 'ally', h: 'Allies', rows: [['Leader', 'Arixal Chompjak', 5], ['Officers', 'Hanaxa Chompjak · Aniz Chompjak · Marshal Haplok']], note: 'Sub officers advance on their own.' },
+          { cls: 'foe', h: 'Enemies', rows: [['Leader', 'Sevirrus', 6], ['Officers', 'Zarkam · Almak · Tamix']] }],
     gateNote: 'Each side’s new officers come from its main camp, so its gate captain is the one that matters most. Defeat a camp’s commander to take the camp for yourself. Stars show each officer’s rank: defeat officers to earn more, up to eight.' },
 };
 const CH4_INTRO = [   // Hak alone in the throne hall (CH4SEV1..6, CH4GUARD1 when recorded)
@@ -5881,11 +5881,11 @@ const preEl = (() => {
       <div class="c4-info">
         <div class="c4-cond"><b class="win">VICTORY</b><span>Sevirrus is defeated</span><b class="lose">DEFEAT</b><span>Arixal Chompjak is defeated</span></div>
         <div class="c4-side ally"><div class="c4-h">Allies</div>
-          <div class="c4-row"><span class="role">Leader</span><b>Arixal Chompjak</b><i>${stars(4)}</i></div>
+          <div class="c4-row"><span class="role">Leader</span><b>Arixal Chompjak</b><i>${stars(5)}</i></div>
           <div class="c4-row"><span class="role">Officers</span><b>Hanaxa Chompjak · Aniz Chompjak · Marshal Haplok</b></div>
           <p class="c4-note">Sub officers advance on their own.</p></div>
         <div class="c4-side foe"><div class="c4-h">Enemies</div>
-          <div class="c4-row"><span class="role">Leader</span><b>Sevirrus</b><i>${stars(8)}</i></div>
+          <div class="c4-row"><span class="role">Leader</span><b>Sevirrus</b><i>${stars(7)}</i></div>
           <div class="c4-row"><span class="role">Officers</span><b>Zarkam · Almak · Tamix</b></div></div>
         <p class="c4-note"><b style="color:#f0c060">◆ Gate Captains</b> keep each fort and camp sending out troops. Defeat one to seal its gates and stop the reinforcements. Each side’s new officers come from its main camp, so its gate captain is the one that matters most.<br><b style="color:#7dffb0">■ Supply crates</b> hold space rocks that restore health. The great ones restore all of it.</p>
         <div class="c4-btns"><button class="close" id="c4Begin">Begin</button><button class="close" id="c4Back">Return to menu</button></div>
@@ -6200,7 +6200,7 @@ function startBattle(st) {
   Object.values(fieldSets).forEach(f => { f.g.visible = f === fieldSet; });
   const units = STAGE.units.map(u => ({ ...u, pos: new THREE.Vector3(u.x, 0, u.z), hp: 100, maxTroops: u.troops, alive: true, engaged: null, model: null }));
   const me = units[0];
-  const squads = STAGE.squads().map(q => ({ ...q, pos: new THREE.Vector3(q.x, 0, q.z), hp: 100, max: q.troops }));
+  const squads = STAGE.squads().map(q => { const t = Math.round(q.troops * ((STAGE.squadMul || {})[q.side] || 1)); return { ...q, troops: t, pos: new THREE.Vector3(q.x, 0, q.z), hp: 100, max: t }; });
   const bases = STAGE.bases.map(b => ({ ...b, pos: new THREE.Vector3(b.x, 0, b.z) }));
   bases.forEach(b => setFlag(b));
   // each fort has a base captain and a garrison; take the fort by defeating him
@@ -6214,7 +6214,7 @@ function startBattle(st) {
     // the hostile armies keep no timetable: when they hold, push, feint and when Sevirrus makes his move all change from battle to battle
     leadName: {}, chiefOut: {}, sideKos: {}, feintT: { E: 30 + Math.random() * 40, T: 30 + Math.random() * 40 }, feintEnd: {},
     waitFor: { E: 30 + Math.random() * 55, T: 45 + Math.random() * 55 }, advAt: { E: 100 + Math.random() * 100, T: 90 + Math.random() * 90 },
-    blitz: { state: 0, at: (STAGE.id === 'alphinos' ? 140 : 110) + Math.random() * 150 } };
+    blitz: { state: 0, at: (STAGE.id === 'alphinos' ? 140 : 110) + Math.random() * 150, target: STAGE.id === 'alphinos' && Math.random() < 0.5 ? 'campT' : 'campA' }, balT: 0 };
   game.sword = giveDamixSword(a.j); game.sword.scale.setScalar(1.15); game.trail = makeTrail(0x5ad0ff);
   buildPickups();
   Object.values(fieldSet.gates).forEach(pc => { pc.userData.open = 1; pc.position.y = -pc.userData.H / 2 + 0.3; });
@@ -6254,22 +6254,22 @@ const ALPH_BASES = [
   { id: 'campE', name: 'Alphinos Keep', side: 'E', main: true, x: 0, z: -770, gate: { x: 0, z: -704 } },
 ];
 const ALPH_UNITS = [
-  { id: 'arixal', name: 'Arixal Chompjak', side: 'A', leader: true, chief: true, stars: 2, tpl: 'arixal', x: 0, z: 770, troops: 0 },
-  { id: 'zamik', name: 'Zamik Chompjak', side: 'A', tpl: 'chompy', badge: 0x7ac8ff, x: -35, z: 705, troops: 80 },
-  { id: 'haplok', name: 'Marshal Haplok', side: 'A', tpl: 'chompy', badge: 0x3aa0ff, x: 0, z: 660, troops: 90 },
-  { id: 'xanok', name: 'Xanok', side: 'A', tpl: 'chompy', badge: 0x5affe0, x: 40, z: 690, troops: 70 },
-  { id: 'danix', name: 'Danix', side: 'A', tpl: 'chompy', badge: 0x9ab0ff, x: 70, z: 610, troops: 70 },
-  { id: 'tritujak', name: 'Tritujak', side: 'A', tpl: 'chompy', badge: 0x60a0ff, x: 20, z: 620, troops: 70 },
-  { id: 'hanaxa', name: 'Hanaxa Chompjak', side: 'A', leader: true, stars: 2, tpl: 'hanaxa', x: -70, z: 585, troops: 90 },
-  { id: 'aniz', name: 'Aniz Chompjak', side: 'A', tpl: 'aniz', x: -82, z: 575, troops: 60, follows: 'hanaxa' },
-  { id: 'sevirrus', name: 'Sevirrus', side: 'E', leader: true, chief: true, stars: 7, tpl: 'sev', x: 0, z: -770, troops: 140 },
+  { id: 'arixal', name: 'Arixal Chompjak', side: 'A', leader: true, chief: true, stars: 4, tpl: 'arixal', x: 0, z: 770, troops: 0 },
+  { id: 'zamik', name: 'Zamik Chompjak', side: 'A', tpl: 'chompy', badge: 0x7ac8ff, x: -35, z: 705, troops: 100 },
+  { id: 'haplok', name: 'Marshal Haplok', side: 'A', tpl: 'chompy', badge: 0x3aa0ff, x: 0, z: 660, troops: 110 },
+  { id: 'xanok', name: 'Xanok', side: 'A', tpl: 'chompy', badge: 0x5affe0, x: 40, z: 690, troops: 90 },
+  { id: 'danix', name: 'Danix', side: 'A', tpl: 'chompy', badge: 0x9ab0ff, x: 70, z: 610, troops: 90 },
+  { id: 'tritujak', name: 'Tritujak', side: 'A', tpl: 'chompy', badge: 0x60a0ff, x: 20, z: 620, troops: 90 },
+  { id: 'hanaxa', name: 'Hanaxa Chompjak', side: 'A', leader: true, stars: 4, tpl: 'hanaxa', x: -70, z: 585, troops: 110 },
+  { id: 'aniz', name: 'Aniz Chompjak', side: 'A', tpl: 'aniz', x: -82, z: 575, troops: 80, follows: 'hanaxa' },
+  { id: 'sevirrus', name: 'Sevirrus', side: 'E', leader: true, chief: true, stars: 6, tpl: 'sev', x: 0, z: -770, troops: 140 },
   { id: 'zarkam', name: 'Zarkam', side: 'E', tpl: 'chompy', badge: 0xff2a2a, x: 80, z: -214, troops: 110, home: 'fortE2' },
   { id: 'almak', name: 'Almak', side: 'E', tpl: 'chompy', badge: 0x3adc5a, x: 75, z: 186, troops: 100, home: 'fortE1' },
   { id: 'tamix', name: 'Tamix', side: 'E', tpl: 'chompy', badge: 0xff9a3a, x: 30, z: -554, troops: 110, home: 'fortE3' },
   { id: 'kraxis', name: 'Kraxis', side: 'E', tpl: 'chompy', badge: 0xff8a2a, x: 35, z: -690, troops: 90 },
   { id: 'vorlag', name: 'Vorlag', side: 'E', tpl: 'chompy', badge: 0xb04aff, x: -35, z: -690, troops: 90 },
   { id: 'darkmar', name: 'Darkmar', side: 'E', tpl: 'chompy', badge: 0xff2a8a, x: 0, z: -640, troops: 90 },
-  { id: 'jazmak', name: 'Jazmak Chompjak', side: 'T', leader: true, chief: true, stars: 8, tpl: 'jazmak', x: -100, z: -380, troops: 140 },
+  { id: 'jazmak', name: 'Jazmak Chompjak', side: 'T', leader: true, chief: true, stars: 6, tpl: 'jazmak', x: -100, z: -380, troops: 140 },
   { id: 'tajak', name: 'Tajak Chompjak', side: 'T', tpl: 'chompy', badge: 0xfff07a, x: -85, z: 86, troops: 100, home: 'fortT1' },
   { id: 'jamak', name: 'Jamak', side: 'T', tpl: 'chompy', badge: 0xffc23a, x: -95, z: -144, troops: 100, home: 'fortT2' },
   { id: 'qajak', name: 'Qajak', side: 'T', tpl: 'chompy', badge: 0xe0b020, x: -55, z: -300, troops: 80 },
@@ -6289,16 +6289,16 @@ function alphSquads() {
   return out;
 }
 STAGES.alphinos = { id: 'alphinos', ch: 5, title: 'Chapter V · The Siege of Alphinos', name: 'The Siege of Alphinos', place: 'Alphinos', bases: ALPH_BASES, units: ALPH_UNITS, squads: alphSquads,
-  sides: ['A', 'E', 'T'], newOfficers: false, caps: { A: 14, E: 26, T: 22 }, sevHit: 7, song: 'songAridaxx', objective: 'Defeat Sevirrus and Jazmak Chompjak',
+  sides: ['A', 'E', 'T'], newOfficers: false, caps: { A: 22, E: 22, T: 22 }, squadMul: { A: 2.0, E: 0.75, T: 1.15 }, sevHit: 7, song: 'songAridaxx', objective: 'Defeat Sevirrus and Jazmak Chompjak',
   win: 'Jazmak Chompjak and Sevirrus are both defeated', lose: 'Arixal Chompjak is defeated', lost: 'Arixal Chompjak has fallen. Alphinos stands, and Aridaxx burns.',
   winMsg: '<b class="a">Arixal Chompjak</b> has taken Alphinos!',
   startMsg: '<b class="a">Arixal Chompjak</b> has begun battle with <b class="e">Sevirrus</b> and <b class="t">Jazmak Chompjak</b>!',
   near: [{ id: 'sevirrus', text: '<b class="e">Sevirrus</b>: You came all this way, cousin. Stay a while.', vo: 110 }, { id: 'jazmak', text: '<b class="t">Jazmak Chompjak</b>: Out of my way, son. The rat who killed your brother is mine.', vo: 111 }],
-  pre: [{ cls: 'ally', h: 'Allies', rows: [['Leader', 'Arixal Chompjak', 2], ['Officers', 'Zamik Chompjak · Marshal Haplok · Xanok · Danix · Tritujak'], ['Leader', 'Hanaxa Chompjak', 2], ['Sub officer', 'Aniz Chompjak']], note: 'Officers advance on their own. Aniz stays at Hanaxa’s side.' },
+  pre: [{ cls: 'ally', h: 'Allies', rows: [['Leader', 'Arixal Chompjak', 4], ['Officers', 'Zamik Chompjak · Marshal Haplok · Xanok · Danix · Tritujak'], ['Leader', 'Hanaxa Chompjak', 4], ['Sub officer', 'Aniz Chompjak']], note: 'Officers advance on their own. Aniz stays at Hanaxa’s side.' },
         { cls: 'foe', h: 'Enemies', rows: [['Leader', 'Sevirrus', 7], ['Officers', 'Zarkam · Almak · Tamix · Kraxis · Vorlag · Darkmar']] },
-        { cls: 'third', h: 'Third party · hostile to both', rows: [['Leader', 'Jazmak Chompjak', 8], ['Officers', 'Tajak Chompjak · Jamak · Qajak · Gakal · Inonzak · Gakam · Talmis']], note: 'Father of Arixal and the late Damix. He wants Sevirrus’s head for his own, and will cut through his son to get it.' }],
+        { cls: 'third', h: 'Third party · hostile to both', rows: [['Leader', 'Jazmak Chompjak', 6], ['Officers', 'Tajak Chompjak · Jamak · Qajak · Gakal · Inonzak · Gakam · Talmis']], note: 'Father of Arixal and the late Damix. He wants Sevirrus’s head for his own, and will cut through his son to get it.' }],
   gateNote: 'No new officers come here, but a fallen officer returns from his main camp while its gate captain lives. Defeat a camp’s commander to take the camp. Stars show each officer’s rank: defeat officers to earn more, up to eight.',
-  tips: ['Jazmak Chompjak answers to no one, not even his own son. His yellow army will fight Sevirrus and you alike.', 'Defeat a commander and his army fights on under a new faction leader. Victory needs both Jazmak and Sevirrus.', 'Sevirrus can vanish from the keep and storm your camp. When he leaves, Jazmak goes for Alphinos itself.', 'Fallen officers return from their main camp. Kill its gate captain and they stay down.', 'Let Sevirrus and Jazmak bleed each other. Strike whichever is weaker.', 'Press M to see every army’s morale, officers and forts.', 'Press 1 to 4 to order your officers: follow me, advance, hold, or fall back.', 'Break supply crates for space rocks. A great space rock restores all your health.'],
+  tips: ['Jazmak Chompjak answers to no one, not even his own son. His yellow army will fight Sevirrus and you alike.', 'Defeat a commander and his army fights on under a new faction leader. Victory needs both Jazmak and Sevirrus.', 'Sevirrus can vanish from the keep and storm a camp: yours, or sometimes Jazmak’s. When he leaves, Jazmak goes for Alphinos itself.', 'Fallen officers return from their main camp. Kill its gate captain and they stay down.', 'Let Sevirrus and Jazmak bleed each other. Strike whichever is weaker.', 'Press M to see every army’s morale, officers and forts.', 'Press 1 to 4 to order your officers: follow me, advance, hold, or fall back.', 'Break supply crates for space rocks. A great space rock restores all your health.'],
   env() {
     scene.fog.color.set(0x150c26); scene.fog.density = 0.011; camera.far = 220; camera.fov = 55; camera.updateProjectionMatrix();
     hemi.color.set(0x8a7ac0); hemi.groundColor.set(0x1a1030); key.angle = Math.PI / 4; key.distance = 40; key.decay = 1.0;
@@ -6477,6 +6477,7 @@ function simulate(dt) {
     if (!game.adv[sd] && L.chief && (game.t > ((game.advAt && game.advAt[sd]) || (sd === 'E' ? 150 : 120)) || fieldOfficers(sd).length === 0)) { game.adv[sd] = true; feed(`${nameOf(sd, leadOf(sd))} advances!`, 'big'); }
   }
   blitzTick();
+  balanceArmies(dt);
   U.forEach(u => {
     if (!u.alive || u === me) return;
     const hostile = U.filter(o => o.side !== u.side && o.alive);
@@ -6693,25 +6694,44 @@ function raidCapture(u, b) {
   if (cap) captureBase(cap, u); else { b.side = u.side; setFlag(b); }
 }
 // Sevirrus's own command, which Arixal has no answer to in kind: he vanishes from his camp, appears in the middle of the plain, and storms the Allied Camp
+// no army runs away with the battle: every ten seconds the weakest one takes heart and the strongest grows careless
+function balanceArmies(dt) {
+  game.balT = (game.balT || 0) + dt; if (game.balT < 10) return; game.balT = 0;
+  const str = {}; STAGE.sides.forEach(sd => {
+    str[sd] = game.units.filter(u => u.side === sd && u.alive && !u.captain).reduce((a, u) => a + 60 + u.troops + (u.chief ? 80 : 0), 0) + game.squads.filter(q => q.side === sd).reduce((a, q) => a + q.troops, 0) + game.bases.filter(b => b.side === sd).length * 40; });
+  // spirit soars and sinks with each victory, but drifts back toward even, so one good minute never decides the battle
+  STAGE.sides.forEach(sd => { game.morale[sd] += (50 - game.morale[sd]) * 0.12; }); updateMoraleBar();
+  const sides = STAGE.sides.slice().sort((a, b) => str[a] - str[b]), lo = sides[0], hi = sides[sides.length - 1];
+  if (str[hi] < str[lo] * 1.25) return;
+  // only enough to keep it a contest: the underdog's spirit is lifted toward even, never past it
+  if (game.morale[lo] < 55) morale(lo, 2); if (game.morale[hi] > 45 && game.morale[hi] > game.morale[lo]) morale(hi, -1);
+  // the weakest army's squads near its camps fill back up a little faster
+  game.squads.forEach(q => { if (q.side === lo && q.max && q.troops < q.max) q.troops = Math.min(q.max, q.troops + 2); });
+}
 function blitzTick() {
   const S = game.blitz; if (!S) return;
-  const su = game.units.find(u => u.id === 'sevirrus'), campA = game.bases.find(b => b.id === 'campA');
-  if (!su || !su.alive || !campA || game.chiefOut.E || game.routed.E) return;
+  const su = game.units.find(u => u.id === 'sevirrus'), tb = blitzBase();
+  if (!su || !su.alive || !tb || game.chiefOut.E || game.routed.E) return;
+  const owner = tb.id === 'campT' ? 'T' : 'A';
   if (S.state === 0) {
-    if (game.t > S.at && campA.side === 'A' && game.mover.position.distanceTo(su.pos) > 35) startBlitz(su);
+    // Jazmak's camp only tempts him while Jazmak's men still hold it; otherwise he goes for ours
+    if (owner === 'T' && tb.side !== 'T') { S.target = 'campA'; return; }
+    if (game.t > S.at && tb.side === owner && game.mover.position.distanceTo(su.pos) > 35) startBlitz(su);
   } else if (S.state === 1) {
-    if (campA.side !== 'A') S.state = 2;
-    else if (su.pos.distanceTo(campA.pos) < 16) { raidCapture(su, campA); S.state = 2; feed('<b class="e">Sevirrus</b> holds the Allied Camp! Drive him out!', 'big'); }
-  } else if (S.state === 2 && campA.side === 'A' && Math.random() < 0.02) { S.state = 1; feed('<b class="e">Sevirrus</b> turns back for the Allied Camp!', 'bad'); }
+    if (tb.side === 'E') S.state = 2;
+    else if (su.pos.distanceTo(tb.pos) < 16) { raidCapture(su, tb); S.state = 2; feed(owner === 'A' ? '<b class="e">Sevirrus</b> holds the Allied Camp! Drive him out!' : '<b class="e">Sevirrus</b> has taken Jazmak’s Camp for himself!', 'big'); }
+  } else if (S.state === 2 && tb.side !== 'E' && Math.random() < 0.02) { S.state = 1; feed(`<b class="e">Sevirrus</b> turns back for ${owner === 'A' ? 'the Allied Camp' : 'Jazmak’s Camp'}!`, 'bad'); }
 }
+const blitzBase = () => game.blitz && game.bases.find(b => b.id === (game.blitz.target || 'campA'));
 function startBlitz(su) {
   const S = game.blitz; S.state = 1;
   rig.getWorldPosition(tmpA); tmpA.y = 1.2; sparks(tmpA.clone(), 80, 6); shards(tmpA.clone(), 30);
   const x = (Math.random() - 0.5) * 120; rig.position.set(x, 0, -20 + Math.random() * 60); su.pos.copy(rig.position);
   tmpA.copy(rig.position); tmpA.y = 1.2; sparks(tmpA.clone(), 80, 6); shards(tmpA.clone(), 30);
   feed('<b class="e">Sevirrus</b> vanishes from his camp in a burst of red light…', 'big');
-  setTimeout(() => game && game.bt && !game.over && feed('…and appears in the middle of the plain! He is racing for our main camp!', 'big'), 900);
-  morale('A', -5); morale('E', 6);
+  const forT = blitzBase() && blitzBase().id === 'campT';
+  setTimeout(() => game && game.bt && !game.over && feed(forT ? '…and appears in the middle of the field! He is not coming for us: he is racing for <b class="t">Jazmak’s Camp</b>!' : '…and appears in the middle of the plain! He is racing for our main camp!', 'big'), 900);
+  morale(forT ? 'T' : 'A', -5); morale('E', 6);
   if (STAGE.id === 'alphinos') {
     const jz = game.units.find(u => u.id === 'jazmak');
     if (jz && jz.alive) { game.jazRaid = true; setTimeout(() => game && game.bt && !game.over && feed('With <b class="e">Sevirrus</b> gone from the keep, <b class="t">Jazmak Chompjak</b> marches on Alphinos!', 'big'), 2600); }
@@ -6992,7 +7012,7 @@ function officerUpdate(u, dt, time) {
   if (m.sev && (!u.alive || game.routed.E)) { m.atk = null; return; }
   if (m.sev) {
     // Sevirrus: in his camp until Arixal comes or he takes the field; then he hunts
-    const d = op.distanceTo(p), bz = game.blitz && game.blitz.state, campA = bz ? game.bases.find(b => b.id === 'campA') : null;
+    const d = op.distanceTo(p), bz = game.blitz && game.blitz.state, campA = bz ? blitzBase() : null;
     // on his raid he only turns on Arixal if Arixal stands right in his way; holding the camp, he defends it
     const huntR = bz === 1 ? 12 : bz === 2 && campA && p.distanceTo(campA.pos) > 90 ? 0 : 45;
     if (bz && campA && d >= huntR) {
