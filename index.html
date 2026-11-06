@@ -38,6 +38,14 @@ body {
 
 /* Atmosphere overlays */
 .fx { position: fixed; inset: 0; pointer-events: none; }
+#pswarn { position: fixed; inset: 0; z-index: 2147483600; display: grid; place-items: center; background: #050208; color: var(--bone); padding: 24px; text-align: center; cursor: pointer; }
+#pswarn[hidden] { display: none; }
+#pswarn .pw { max-width: 620px; display: flex; flex-direction: column; gap: 16px; }
+#pswarn h1 { font-family: var(--font-display); font-size: clamp(18px, 4vw, 30px); letter-spacing: .14em; color: var(--crimson); margin: 0; }
+#pswarn p { margin: 0; font-size: clamp(13px, 2.2vw, 15px); line-height: 1.6; color: var(--bone); opacity: .9; }
+#pswarn .pw-go { margin-top: 10px; font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: var(--dim); animation: pwBlink 1.6s ease-in-out infinite; }
+@keyframes pwBlink { 0%,100% { opacity: .45; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { #pswarn .pw-go { animation: none; } }
 .fx-sky { background: radial-gradient(ellipse 80% 55% at 60% 18%, rgba(110,50,180,.22), transparent 70%), radial-gradient(ellipse 60% 40% at 50% 100%, rgba(70,20,110,.25), transparent 70%); mix-blend-mode: screen; }
 .fx-vignette { background: radial-gradient(ellipse at 55% 45%, transparent 35%, rgba(8,3,14,.55) 70%, rgba(6,2,10,.95) 100%); }
 .fx-scan { background: repeating-linear-gradient(to bottom, rgba(255,255,255,.025) 0 1px, transparent 1px 3px); mix-blend-mode: overlay; }
@@ -495,6 +503,17 @@ body.run .g-sev.near b { color: var(--crimson); }
   <p>Save your progress? Nothing is saved unless you choose a slot.</p>
   <ol class="slots" id="doneSlots"></ol>
   <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="close" id="gDoneNext">Continue to Chapter II</button><button class="close" id="gDoneMenu">Return to menu</button></div></div></div>
+<div id="pswarn" role="dialog" aria-modal="true" aria-labelledby="pwTitle" tabindex="-1"><div class="pw">
+  <h1 id="pwTitle">Photosensitive Seizure Warning</h1>
+  <p>A very small percentage of people may experience a seizure when exposed to certain visual images, including flashing lights, strobe effects and rapidly changing patterns. This game contains flashing lights, bright impact flashes, screen shake and fast-moving images.</p>
+  <p>Even people with no history of seizures or epilepsy may have an undiagnosed condition. If you or anyone in your family has an epileptic condition, consult a doctor before playing.</p>
+  <p>Stop playing immediately and consult a doctor if you experience dizziness, altered vision, eye or muscle twitching, loss of awareness, disorientation, any involuntary movement or convulsions.</p>
+  <p>Play in a well-lit room, sit a good distance from the screen, and take regular breaks.</p>
+  <div class="pw-go">Press any key or tap to continue</div>
+</div></div>
+<script>(function () { const w = document.getElementById('pswarn'); w.focus();
+  const go = e => { if (w.hidden) return; e.preventDefault(); e.stopImmediatePropagation(); w.hidden = true; window.removeEventListener('keydown', go, true); const f = document.querySelector('.mi'); f && f.focus(); };
+  window.addEventListener('keydown', go, true); w.addEventListener('click', go); w.addEventListener('touchend', go); })();</script>
 <div class="loading" id="loading">Reconstituting subject…</div>
 
 <div class="ui">
