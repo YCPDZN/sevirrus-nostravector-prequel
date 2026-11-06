@@ -6298,7 +6298,7 @@ STAGES.alphinos = { id: 'alphinos', ch: 5, title: 'Chapter V · The Siege of Alp
         { cls: 'foe', h: 'Enemies', rows: [['Leader', 'Sevirrus', 7], ['Officers', 'Zarkam · Almak · Tamix · Kraxis · Vorlag · Darkmar']] },
         { cls: 'third', h: 'Third party · hostile to both', rows: [['Leader', 'Jazmak Chompjak', 6], ['Officers', 'Tajak Chompjak · Jamak · Qajak · Gakal · Inonzak · Gakam · Talmis']], note: 'Father of Arixal and the late Damix. He wants Sevirrus’s head for his own, and will cut through his son to get it.' }],
   gateNote: 'No new officers come here, but a fallen officer returns from his main camp while its gate captain lives. Defeat a camp’s commander to take the camp. Stars show each officer’s rank: defeat officers to earn more, up to eight.',
-  tips: ['Jazmak Chompjak answers to no one, not even his own son. His yellow army will fight Sevirrus and you alike.', 'Defeat a commander and his army fights on under a new faction leader. Victory needs both Jazmak and Sevirrus.', 'Sevirrus can vanish from the keep and storm a camp: yours, or sometimes Jazmak’s. When he leaves, Jazmak goes for Alphinos itself.', 'Fallen officers return from their main camp. Kill its gate captain and they stay down.', 'Let Sevirrus and Jazmak bleed each other. Strike whichever is weaker.', 'Press M to see every army’s morale, officers and forts.', 'Press 1 to 4 to order your officers: follow me, advance, hold, or fall back.', 'Break supply crates for space rocks. A great space rock restores all your health.'],
+  tips: ['Jazmak Chompjak answers to no one, not even his own son. His yellow army will fight Sevirrus and you alike.', 'Defeat a commander and his army fights on under a new faction leader. Victory needs both Jazmak and Sevirrus.', 'Sevirrus can vanish from the keep and storm a camp: yours, or sometimes Jazmak’s. If he comes for yours, Jazmak goes for Alphinos itself. If he takes Jazmak’s, Jazmak falls back south toward you.', 'Fallen officers return from their main camp. Kill its gate captain and they stay down.', 'Let Sevirrus and Jazmak bleed each other. Strike whichever is weaker.', 'Press M to see every army’s morale, officers and forts.', 'Press 1 to 4 to order your officers: follow me, advance, hold, or fall back.', 'Break supply crates for space rocks. A great space rock restores all your health.'],
   env() {
     scene.fog.color.set(0x150c26); scene.fog.density = 0.011; camera.far = 220; camera.fov = 55; camera.updateProjectionMatrix();
     hemi.color.set(0x8a7ac0); hemi.groundColor.set(0x1a1030); key.angle = Math.PI / 4; key.distance = 40; key.decay = 1.0;
@@ -6394,7 +6394,7 @@ function battleState() {
   return { v: 1, t: Date.now(), chapter: STAGE.ch, stage: STAGE.id, phase: 'battle', complete: false, time: r2(game.t), ko: game.ko, musou: Math.round(game.musou), hp: Math.round(B.hp),
     pos: [r2(p.x), r2(p.z)], yaw: r2(game.mover.rotation.y), morale: Object.fromEntries(Object.entries(game.morale).map(([k, v]) => [k, r2(v)])), tOrder: game.tOrder, adv: game.adv, fallT: game.fallT, routed: game.routed,
     aOrder: game.aOrder, eOrder: game.eOrder, sevAdvance: !!game.adv.E, heard: [...game.heard],
-    leadName: game.leadName, chiefOut: game.chiefOut, sideKos: game.sideKos, waitFor: game.waitFor, advAt: game.advAt, blitz: game.blitz, jazRaid: !!game.jazRaid, meStars: game.me.stars, meKos: game.me.kos,
+    leadName: game.leadName, chiefOut: game.chiefOut, sideKos: game.sideKos, waitFor: game.waitFor, advAt: game.advAt, blitz: game.blitz, jazRaid: !!game.jazRaid, jazSouth: !!game.jazSouth, meStars: game.me.stars, meKos: game.me.kos,
     units: game.units.filter(u => u !== game.me).map(u => ({ id: u.id, downAt: u.downAt, x: r2(u.pos.x), z: r2(u.pos.z), hp: r2(u.hp), troops: Math.round(u.troops + game.troops.filter(t => t.officer === u && t.state !== 'dead' && t.state !== 'flee').length), alive: u.alive, side: u.side, stars: u.stars, kos: u.kos || 0, fl: !!u.factionLead })),
     bases: Object.fromEntries(game.bases.map(b => [b.id, b.side])),
     squads: game.squads.map(q => Math.round(q.troops + game.troops.filter(t => t.officer === q && t.state !== 'dead' && t.state !== 'flee').length)),
@@ -6409,7 +6409,7 @@ function restoreBattle(st) {
   game.adv = { ...(st.adv || {}) }; if (st.sevAdvance) game.adv.E = true; game.fallT = { ...(st.fallT || {}) }; if (st.eFallT) game.fallT.E = st.eFallT; game.routed = { ...(st.routed || {}) }; (st.heard || []).forEach(h => game.heard.add(h));
   game.bases.forEach(b => { if (st.bases && st.bases[b.id]) { b.side = st.bases[b.id]; setFlag(b); } });
   ['leadName', 'chiefOut', 'sideKos', 'waitFor', 'advAt', 'blitz'].forEach(k => { if (st[k]) game[k] = { ...game[k], ...st[k] }; });
-  game.jazRaid = !!st.jazRaid; if (st.meStars) game.me.stars = st.meStars; game.me.kos = st.meKos || 0;
+  game.jazRaid = !!st.jazRaid; game.jazSouth = !!st.jazSouth; if (st.meStars) game.me.stars = st.meStars; game.me.kos = st.meKos || 0;
   (st.spawned || []).forEach(sp => spawnOfficer(sp.side, sp)); game.rfN = st.rfN || game.rfN || 0; if (st.rfT) game.rfT = { ...st.rfT };
   (st.units || []).forEach(s2 => {
     const u = game.units.find(o => o.id === s2.id); if (!u) return;
@@ -6502,13 +6502,14 @@ function simulate(dt) {
       if (u.aim) { u.destV = u.destV || new THREE.Vector3(); const far = u.aim.pos.distanceTo(u.pos) > 70 ? 1 : 0; dest = u.destV.set(THREE.MathUtils.clamp(u.aim.pos.x + u.flank * far, -K4.W + 6, K4.W - 6), 0, u.aim.pos.z); }
     }
     // Jazmak, once Sevirrus has left the keep: he goes for Alphinos itself, and stays to hold it
+    if (u.chief && u.side === 'T' && game.jazSouth) { const ours = game.bases.find(b => b.id === 'campA'); if (ours) { dest = ours.pos; if (ours.side !== 'T' && u.pos.distanceTo(ours.pos) < 18) raidCapture(u, ours); } }
     if (u.chief && u.side === 'T' && game.jazRaid) { const keep = game.bases.find(b => b.id === 'campE'); if (keep) { dest = keep.pos; if (keep.side !== 'T' && u.pos.distanceTo(keep.pos) < 18) raidCapture(u, keep); } }
     // a sub officer stays with the leader he serves
     if (u.follows && order !== 'fallback' && order !== 'follow') { const L = U.find(o => o.id === u.follows && o.alive); if (L) dest = L.pos.distanceTo(u.pos) > 9 ? L.pos : null; }
-    if (u.engaged && order !== 'fallback' && !(u.chief && u.side === 'T' && game.jazRaid && !u.engaged.chief && u.engaged !== me)) dest = u.engaged.pos;
+    if (u.engaged && order !== 'fallback' && !(u.chief && u.side === 'T' && ((game.jazRaid && !u.engaged.chief) || game.jazSouth) && u.engaged !== me)) dest = u.engaged.pos;
     u.dest = dest;
     // units out of his sight move on the map; the ones near him are walked by their bodies
-    if (!u.model && dest) { const dd = tmpA.subVectors(dest, u.pos).setY(0).length(); if (dd > 4) { tmpA.normalize(); u.pos.addScaledVector(tmpA, (u.chief && u.side === 'T' && game.jazRaid ? 7 : u.leader ? 1.8 : 2.4) * dt); } }
+    if (!u.model && dest) { const dd = tmpA.subVectors(dest, u.pos).setY(0).length(); if (dd > 4) { tmpA.normalize(); u.pos.addScaledVector(tmpA, (u.chief && u.side === 'T' && game.jazRaid ? 7 : u.chief && u.side === 'T' && game.jazSouth ? 1.3 : u.leader ? 1.8 : 2.4) * dt); } }
     // squads grinding against each other, officer against officer once a squad is spent
     const e = u.engaged;
     if (e && e !== me && e.alive && u.pos.distanceTo(me.pos) > 60) {
@@ -6719,7 +6720,8 @@ function blitzTick() {
     if (game.t > S.at && tb.side === owner && game.mover.position.distanceTo(su.pos) > 35) startBlitz(su);
   } else if (S.state === 1) {
     if (tb.side === 'E') S.state = 2;
-    else if (su.pos.distanceTo(tb.pos) < 16) { raidCapture(su, tb); S.state = 2; feed(owner === 'A' ? '<b class="e">Sevirrus</b> holds the Allied Camp! Drive him out!' : '<b class="e">Sevirrus</b> has taken Jazmak’s Camp for himself!', 'big'); }
+    else if (su.pos.distanceTo(tb.pos) < 16) { raidCapture(su, tb); S.state = 2;
+      if (owner === 'T') { const jz = game.units.find(u => u.id === 'jazmak'); if (jz && jz.alive && !game.jazSouth) { game.jazSouth = true; game.jazRaid = false; setTimeout(() => game && game.bt && !game.over && feed('<b class="t">Jazmak Chompjak</b> has lost his camp! He falls back southward… toward our camp!', 'big'), 1500); } } feed(owner === 'A' ? '<b class="e">Sevirrus</b> holds the Allied Camp! Drive him out!' : '<b class="e">Sevirrus</b> has taken Jazmak’s Camp for himself!', 'big'); }
   } else if (S.state === 2 && tb.side !== 'E' && Math.random() < 0.02) { S.state = 1; feed(`<b class="e">Sevirrus</b> turns back for ${owner === 'A' ? 'the Allied Camp' : 'Jazmak’s Camp'}!`, 'bad'); }
 }
 const blitzBase = () => game.blitz && game.bases.find(b => b.id === (game.blitz.target || 'campA'));
@@ -6734,7 +6736,7 @@ function startBlitz(su) {
   morale(forT ? 'T' : 'A', -5); morale('E', 6);
   if (STAGE.id === 'alphinos') {
     const jz = game.units.find(u => u.id === 'jazmak');
-    if (jz && jz.alive) { game.jazRaid = true; setTimeout(() => game && game.bt && !game.over && feed('With <b class="e">Sevirrus</b> gone from the keep, <b class="t">Jazmak Chompjak</b> marches on Alphinos!', 'big'), 2600); }
+    if (jz && jz.alive && !forT) { game.jazRaid = true; setTimeout(() => game && game.bt && !game.over && feed('With <b class="e">Sevirrus</b> gone from the keep, <b class="t">Jazmak Chompjak</b> marches on Alphinos!', 'big'), 2600); }
   }
 }
 function officerDown(u, by) {
@@ -7062,7 +7064,7 @@ function officerUpdate(u, dt, time) {
     m.cd -= dt;
     if (!m.atk && m.cd <= 0 && ed < 2.4) m.atk = { t: 0, f };
   } else if (u.dest && op.distanceTo(u.dest) > 4) {
-    tmpA.subVectors(u.dest, op).setY(0).normalize(); op.addScaledVector(tmpA, 3.2 * dt); m.mover.rotation.y = Math.atan2(tmpA.x, tmpA.z); moving = true;
+    tmpA.subVectors(u.dest, op).setY(0).normalize(); op.addScaledVector(tmpA, (u.chief && u.side === 'T' && game.jazSouth ? 1.6 : 3.2) * dt); m.mover.rotation.y = Math.atan2(tmpA.x, tmpA.z); moving = true;
   }
   op.x = THREE.MathUtils.clamp(op.x, -K4.W + 1, K4.W - 1);
   u.pos.copy(op);
