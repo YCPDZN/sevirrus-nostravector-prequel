@@ -258,7 +258,7 @@ body.post5 .fx-vignette, body.post5 .vignette { box-shadow: inset 0 0 200px rgba
 .crack { position: fixed; inset: 0; pointer-events: none; z-index: 4; clip-path: circle(160% at var(--cx) var(--cy)); transition: clip-path .8s cubic-bezier(.6,0,.4,1); background: radial-gradient(circle at var(--cx) var(--cy), rgba(255,255,255,.18), transparent 22%); }
 .crack svg { position: absolute; inset: 0; } .crack path { fill: none; stroke: rgba(235,240,255,.85); stroke-width: 1.4; filter: drop-shadow(0 0 2px rgba(0,0,0,.9)); }
 .crack.heal { clip-path: circle(0% at var(--cx) var(--cy)); }
-body.post3:not(.game):not(.cine):not(.c4screen)::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 1; background: radial-gradient(ellipse at 70% 40%, transparent 35%, rgba(110,0,16,.35) 100%); animation: bloodPulse 4.5s ease-in-out infinite; }
+body.post3:not(.game):not(.cine):not(.c4screen):not(.zcine):not(.hold)::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 1; background: radial-gradient(ellipse at 70% 40%, transparent 35%, rgba(110,0,16,.35) 100%); animation: bloodPulse 4.5s ease-in-out infinite; }
 @keyframes bloodPulse { 0%, 100% { opacity: .6; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { body.post3::after { animation: none; } }
 body.post6 .grid9 .ne { background: #2fae5a; border-color: #2fae5a; box-shadow: 0 0 14px rgba(47,174,90,.7); } body.post6 .align-val { color: #4fd47a; }
@@ -343,7 +343,8 @@ body.cine .ui, body.cine .fx-pulse { opacity: 0; pointer-events: none; }
 body.game .ghud { display: block; }
 body.game .ui, body.game .fx-pulse { opacity: 0; pointer-events: none; }
 body.hold .ui, body.hold .fx-pulse { opacity: 0 !important; visibility: hidden !important; transition: none !important; }
-body.hold::after { content: ''; position: fixed; inset: 0; background: #000; opacity: 1; animation: none; transform: none; filter: none; z-index: 2147483000; pointer-events: none; }
+#holdCover { position: fixed; inset: 0; background: #000; z-index: 2147483000; pointer-events: none; display: none; } body.hold #holdCover { display: block; }
+body.game .fx-pulse, body.cine .fx-pulse, body.c4screen .fx-pulse, body.zcine .fx-pulse, body.hold .fx-pulse, body.game .fx-flash, body.cine .fx-flash, body.c4screen .fx-flash, body.zcine .fx-flash, body.hold .fx-flash { animation: none !important; opacity: 0 !important; }
 /* gameplay, cutscenes and the Chapter IV screens cut the menu away at once: no fade, so it never shows over the first frame */
 body.game .ui, body.game .fx-pulse, body.cine .ui, body.cine .fx-pulse, body.c4screen .ui, body.c4screen .fx-pulse { transition: none; }
 body.c4screen .ui, body.c4screen .fx-pulse { opacity: 0; pointer-events: none; }
@@ -458,7 +459,7 @@ body.run .g-sev.near b { color: var(--crimson); }
 <div class="fx fx-vignette"></div>
 <div class="fx fx-scan"></div>
 <div class="fx fx-grain"></div>
-<div class="fx fx-flash" id="flash"></div>
+<div class="fx fx-flash" id="flash"></div><div id="holdCover"></div>
 <div class="fx fx-pulse"></div>
 <div class="cine-bars" aria-hidden="true"><i></i><i></i></div>
 <div class="cine-layer" id="cineBlack"></div>
@@ -3663,7 +3664,7 @@ function startSiege() {
   camera.far = 120; camera.fov = 36; camera.updateProjectionMatrix();
   cineEls.red.dataset.hit = -9;
   document.body.classList.add('cine'); cineEls.skip.hidden = false; cineEls.skip.focus();
-  M.song && M.song.play('songAridaxx');
+  M.song && M.song.stop(); // Chapter II plays no music
   return true;
 }
 function endSiege(finished) {
@@ -4159,7 +4160,7 @@ function startEscape(st) {
   hud.journal.hidden = true; G('gJournalBtn').hidden = true; bHud.boss.hidden = true;
   hud.exBtn.disabled = false; hud.exBtn.textContent = 'Strike';
   updateRunHud();
-  M.song && M.song.play('songAridaxx');
+  M.song && M.song.stop(); // Chapter II plays no music
   if (!st) { narrate('THE ROAD TO ALPHINOS<small>Seal the keep’s gates before he reaches the Emperor</small>', 'title'); }
   else narrate('CHAPTER II<small>Game loaded</small>', 'title');
   return true;
@@ -4167,7 +4168,7 @@ function startEscape(st) {
 M.playEscape = startEscape;
 M._game = () => game;   // test hooks
 M._stage = id => { STAGE = STAGES[id]; return !!STAGE; }; M._camYaw = y => { camYaw = y; }; M._sevMats = () => { const out = []; rig.traverse(o => { if (o.isMesh) { const ms = Array.isArray(o.material) ? o.material : [o.material]; ms.forEach(m => out.push([o.name, m.name, m.color && m.color.getHexString(), m.emissive && m.emissive.getHexString(), !!m.vertexColors, !!m.map])); } }); return out; }; M._wristGap = (pose) => { rig.visible = true; applyPose(sev.j, pose); rig.updateMatrixWorld(true); const a = new THREE.Vector3(), b = new THREE.Vector3(), h = new THREE.Vector3(); sev.j.wristL.getWorldPosition(a); sev.j.wristR.getWorldPosition(b); sev.j.spine.getWorldPosition(h); return { gap: +a.distanceTo(b).toFixed(3), fwd: +(((a.z + b.z) / 2) - h.z).toFixed(3), y: +(((a.y + b.y) / 2) - h.y).toFixed(3) }; }; M._unit = id => game && game.units.find(u => u.id === id); M._stageId = () => STAGE && STAGE.id; M._sevHit = () => STAGE.sevHit;
-M._setHp = v => { B.hp = v; }; M._dropTest = (x, z) => { dropItem(V(x, 0, z), 'rock', true); dropItem(V(x + 1.4, 0, z - 0.6), 'great', true); }; M._down = u => officerDown(u, game.me); M._sim = t => simulate(t); M._reinforce = () => game && game.bases.forEach(b => reinforce(b));
+M._setHp = v => { B.hp = v; }; M._getHp = () => B.hp; M._dropTest = (x, z) => { dropItem(V(x, 0, z), 'rock', true); dropItem(V(x + 1.4, 0, z - 0.6), 'great', true); }; M._down = u => officerDown(u, game.me); M._sim = t => simulate(t); M._reinforce = () => game && game.bases.forEach(b => reinforce(b));
 M._poses = POSES; M._fit = f => { fit = lastFit = f; fitT = 0; fitNext = 99; };
 M._step = (n, dt = 1 / 30) => { for (let i = 0; i < n && game; i++) gameUpdate(dt, performance.now() / 1000 + i * dt); return !!game; };
 function updateRunHud() {
@@ -6254,7 +6255,7 @@ function alphSquads() {
   return out;
 }
 STAGES.alphinos = { id: 'alphinos', ch: 5, title: 'Chapter V · The Siege of Alphinos', name: 'The Siege of Alphinos', place: 'Alphinos', bases: ALPH_BASES, units: ALPH_UNITS, squads: alphSquads,
-  sides: ['A', 'E', 'T'], newOfficers: false, caps: { A: 14, E: 26, T: 22 }, sevHit: 7, song: 'songKesh', objective: 'Defeat Sevirrus and Jazmak Chompjak',
+  sides: ['A', 'E', 'T'], newOfficers: false, caps: { A: 14, E: 26, T: 22 }, sevHit: 7, song: 'songAridaxx', objective: 'Defeat Sevirrus and Jazmak Chompjak',
   win: 'Jazmak Chompjak and Sevirrus are both defeated', lose: 'Arixal Chompjak is defeated', lost: 'Arixal Chompjak has fallen. Alphinos stands, and Aridaxx burns.',
   winMsg: '<b class="a">Arixal Chompjak</b> has taken Alphinos!',
   startMsg: '<b class="a">Arixal Chompjak</b> has begun battle with <b class="e">Sevirrus</b> and <b class="t">Jazmak Chompjak</b>!',
@@ -6597,7 +6598,8 @@ function routSide(sd) {
   });
   game.squads.forEach(q => { if (q.side === sd) q.troops = 0; });
   game.troops.filter(tr => tr.side === sd && tr.state !== 'dead').forEach(tr => { tr.state = 'flee'; tr.t = 0; });
-  if (sd === 'E') { setTimeout(() => { if (game && game.bt && game.routed.E && !game.over) rig.visible = false; }, 1800); }
+  // a defeated Sevirrus leaves the field at once: hidden, out of reach, and no longer fighting
+  if (sd === 'E') { rig.visible = false; const su = game.units.find(o => o.model && o.model.sev); if (su) { su.model.atk = null; su.dest = null; } }
   game.morale[sd] = 0; updateMoraleBar(); updateOfficerCount();
 }
 function officerDown(u, by) {
