@@ -351,6 +351,9 @@ body.cine .ui, body.cine .fx-pulse { opacity: 0; pointer-events: none; }
 body.game .ghud { display: block; }
 body.game .ui, body.game .fx-pulse { opacity: 0; pointer-events: none; }
 body.hold .ui, body.hold .fx-pulse { opacity: 0 !important; visibility: hidden !important; transition: none !important; }
+.c4-tag .st, .c4-target .st, .c4-me .st, .c4-mv .st, #c4MvA .st, #c4MvE .st, #c4MvT .st { display: block; font-style: normal; font-size: 9px; letter-spacing: 1px; color: #ffd84a; line-height: 1.2; text-shadow: 0 1px 2px #000; }
+.c4-me .st { display: inline; font-size: 10px; margin-left: 6px; } #c4MvA .st, #c4MvE .st, #c4MvT .st { display: inline; margin-left: 4px; }
+.st .st-off, .st-off { color: rgba(255,255,255,.16); } .c4-tag .st b { color: #fff; font-weight: 600; letter-spacing: .14em; font-size: 8px; } .st-up { color: #ffd84a; letter-spacing: 1px; }
 #holdCover { position: fixed; inset: 0; background: #000; z-index: 2147483000; pointer-events: none; display: none; } body.hold #holdCover { display: block; }
 body.game .fx-pulse, body.cine .fx-pulse, body.c4screen .fx-pulse, body.zcine .fx-pulse, body.hold .fx-pulse, body.game .fx-flash, body.cine .fx-flash, body.c4screen .fx-flash, body.zcine .fx-flash, body.hold .fx-flash { animation: none !important; opacity: 0 !important; }
 /* gameplay, cutscenes and the Chapter IV screens cut the menu away at once: no fade, so it never shows over the first frame */
@@ -4747,6 +4750,13 @@ const SIDE = {
   T: { rgb: '255,210,58', hex: 0xffd23a, cls: 't', tag: 'third', flag: 0xb08a18, em: 0x3a2a04, tint: 0xfff0b0, lead: 'Jazmak Chompjak', army: 'Jazmak Chompjak’s army', label: 'Third party' },
 };
 const nameOf = (side, name) => `<b class="${SIDE[side].cls}">${name}</b>`;
+// who leads each army right now: its commander, or once he has fallen, the officer who took over
+const leadOf = sd => (typeof game !== 'undefined' && game && game.leadName && game.leadName[sd]) || SIDE[sd].lead;
+const HOME_CAMP = { A: 'campA', E: 'campE', T: 'campT' };
+// officer rank: one to eight stars. Defeating enemy officers raises it; being defeated lowers it
+const STAR_MAX = 8;
+const starHtml = n => '★'.repeat(n) + '<span class="st-off">' + '★'.repeat(Math.max(0, STAR_MAX - n)) + '</span>';
+const starGain = u => 1 + 0.06 * ((u.stars || 1) - (u.stars0 || u.stars || 1));
 let STAGE = null;   // the battle being fought (STAGES.kesh or STAGES.alphinos), set before its loading screen
 const C4_BASES = [
   { id: 'campA', name: 'Allied Camp', side: 'A', main: true, x: 0, z: 770 },
@@ -4756,7 +4766,7 @@ const C4_BASES = [
   { id: 'fortP', name: 'Spire Fort', side: 'E', x: 70, z: -440 },
   { id: 'campE', name: 'Sevirrus’s Camp', side: 'E', main: true, x: 0, z: -770 },
 ];
-const gatePost = b => b.gate ? { x: b.gate.x, z: b.gate.z } : b.main ? { x: b.x, z: b.z + (b.side === 'A' ? -50 : 50) } : { x: b.x, z: b.z + 14.5 };
+const gatePost = b => b.gate ? { x: b.gate.x, z: b.gate.z } : b.main ? { x: b.x, z: b.z + (b.id === 'campA' ? -50 : 50) } : { x: b.x, z: b.z + 14.5 };
 // supply crates along the plain and inside each fort; strike one to break it open for the space rock inside
 function crateSpots() {
   let seed = 71; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
@@ -4794,7 +4804,7 @@ const STAGES = {
     near: [{ id: 'sevirrus', text: '<b class="e">Sevirrus</b>: Brother of a dead man. Come and kneel.', vo: 92 }],
     pre: [{ cls: 'ally', h: 'Allies', rows: [['Leader', 'Arixal Chompjak', 4], ['Officers', 'Hanaxa Chompjak · Aniz Chompjak · Marshal Haplok']], note: 'Sub officers advance on their own.' },
           { cls: 'foe', h: 'Enemies', rows: [['Leader', 'Sevirrus', 8], ['Officers', 'Zarkam · Almak · Tamix']] }],
-    gateNote: 'Each side’s new officers come from its main camp, so its gate captain is the one that matters most.' },
+    gateNote: 'Each side’s new officers come from its main camp, so its gate captain is the one that matters most. Defeat a camp’s commander to take the camp for yourself. Stars show each officer’s rank: defeat officers to earn more, up to eight.' },
 };
 const CH4_INTRO = [   // Hak alone in the throne hall (CH4SEV1..6, CH4GUARD1 when recorded)
   [4.0, 3.2, 'Sevirrus', 'He said he loved me.', 85],
@@ -5852,8 +5862,8 @@ function drawStageMap(cv, units, t, opts = {}) {
   // T-shaped icons; leaders flash white, sub officers glow faintly
   units.forEach(u => {
     if (u.alive === false || u.anon || u.captain) return;
-    const x = mx(u.x), y = mz(u.z), s = u.leader ? 7 : 5;
-    const pulse = u.leader ? (Math.sin(t * 6) > 0 ? 1 : 0) : 0.35 + Math.sin(t * 3 + u.x) * 0.2;
+    const x = mx(u.x), y = mz(u.z), lead = u.leader || u.factionLead, s = lead ? 7 : 5;
+    const pulse = lead ? (Math.sin(t * 6) > 0 ? 1 : 0) : 0.35 + Math.sin(t * 3 + u.x) * 0.2;
     const col = SIDE[u.side].rgb;
     c.fillStyle = `rgba(${col},1)`; c.fillRect(x - s, y - s, s * 2, s * 0.6); c.fillRect(x - s * 0.3, y - s, s * 0.6, s * 2);
     if (pulse > 0) { c.fillStyle = `rgba(255,255,255,${u.leader ? 0.85 * pulse : pulse * 0.45})`; c.fillRect(x - s, y - s, s * 2, s * 0.6); c.fillRect(x - s * 0.3, y - s, s * 0.6, s * 2); }
@@ -5886,7 +5896,7 @@ const preEl = (() => {
 const loadEl = (() => { const d = document.createElement('div'); d.className = 'c4load'; d.id = 'c4Load'; d.hidden = true;
   d.innerHTML = '<div class="c4load-in"><div class="eyebrow">Chapter IV · Enough is Enough</div><h2 id="c4LoadT">The Plain of Kesh</h2><div class="c4load-bar"><i id="c4LoadBar"></i></div><p id="c4LoadTip"></p></div>';
   document.body.appendChild(d); return d; })();
-const C4_TIPS = ['Press M to see the whole battle: every officer, every fort, and how each army’s morale is holding.', 'While the gate captain of Sevirrus’s camp lives, new officers keep riding out to replace the ones you defeat.', 'Defeat a Gate Captain and his fort sends no more troops. They stand before the gates, marked ◆ on your map.', 'Break supply crates for space rocks. A space rock restores some health; a great space rock restores all of it.', 'Defeated officers drop a great space rock. Take it before Sevirrus finds you.', 'Arixal fells a soldier in three strikes. Sevirrus is another matter.', 'Your officers advance on their own. Help them, or they may fall back.', 'Strike to fill the gold bar, then press Q to unleash his Latent Powers.', 'Every soldier answers to an officer. Defeat the officer and his squad breaks.', 'Sevirrus will not leave his camp until you come for him, or until he tires of waiting.', 'Defeat a Base Captain to take his fort. Forts send fresh troops to whoever holds them.', 'Press 1 to 4 to order your officers: follow me, advance, hold, or fall back.', 'Every soldier and officer you cut down saps Sevirrus’s morale. A wavering army strikes weakly.'];
+const C4_TIPS = ['Sevirrus has a trick you do not: he can vanish from his camp, appear in the middle of the plain and storm yours. Guard it.', 'Each officer wears his rank in stars, up to eight. Every second officer he defeats raises it.', 'Take Sevirrus’s camp by defeating its Camp Commander, and it flies your colours.', 'Press M to see the whole battle: every officer, every fort, and how each army’s morale is holding.', 'While the gate captain of Sevirrus’s camp lives, new officers keep riding out to replace the ones you defeat.', 'Defeat a Gate Captain and his fort sends no more troops. They stand before the gates, marked ◆ on your map.', 'Break supply crates for space rocks. A space rock restores some health; a great space rock restores all of it.', 'Defeated officers drop a great space rock. Take it before Sevirrus finds you.', 'Arixal fells a soldier in three strikes. Sevirrus is another matter.', 'Your officers advance on their own. Help them, or they may fall back.', 'Strike to fill the gold bar, then press Q to unleash his Latent Powers.', 'Every soldier answers to an officer. Defeat the officer and his squad breaks.', 'Sevirrus will not leave his camp until you come for him, or until he tires of waiting.', 'Defeat a Base Captain to take his fort. Forts send fresh troops to whoever holds them.', 'Press 1 to 4 to order your officers: follow me, advance, hold, or fall back.', 'Every soldier and officer you cut down saps Sevirrus’s morale. A wavering army strikes weakly.'];
 function c4Loading(next) {
   loadEl.hidden = false; document.body.classList.add('c4screen');
   loadEl.querySelector('.eyebrow').textContent = STAGE.title; G('c4LoadT').textContent = STAGE.name;
@@ -6019,8 +6029,8 @@ function makeOfficerModel(u) {
 const c4Hud = (() => {
   const d = document.createElement('div'); d.className = 'c4hud'; d.id = 'c4Hud';
   d.innerHTML = `<canvas class="c4-mini" id="c4Mini" width="120" height="300" aria-label="Battle map"></canvas>
-    <div class="c4-me"><span class="nm">Arixal Chompjak</span><div class="c4-bar ally"><i id="c4Hp"></i></div><div class="c4-bar musou"><i id="c4Mu"></i></div><span class="ko"><b id="c4Ko">0</b> KO</span><div class="c4-mor" id="c4Mor"><span>Morale</span><div class="c4-mbar"><i id="c4MA"></i><i id="c4ME"></i><i id="c4MT"></i></div></div></div>
-    <div class="c4-target" id="c4Target" hidden><span class="lead" id="c4TLead"></span><b id="c4TName"></b><div class="c4-bar foe"><i id="c4THp"></i></div></div>
+    <div class="c4-me"><span class="nm">Arixal Chompjak <em class="st" id="c4MeSt"></em></span><div class="c4-bar ally"><i id="c4Hp"></i></div><div class="c4-bar musou"><i id="c4Mu"></i></div><span class="ko"><b id="c4Ko">0</b> KO</span><div class="c4-mor" id="c4Mor"><span>Morale</span><div class="c4-mbar"><i id="c4MA"></i><i id="c4ME"></i><i id="c4MT"></i></div></div></div>
+    <div class="c4-target" id="c4Target" hidden><span class="lead" id="c4TLead"></span><b id="c4TName"></b><em class="st" id="c4TSt"></em><div class="c4-bar foe"><i id="c4THp"></i></div></div>
     <div class="c4-feed" id="c4Feed" aria-live="polite"></div>
     <div class="c4-tags" id="c4Tags"></div>
     <div class="c4-big" id="c4Big"></div>
@@ -6130,7 +6140,7 @@ function renderMapView() {
   const m = game.morale;
   const row = (side, label) => `<div class="c4-mrow ${SIDE[side].tag}"><div class="nm"><span>${label}</span><em>${moraleWord(m[side])} · ${Math.round(m[side])}</em></div><div class="mbar"><i style="width:${m[side]}%"></i></div><small>Soldiers strike at ×${mf(side).toFixed(2)} strength</small></div>`;
   G('c4MvMorale').innerHTML = STAGE.sides.map(sd => row(sd, SIDE[sd].army)).join('');
-  const list = side => game.units.filter(u => u.side === side && !u.captain).map(u => `<div class="${u.alive ? '' : 'dead'}"><b>${u.name}</b><span>${u === game.me ? Math.round(B.hp) + ' HP' : u.alive ? live(u) + ' troops' : (side !== 'A' ? 'defeated' : 'retreated')}</span></div>`).join('');
+  const list = side => game.units.filter(u => u.side === side && !u.captain).map(u => `<div class="${u.alive ? '' : 'dead'}"><b>${u.name}${u.factionLead ? ' · leader' : ''} <em class="st">${starHtml(u.stars || 1)}</em></b><span>${u === game.me ? Math.round(B.hp) + ' HP' : u.alive ? live(u) + ' troops' : (side !== 'A' ? 'defeated' : 'retreated')}</span></div>`).join('');
   G('c4MvA').innerHTML = list('A'); G('c4MvE').innerHTML = list('E'); G('c4MvTWrap').hidden = !STAGE.sides.includes('T'); if (STAGE.sides.includes('T')) G('c4MvT').innerHTML = list('T');
   G('hMv').textContent = STAGE.name;
   mapView.querySelector('.c4-mv-legend').innerHTML = `<b style="color:#fff">▲</b> Arixal · ${STAGE.sides.map(sd => `<b style="color:#${SIDE[sd].hex.toString(16).padStart(6, '0')}">T</b>`).join('/')} officers · <b style="color:#f0c060">◆</b> gate captain · <b style="color:#9a9aa6">✕</b> sealed gate · <b style="color:#7dffb0">■</b> space rock`;
@@ -6165,7 +6175,7 @@ function morale(side, d) {
   const m = game.morale; m[side] = THREE.MathUtils.clamp(m[side] + d, 0, 100);
   updateMoraleBar();
   for (const sd of STAGE.sides) { if (sd === 'A') continue; const k = sd + 'Waver';
-    if (m[sd] < 20 && !game.heard.has(k)) { game.heard.add(k); feed(`${nameOf(sd, SIDE[sd].lead)}’s army is wavering!`, 'good'); }
+    if (m[sd] < 20 && !game.heard.has(k)) { game.heard.add(k); feed(`${nameOf(sd, leadOf(sd))}’s army is wavering!`, 'good'); }
     if (m[sd] > 35) game.heard.delete(k); }
   if (m.A < 20 && !game.heard.has('aWaver')) { game.heard.add('aWaver'); feed('<b class="a">Arixal Chompjak</b>’s army is losing heart!', 'bad'); }
   if (m.A > 35) game.heard.delete('aWaver');
@@ -6173,12 +6183,12 @@ function morale(side, d) {
 function updateMoraleBar() {
   const m = game.morale, sides = STAGE.sides, tot = sides.reduce((a, sd) => a + (m[sd] || 0), 0) || 1;
   G('c4MA').style.width = (m.A / tot * 100) + '%'; G('c4ME').style.width = (m.E / tot * 100) + '%'; G('c4MT').style.width = sides.includes('T') ? (m.T / tot * 100) + '%' : '0';
-  G('c4Mor').title = 'Morale: ' + sides.map(sd => `${SIDE[sd].lead} ${Math.round(m[sd])}`).join(' · ');
+  G('c4Mor').title = 'Morale: ' + sides.map(sd => `${leadOf(sd)} ${Math.round(m[sd])}`).join(' · ');
 }
 function feed(html, cls = '') { const el = document.createElement('div'); el.className = 'c4-msg ' + cls; el.innerHTML = html; G('c4Feed').prepend(el); setTimeout(() => el.classList.add('out'), 5200); setTimeout(() => el.remove(), 6200); while (G('c4Feed').children.length > 6) G('c4Feed').lastChild.remove(); }
 const tagEls = new Map();
 function tagFor(u) {
-  if (!tagEls.has(u.id)) { const e = document.createElement('div'); e.className = 'c4-tag ' + SIDE[u.side].tag; e.innerHTML = `<span>${u.name}</span><div class="c4-bar ${SIDE[u.side].tag}"><i></i></div>`; G('c4Tags').appendChild(e); tagEls.set(u.id, e); }
+  if (!tagEls.has(u.id)) { const e = document.createElement('div'); e.className = 'c4-tag ' + SIDE[u.side].tag; e.innerHTML = `<span>${u.name}</span>${u.captain ? '' : '<em class="st"></em>'}<div class="c4-bar ${SIDE[u.side].tag}"><i></i></div>`; G('c4Tags').appendChild(e); tagEls.set(u.id, e); }
   return tagEls.get(u.id);
 }
 
@@ -6194,12 +6204,17 @@ function startBattle(st) {
   const bases = STAGE.bases.map(b => ({ ...b, pos: new THREE.Vector3(b.x, 0, b.z) }));
   bases.forEach(b => setFlag(b));
   // each fort has a base captain and a garrison; take the fort by defeating him
-  bases.filter(b => !b.main).forEach(b => units.push({ id: 'cap_' + b.id, name: 'Base Captain', side: b.side, tpl: 'chompy', badge: 0xf0f0f0, captain: true, base: b, pos: b.pos.clone(), x: b.x, z: b.z, hp: 70, troops: 30, maxTroops: 30, alive: true, engaged: null, model: null }));
+  // the main camps too: a camp commander holds each one, and whoever defeats him takes the camp
+  bases.forEach(b => units.push({ id: 'cap_' + b.id, name: b.main ? 'Camp Commander' : 'Base Captain', side: b.side, tpl: 'chompy', badge: 0xf0f0f0, captain: true, base: b, pos: b.pos.clone(), x: b.x, z: b.z, hp: b.main ? 120 : 70, troops: b.main ? 40 : 30, maxTroops: b.main ? 40 : 30, alive: true, engaged: null, model: null }));
   // and a gate captain: while he lives, the base keeps sending troops out
   bases.forEach(b => { const gp = gatePost(b); units.push({ id: 'gate_' + b.id, name: 'Gate Captain', side: b.side, tpl: 'chompy', badge: 0xd0a040, captain: true, gate: true, base: b, post: new THREE.Vector3(gp.x, 0, gp.z), pos: new THREE.Vector3(gp.x, 0, gp.z), x: gp.x, z: gp.z, hp: 55, troops: 10, maxTroops: 10, alive: true, engaged: null, model: null }); });
-  units.forEach(u => { if (u.home) u.homePos = bases.find(b => b.id === u.home).pos.clone(); });
+  units.forEach(u => { if (u.home) u.homePos = bases.find(b => b.id === u.home).pos.clone(); u.stars = u.stars || (u.captain ? 1 : 3); u.stars0 = u.stars; u.kos = 0; });
   const a = rigClone(arixalTpl); a.mover.position.copy(me.pos); a.mover.rotation.y = Math.PI; scene.add(a.mover);
-  game = { phase: 'battle', ch: STAGE.ch, t: 0, mover: a.mover, j: a.j, gait: makeGait(a.mover), units, squads, bases, aOrder: 'advance', eOrder: 'hold', tOrder: 'hold', morale: Object.fromEntries(STAGE.sides.map(sd => [sd, 50])), adv: {}, fallT: {}, routed: {}, bt: true, stage: STAGE.id, me, troops: [], ko: 0, musou: 0, paused: false, done: false, heard: new Set(), simT: 0, spawnT: 0, foes: [] };
+  game = { phase: 'battle', ch: STAGE.ch, t: 0, mover: a.mover, j: a.j, gait: makeGait(a.mover), units, squads, bases, aOrder: 'advance', eOrder: 'hold', tOrder: 'hold', morale: Object.fromEntries(STAGE.sides.map(sd => [sd, 50])), adv: {}, fallT: {}, routed: {}, bt: true, stage: STAGE.id, me, troops: [], ko: 0, musou: 0, paused: false, done: false, heard: new Set(), simT: 0, spawnT: 0, foes: [],
+    // the hostile armies keep no timetable: when they hold, push, feint and when Sevirrus makes his move all change from battle to battle
+    leadName: {}, chiefOut: {}, sideKos: {}, feintT: { E: 30 + Math.random() * 40, T: 30 + Math.random() * 40 }, feintEnd: {},
+    waitFor: { E: 30 + Math.random() * 55, T: 45 + Math.random() * 55 }, advAt: { E: 100 + Math.random() * 100, T: 90 + Math.random() * 90 },
+    blitz: { state: 0, at: (STAGE.id === 'alphinos' ? 140 : 110) + Math.random() * 150 } };
   game.sword = giveDamixSword(a.j); game.sword.scale.setScalar(1.15); game.trail = makeTrail(0x5ad0ff);
   buildPickups();
   Object.values(fieldSet.gates).forEach(pc => { pc.userData.open = 1; pc.position.y = -pc.userData.H / 2 + 0.3; });
@@ -6217,7 +6232,7 @@ function startBattle(st) {
   document.body.classList.add('game', 'c4');
   G('c4Ko').textContent = '0'; G('c4Feed').innerHTML = ''; hud.exBtn.textContent = 'Strike'; hud.exBtn.disabled = false; G('c4Big').textContent = '';
   if (st && st.phase === 'battle') restoreBattle(st);
-  updateC4Hud(); updateMoraleBar(); document.querySelectorAll('.c4-orders button').forEach(b => b.classList.toggle('on', b.dataset.o === 'advance')); G('gHud').querySelector('.g-ch').textContent = STAGE.title; hud.obj.textContent = STAGE.objective; updateOfficerCount();
+  updateC4Hud(); updateMoraleBar(); updateMeStars(); document.querySelectorAll('.c4-orders button').forEach(b => b.classList.toggle('on', b.dataset.o === 'advance')); G('gHud').querySelector('.g-ch').textContent = STAGE.title; hud.obj.textContent = STAGE.objective; updateOfficerCount();
   setTimeout(() => game && game.bt && feed(game.restored ? `<b class="a">Arixal Chompjak</b> returns to the battle of ${STAGE.place}.` : STAGE.startMsg, 'big'), 400);
   M.song && M.song.play(STAGE.song);
   return true;
@@ -6282,8 +6297,8 @@ STAGES.alphinos = { id: 'alphinos', ch: 5, title: 'Chapter V · The Siege of Alp
   pre: [{ cls: 'ally', h: 'Allies', rows: [['Leader', 'Arixal Chompjak', 2], ['Officers', 'Zamik Chompjak · Marshal Haplok · Xanok · Danix · Tritujak'], ['Leader', 'Hanaxa Chompjak', 2], ['Sub officer', 'Aniz Chompjak']], note: 'Officers advance on their own. Aniz stays at Hanaxa’s side.' },
         { cls: 'foe', h: 'Enemies', rows: [['Leader', 'Sevirrus', 7], ['Officers', 'Zarkam · Almak · Tamix · Kraxis · Vorlag · Darkmar']] },
         { cls: 'third', h: 'Third party · hostile to both', rows: [['Leader', 'Jazmak Chompjak', 8], ['Officers', 'Tajak Chompjak · Jamak · Qajak · Gakal · Inonzak · Gakam · Talmis']], note: 'Father of Arixal and the late Damix. He wants Sevirrus’s head for his own, and will cut through his son to get it.' }],
-  gateNote: 'No new officers come here, but a fallen officer returns from his main camp while its gate captain lives.',
-  tips: ['Jazmak Chompjak answers to no one, not even his own son. His yellow army will fight Sevirrus and you alike.', 'Defeat a leader and his whole army breaks. Victory needs both Jazmak and Sevirrus.', 'Fallen officers return from their main camp. Kill its gate captain and they stay down.', 'Let Sevirrus and Jazmak bleed each other. Strike whichever is weaker.', 'Press M to see every army’s morale, officers and forts.', 'Press 1 to 4 to order your officers: follow me, advance, hold, or fall back.', 'Break supply crates for space rocks. A great space rock restores all your health.'],
+  gateNote: 'No new officers come here, but a fallen officer returns from his main camp while its gate captain lives. Defeat a camp’s commander to take the camp. Stars show each officer’s rank: defeat officers to earn more, up to eight.',
+  tips: ['Jazmak Chompjak answers to no one, not even his own son. His yellow army will fight Sevirrus and you alike.', 'Defeat a commander and his army fights on under a new faction leader. Victory needs both Jazmak and Sevirrus.', 'Sevirrus can vanish from the keep and storm your camp. When he leaves, Jazmak goes for Alphinos itself.', 'Fallen officers return from their main camp. Kill its gate captain and they stay down.', 'Let Sevirrus and Jazmak bleed each other. Strike whichever is weaker.', 'Press M to see every army’s morale, officers and forts.', 'Press 1 to 4 to order your officers: follow me, advance, hold, or fall back.', 'Break supply crates for space rocks. A great space rock restores all your health.'],
   env() {
     scene.fog.color.set(0x150c26); scene.fog.density = 0.011; camera.far = 220; camera.fov = 55; camera.updateProjectionMatrix();
     hemi.color.set(0x8a7ac0); hemi.groundColor.set(0x1a1030); key.angle = Math.PI / 4; key.distance = 40; key.decay = 1.0;
@@ -6379,7 +6394,8 @@ function battleState() {
   return { v: 1, t: Date.now(), chapter: STAGE.ch, stage: STAGE.id, phase: 'battle', complete: false, time: r2(game.t), ko: game.ko, musou: Math.round(game.musou), hp: Math.round(B.hp),
     pos: [r2(p.x), r2(p.z)], yaw: r2(game.mover.rotation.y), morale: Object.fromEntries(Object.entries(game.morale).map(([k, v]) => [k, r2(v)])), tOrder: game.tOrder, adv: game.adv, fallT: game.fallT, routed: game.routed,
     aOrder: game.aOrder, eOrder: game.eOrder, sevAdvance: !!game.adv.E, heard: [...game.heard],
-    units: game.units.filter(u => u !== game.me).map(u => ({ id: u.id, downAt: u.downAt, x: r2(u.pos.x), z: r2(u.pos.z), hp: r2(u.hp), troops: Math.round(u.troops + game.troops.filter(t => t.officer === u && t.state !== 'dead' && t.state !== 'flee').length), alive: u.alive, side: u.side })),
+    leadName: game.leadName, chiefOut: game.chiefOut, sideKos: game.sideKos, waitFor: game.waitFor, advAt: game.advAt, blitz: game.blitz, jazRaid: !!game.jazRaid, meStars: game.me.stars, meKos: game.me.kos,
+    units: game.units.filter(u => u !== game.me).map(u => ({ id: u.id, downAt: u.downAt, x: r2(u.pos.x), z: r2(u.pos.z), hp: r2(u.hp), troops: Math.round(u.troops + game.troops.filter(t => t.officer === u && t.state !== 'dead' && t.state !== 'flee').length), alive: u.alive, side: u.side, stars: u.stars, kos: u.kos || 0, fl: !!u.factionLead })),
     bases: Object.fromEntries(game.bases.map(b => [b.id, b.side])),
     squads: game.squads.map(q => Math.round(q.troops + game.troops.filter(t => t.officer === q && t.state !== 'dead' && t.state !== 'flee').length)),
     spawned: game.units.filter(u => u.spawned).map(u => ({ id: u.id, name: u.name, badge: u.badge, side: u.side })), rfN: game.rfN || 0, rfT: game.rfT || null,
@@ -6392,10 +6408,12 @@ function restoreBattle(st) {
   STAGE.sides.forEach(sd => { if (st.morale && st.morale[sd] !== undefined) game.morale[sd] = st.morale[sd]; }); game.aOrder = st.aOrder || 'advance'; game.eOrder = st.eOrder || 'hold'; game.tOrder = st.tOrder || 'hold';
   game.adv = { ...(st.adv || {}) }; if (st.sevAdvance) game.adv.E = true; game.fallT = { ...(st.fallT || {}) }; if (st.eFallT) game.fallT.E = st.eFallT; game.routed = { ...(st.routed || {}) }; (st.heard || []).forEach(h => game.heard.add(h));
   game.bases.forEach(b => { if (st.bases && st.bases[b.id]) { b.side = st.bases[b.id]; setFlag(b); } });
+  ['leadName', 'chiefOut', 'sideKos', 'waitFor', 'advAt', 'blitz'].forEach(k => { if (st[k]) game[k] = { ...game[k], ...st[k] }; });
+  game.jazRaid = !!st.jazRaid; if (st.meStars) game.me.stars = st.meStars; game.me.kos = st.meKos || 0;
   (st.spawned || []).forEach(sp => spawnOfficer(sp.side, sp)); game.rfN = st.rfN || game.rfN || 0; if (st.rfT) game.rfT = { ...st.rfT };
   (st.units || []).forEach(s2 => {
     const u = game.units.find(o => o.id === s2.id); if (!u) return;
-    u.pos.set(s2.x, 0, s2.z); u.hp = s2.hp; u.troops = s2.troops; u.alive = s2.alive; u.side = s2.side;
+    u.pos.set(s2.x, 0, s2.z); u.hp = s2.hp; u.troops = s2.troops; u.alive = s2.alive; u.side = s2.side; if (s2.stars) u.stars = s2.stars; u.kos = s2.kos || 0; u.factionLead = !!s2.fl;
     if (u.id === 'sevirrus') rig.position.set(s2.x, 0, s2.z);
     if (s2.downAt !== undefined) u.downAt = s2.downAt;
   });
@@ -6404,8 +6422,8 @@ function restoreBattle(st) {
   (st.items || []).forEach(([x, z, k]) => dropItem(V(x, 0, z), k, true));
   game.units.forEach(u => { if (u.gate) { if (u.pos.distanceTo(u.post) > 1) u.pos.copy(u.post); setGate(u.base, u.alive && u.side === u.base.side, true); } });
   document.querySelectorAll('.c4-orders button').forEach(b => b.classList.toggle('on', b.dataset.o === game.aOrder));
-  if (game.routed.E) rig.visible = false;
-  updateMoraleBar(); updateOfficerCount();
+  if (game.routed.E || game.chiefOut.E) rig.visible = false;
+  updateMoraleBar(); updateOfficerCount(); updateMeStars();
   game.restored = true;
 }
 function updateC4Hud() {
@@ -6424,14 +6442,14 @@ function setFactionOrder(side, o) {
   if (side === 'E') { setEnemyOrder(o); return; }
   game.tOrder = o;
   const t = { advance: 'orders his officers to advance!', hold: 'orders his officers to hold their forts!', fallback: 'calls his officers back to his camp!' }[o];
-  feed(`${nameOf(side, SIDE[side].lead)} ${t}`, 'bad');
+  feed(`${nameOf(side, leadOf(side))} ${t}`, 'bad');
 }
 const orderOf = side => side === 'A' ? game.aOrder : side === 'E' ? game.eOrder : game.tOrder;
-const campOf = side => game.bases.find(b => b.main && b.side === side) || game.bases.find(b => b.main && b.id === (side === 'A' ? 'campA' : 'campE'));
+const campOf = side => game.bases.find(b => b.main && b.side === side && b.id === HOME_CAMP[side]) || game.bases.find(b => b.main && b.side === side) || game.bases.find(b => b.main && b.id === HOME_CAMP[side]);
 function setEnemyOrder(o) {
   game.eOrder = o;
   const t = { advance: 'orders his officers to advance!', hold: 'orders his officers to hold their forts!', fallback: 'calls his officers back to his camp!' }[o];
-  feed(`<b class="e">Sevirrus</b> ${t}`, 'bad');
+  feed(`${nameOf('E', leadOf('E'))} ${t}`, 'bad');
 }
 const nearestOf = (list, pos) => list.reduce((b, f) => (!b || f.pos.distanceTo(pos) < b.pos.distanceTo(pos) ? f : b), null);
 function simulate(dt) {
@@ -6439,14 +6457,24 @@ function simulate(dt) {
   // each hostile army's orders: hold the forts, then advance; pull back when its leader is hurt; later the leader takes the field himself
   for (const sd of STAGE.sides) {
     if (sd === 'A' || game.routed[sd]) continue;
-    const L = U.find(u => u.chief && u.side === sd); if (!L) continue;
-    const ord = orderOf(sd), wait = sd === 'E' ? 55 : 70;
-    if (ord === 'hold' && game.t > wait) setFactionOrder(sd, 'advance');
+    const L = U.find(u => u.chief && u.side === sd && u.alive) || U.find(u => u.factionLead && u.side === sd && u.alive); if (!L) continue;
+    const ord = orderOf(sd), wait = (game.waitFor && game.waitFor[sd]) || (sd === 'E' ? 55 : 70), feinting = (game.feintEnd[sd] || 0) > game.t;
+    if (ord === 'hold' && game.t > wait && !feinting) setFactionOrder(sd, 'advance');
+    // feints and surges: now and then an army stops dead, falls back for a moment, or throws everything forward
+    game.feintT[sd] = (game.feintT[sd] || 40) - dt;
+    if (game.feintT[sd] <= 0 && game.t > wait) {
+      game.feintT[sd] = 25 + Math.random() * 45; const r = Math.random();
+      if (r < 0.28 && orderOf(sd) === 'advance') { game.feintEnd[sd] = game.t + 10 + Math.random() * 14; setFactionOrder(sd, 'hold'); }
+      else if (r < 0.42 && orderOf(sd) === 'advance' && L.hp >= 35) { game.feintEnd[sd] = game.t + 6 + Math.random() * 8; setFactionOrder(sd, 'fallback'); game.fallT[sd] = game.t - 30; }
+      else if (r < 0.7) { U.forEach(u => { if (u.side === sd && !u.captain) u.aimT = 0; }); morale(sd, 4); feed(`${nameOf(sd, leadOf(sd))}’s officers change their targets!`, 'bad'); }
+    }
+    if (orderOf(sd) === 'fallback' && game.feintEnd[sd] && game.feintEnd[sd] < game.t && L.hp >= 35) { game.feintEnd[sd] = 0; setFactionOrder(sd, 'advance'); }
     if (orderOf(sd) !== 'fallback' && L.hp < 35) setFactionOrder(sd, 'fallback');
     if (orderOf(sd) === 'fallback' && L.hp >= 35 && game.t - (game.fallT[sd] || 0) > 40) setFactionOrder(sd, 'advance');
     if (orderOf(sd) === 'fallback' && !game.fallT[sd]) game.fallT[sd] = game.t;
-    if (!game.adv[sd] && (game.t > (sd === 'E' ? 150 : 120) || fieldOfficers(sd).length === 0)) { game.adv[sd] = true; feed(`${nameOf(sd, SIDE[sd].lead)} advances!`, 'big'); }
+    if (!game.adv[sd] && L.chief && (game.t > ((game.advAt && game.advAt[sd]) || (sd === 'E' ? 150 : 120)) || fieldOfficers(sd).length === 0)) { game.adv[sd] = true; feed(`${nameOf(sd, leadOf(sd))} advances!`, 'big'); }
   }
+  blitzTick();
   U.forEach(u => {
     if (!u.alive || u === me) return;
     const hostile = U.filter(o => o.side !== u.side && o.alive);
@@ -6460,20 +6488,28 @@ function simulate(dt) {
     else if (order === 'fallback') dest = campOf(u.side).pos;
     else if (order === 'hold') dest = u.side !== 'A' ? (u.homePos || (u.chief ? campOf(u.side).pos : null)) : u.holdAt || null;
     else {
-      const forts = game.bases.filter(b => !b.main && b.side !== u.side);
-      const fort = nearestOf(forts, u.pos), foeOff = nearestOf(hostile.filter(o => !o.captain && (u.side === 'A' ? true : true)), u.pos);
-      dest = fort && (!foeOff || fort.pos.distanceTo(u.pos) < foeOff.pos.distanceTo(u.pos) + 60) ? fort.pos : foeOff ? foeOff.pos : null;
+      // each officer picks his own aim among the nearest few forts and enemy officers, and keeps it a while; he comes in from the flank
+      const bad = a => !a || (a.alive === false) || (game.bases.includes(a) && a.side === u.side);
+      if (bad(u.aim) || !(game.t < (u.aimT || 0))) {
+        const cands = [...game.bases.filter(b => !b.main && b.side !== u.side).map(b => ({ o: b, d: b.pos.distanceTo(u.pos) })),
+                       ...hostile.filter(o => !o.captain).map(o => ({ o, d: o.pos.distanceTo(u.pos) + 60 }))].sort((a, b) => a.d - b.d).slice(0, 3);
+        const r = Math.random(), k = r < 0.55 ? 0 : r < 0.85 ? 1 : 2;
+        u.aim = cands.length ? cands[Math.min(k, cands.length - 1)].o : null; u.aimT = game.t + 14 + Math.random() * 22; u.flank = (Math.random() - 0.5) * 70;
+      }
+      if (u.aim) { u.destV = u.destV || new THREE.Vector3(); const far = u.aim.pos.distanceTo(u.pos) > 70 ? 1 : 0; dest = u.destV.set(THREE.MathUtils.clamp(u.aim.pos.x + u.flank * far, -K4.W + 6, K4.W - 6), 0, u.aim.pos.z); }
     }
+    // Jazmak, once Sevirrus has left the keep: he goes for Alphinos itself, and stays to hold it
+    if (u.chief && u.side === 'T' && game.jazRaid) { const keep = game.bases.find(b => b.id === 'campE'); if (keep) { dest = keep.pos; if (keep.side !== 'T' && u.pos.distanceTo(keep.pos) < 18) raidCapture(u, keep); } }
     // a sub officer stays with the leader he serves
     if (u.follows && order !== 'fallback' && order !== 'follow') { const L = U.find(o => o.id === u.follows && o.alive); if (L) dest = L.pos.distanceTo(u.pos) > 9 ? L.pos : null; }
-    if (u.engaged && order !== 'fallback') dest = u.engaged.pos;
+    if (u.engaged && order !== 'fallback' && !(u.chief && u.side === 'T' && game.jazRaid && !u.engaged.chief && u.engaged !== me)) dest = u.engaged.pos;
     u.dest = dest;
     // units out of his sight move on the map; the ones near him are walked by their bodies
-    if (!u.model && dest) { const dd = tmpA.subVectors(dest, u.pos).setY(0).length(); if (dd > 4) { tmpA.normalize(); u.pos.addScaledVector(tmpA, (u.leader ? 1.8 : 2.4) * dt); } }
+    if (!u.model && dest) { const dd = tmpA.subVectors(dest, u.pos).setY(0).length(); if (dd > 4) { tmpA.normalize(); u.pos.addScaledVector(tmpA, (u.chief && u.side === 'T' && game.jazRaid ? 7 : u.leader ? 1.8 : 2.4) * dt); } }
     // squads grinding against each other, officer against officer once a squad is spent
     const e = u.engaged;
     if (e && e !== me && e.alive && u.pos.distanceTo(me.pos) > 60) {
-      e.troops = Math.max(0, e.troops - dt * (0.6 + Math.random() * 0.5) * (u.troops > 0 ? 1 : 0.3) * mf(u.side) / mf(e.side));
+      e.troops = Math.max(0, e.troops - dt * (0.6 + Math.random() * 0.5) * (u.troops > 0 ? 1 : 0.3) * mf(u.side) / mf(e.side) * starGain(u) / starGain(e));
       if (e.troops <= 0) { e.hp -= dt * (u.troops > 0 ? 1.1 : 0.6) * (e.captain ? 1.6 : 1); if (e.leader) e.hp = Math.max(e.hp, 30); if (e.hp <= 0) officerDown(e, u); }
     }
   });
@@ -6496,8 +6532,8 @@ function officerReturns(dt) {
     if (game.routed[sd]) continue;
     const camp = campOf(sd), g = camp && gateOf(camp);
     game.rfT[sd] = Math.max(0, (game.rfT[sd] || 0) - dt);
-    if (!g || !g.alive || g.side !== camp.side || game.rfT[sd] > 0) continue;
-    const u = game.units.find(o => o.side === sd && !o.alive && !o.captain && !o.leader && o.downAt !== undefined && game.t - o.downAt > 40);
+    if (!camp || camp.side !== sd || !g || !g.alive || g.side !== camp.side || game.rfT[sd] > 0) continue;
+    const u = game.units.find(o => o.side === sd && !o.alive && !o.captain && !o.chief && !(o.leader && o.side === 'A') && o.downAt !== undefined && game.t - o.downAt > 40);
     if (!u) continue;
     game.rfT[sd] = 12;
     if (u.model) { scene.remove(u.model.mover); u.model = null; }
@@ -6519,16 +6555,16 @@ function updateOfficerCount() {
   hud.count.textContent = left ? `${left} enemy officer${left > 1 ? 's' : ''} remain${left > 1 ? '' : 's'}` : 'Only Sevirrus remains';
 }
 function spawnOfficer(side, spec) {
-  const camp = game.bases.find(b => b.main && b.side === side), gp = gatePost(camp);
+  const camp = game.bases.find(b => b.main && b.side === side) || game.bases.find(b => b.main && b.id === HOME_CAMP[side]) || game.bases.find(b => b.main), gp = gatePost(camp);
   game.rfN = (game.rfN || 0) + 1;
   const used = new Set(game.units.map(u => u.name)), pool = OFFICER_POOL[side];
   const pick = spec ? [spec.name, spec.badge] : (pool.find(([n]) => !used.has(n)) || [pool[game.rfN % pool.length][0] + ' ' + ['II', 'III', 'IV', 'V'][(game.rfN / pool.length | 0) % 4], pool[game.rfN % pool.length][1]]);
   const pos = new THREE.Vector3(gp.x + (Math.random() - 0.5) * 8, 0, gp.z);
-  const u = { id: spec ? spec.id : 'rf_' + side + game.rfN, name: pick[0], side, tpl: 'chompy', badge: pick[1], spawned: true, pos, x: pos.x, z: pos.z, troops: 60, maxTroops: 60, hp: 100, alive: true, engaged: null, model: null, homePos: pos.clone() };
+  const u = { id: spec ? spec.id : 'rf_' + side + game.rfN, name: pick[0], side, tpl: 'chompy', badge: pick[1], spawned: true, pos, x: pos.x, z: pos.z, troops: 60, maxTroops: 60, hp: 100, alive: true, engaged: null, model: null, homePos: pos.clone(), stars: 2, stars0: 2, kos: 0 };
   if (side === 'A') u.holdAt = pos.clone();
   game.units.push(u);
   if (!spec) {
-    feed(side === 'E' ? `A new officer, <b class="e">${u.name}</b>, rides out of <b class="e">Sevirrus</b>’s camp!` : `<b class="a">${u.name}</b> rides out of our camp to join the battle!`, side === 'E' ? 'bad' : 'good');
+    feed(side === 'E' ? `A new officer, <b class="e">${u.name}</b>, rides out of the ${camp.name}!` : `<b class="a">${u.name}</b> rides out of our camp to join the battle!`, side === 'E' ? 'bad' : 'good');
     updateOfficerCount();
   }
   return u;
@@ -6538,7 +6574,7 @@ function officerReinforcements(dt) {
   game.rfT = game.rfT || { A: 0, E: 0 };
   ['A', 'E'].forEach(side => {
     const camp = game.bases.find(b => b.main && b.side === side), g = camp && gateOf(camp);
-    if (!g || !g.alive) { game.rfT[side] = 0; return; }
+    if (!g || !g.alive || g.side !== side) { game.rfT[side] = 0; return; }
     if (fieldOfficers(side).length >= OFFICERS_WANTED) { game.rfT[side] = 0; return; }
     game.rfT[side] += dt;
     if (game.rfT[side] >= OFFICER_EVERY) { game.rfT[side] = 0; spawnOfficer(side); }
@@ -6566,7 +6602,7 @@ function gateDown(u, by) {
   u.alive = false; u.hp = 0;
   const b = u.base, foe = u.side !== 'A', ks = killerSide(by);
   setGate(b, false);
-  const gc = nameOf(u.side, 'Gate Captain'), lead = SIDE[u.side].lead;
+  const gc = nameOf(u.side, 'Gate Captain'), lead = leadOf(u.side);
   if (b.main) feed(foe ? `The ${gc} of ${b.name} has fallen! ${STAGE.newOfficers ? `No more officers or troops will come from ${lead}’s camp.` : `No more troops will come from ${lead}’s camp, and his fallen officers cannot return.`}`
                        : `The ${gc} of the ${b.name} has fallen! ${STAGE.newOfficers ? 'No more officers or troops will come from our camp.' : 'No more troops will come from our camp, and our fallen officers cannot return.'}`, foe ? 'good' : 'bad');
   else feed(foe ? `The ${gc} of the ${b.name} has fallen! Its gates are sealed. No more reinforcements.`
@@ -6583,7 +6619,9 @@ function captureBase(u, by) {
   b.side = side;
   morale(side, 6); morale(old, -8);
   setFlag(b);
-  feed(side === 'A' ? `<b class="a">Arixal Chompjak</b> has captured the ${b.name}!` : `${nameOf(side, SIDE[side].lead)}’s army has seized the ${b.name}!`, side === 'A' ? 'good' : 'bad');
+  const nm = b.main && /’s /.test(b.name) ? b.name : 'the ' + b.name;
+  feed(side === 'A' ? `<b class="a">Arixal Chompjak</b> has captured ${nm}!` : `${nameOf(side, leadOf(side))}’s army has seized ${nm}!`, side === 'A' ? 'good' : 'bad');
+  if (b.main) { morale(side, 10); morale(old, -12); if (b.id === 'campA' && side !== 'A') feed('Our main camp has fallen! No more officers will ride out for us until we take it back.', 'bad'); if (side === 'A' && b.id !== 'campA') feed(`${b.name} flies our colours now!`, 'good'); }
   game.troops.filter(tr => tr.officer === u && tr.state !== 'dead').forEach(tr => { tr.state = 'flee'; tr.t = 0; });
   if (u.model) { scene.remove(u.model.mover); u.model = null; }
   const t = tagEls.get(u.id); if (t) { t.remove(); tagEls.delete(u.id); }
@@ -6601,11 +6639,19 @@ function captureBase(u, by) {
 // a leader falls. At Kesh that is the battle; at Alphinos his whole army breaks, and the battle is won when both have
 function chiefDown(u, by) {
   if (STAGE.sides.length === 2) { u.alive = false; u.hp = 0; battleWon(); return; }
-  const sd = u.side; game.routed[sd] = true;
-  feed(sd === 'E' ? '<b class="e">Sevirrus</b> has been driven back into the keep! His army is routed!' : `${nameOf(sd, SIDE[sd].lead)} has fallen! His army breaks and scatters!`, 'big');
-  routSide(sd);
-  morale('A', 15);
-  if (STAGE.sides.every(s => s === 'A' || game.routed[s])) battleWon();
+  // his army does not break: an officer takes over as faction leader, and the fallen keep riding back out of their main camps
+  const sd = u.side, ks = killerSide(by); game.chiefOut[sd] = true;
+  u.alive = false; u.hp = 0; u.downAt = game.t;
+  if (u.model && !u.model.sev) u.model.dead = 0.001;
+  const t = tagEls.get(u.id); if (t) t.hidden = true;
+  if (sd === 'E') { rig.visible = false; if (u.model) u.model.atk = null; u.dest = null; }
+  game.troops.filter(tr => tr.officer === u && tr.state !== 'dead').forEach(tr => { tr.state = 'flee'; tr.t = 0; });
+  const nl = newFactionLead(sd);
+  feed((sd === 'E' ? '<b class="e">Sevirrus</b> has been driven back into the keep! ' : `${nameOf(sd, SIDE[sd].lead)} has fallen! `) + (nl ? `${nameOf(sd, nl.name)} takes command of his army, and they fight on!` : 'His army fights on without a leader!'), 'big');
+  morale(sd, -20); if (ks && ks !== sd) morale(ks, 12); else morale('A', 12);
+  creditKill(by, u);
+  updateOfficerCount();
+  if (STAGE.sides.every(s => s === 'A' || game.routed[s] || game.chiefOut[s])) battleWon();
 }
 function routSide(sd) {
   game.units.forEach(o => {
@@ -6621,6 +6667,54 @@ function routSide(sd) {
   if (sd === 'E') { rig.visible = false; const su = game.units.find(o => o.model && o.model.sev); if (su) { su.model.atk = null; su.dest = null; } }
   game.morale[sd] = 0; updateMoraleBar(); updateOfficerCount();
 }
+function newFactionLead(sd) {
+  const c = game.units.filter(o => o.side === sd && o.alive && !o.captain && !o.chief).sort((a, b) => (b.stars || 1) - (a.stars || 1) || b.hp - a.hp)[0];
+  game.units.forEach(o => { if (o.side === sd) o.factionLead = false; });
+  if (!c) { game.leadName[sd] = null; return null; }
+  c.factionLead = true; game.leadName[sd] = c.name; return c;
+}
+// a defeated officer raises his victor's rank: every second officer he defeats, one star, up to eight; every third his army defeats, its leader gains one too
+function creditKill(by, v) {
+  if (!v || v.captain) return;
+  const k = by === game.me ? game.me : by && by.alive !== undefined && by.pos ? by : by && by.officer && by.officer.alive !== undefined && by.officer.pos ? by.officer : null;
+  const ks = killerSide(by); if (!ks || ks === v.side) return;
+  const up = (o, why) => { if (!o || (o.stars || 1) >= STAR_MAX) return; o.stars = (o.stars || 1) + 1; feed(`${nameOf(o.side, o.name)} ${why} <span class="st-up">${'★'.repeat(o.stars)}</span>`, o.side === 'A' ? 'good' : 'bad'); if (o === game.me) updateMeStars(); };
+  if (k && !k.captain && !k.anon) { k.kos = (k.kos || 0) + 1; if (k.kos % 2 === 0) up(k, 'rises in rank!'); }
+  game.sideKos[ks] = (game.sideKos[ks] || 0) + 1;
+  if (game.sideKos[ks] % 3 === 0) { const L = ks === 'A' ? game.me : game.units.find(o => o.side === ks && o.alive && (o.chief || o.factionLead)); if (L && L !== k) up(L, 'gains renown as his army cuts down the enemy!'); }
+}
+function updateMeStars() { const el = G('c4MeSt'); if (el && game && game.me) el.innerHTML = starHtml(game.me.stars || 1); }
+// capture a camp by riding into it: its commander and gate captain fall to the raider
+function raidCapture(u, b) {
+  const cap = game.units.find(o => o.captain && !o.gate && o.base === b), g = gateOf(b);
+  if (g && g.alive && g.side !== u.side) { g.alive = false; if (g.model) g.model.dead = 0.001; }
+  if (cap) captureBase(cap, u); else { b.side = u.side; setFlag(b); }
+}
+// Sevirrus's own command, which Arixal has no answer to in kind: he vanishes from his camp, appears in the middle of the plain, and storms the Allied Camp
+function blitzTick() {
+  const S = game.blitz; if (!S) return;
+  const su = game.units.find(u => u.id === 'sevirrus'), campA = game.bases.find(b => b.id === 'campA');
+  if (!su || !su.alive || !campA || game.chiefOut.E || game.routed.E) return;
+  if (S.state === 0) {
+    if (game.t > S.at && campA.side === 'A' && game.mover.position.distanceTo(su.pos) > 35) startBlitz(su);
+  } else if (S.state === 1) {
+    if (campA.side !== 'A') S.state = 2;
+    else if (su.pos.distanceTo(campA.pos) < 16) { raidCapture(su, campA); S.state = 2; feed('<b class="e">Sevirrus</b> holds the Allied Camp! Drive him out!', 'big'); }
+  } else if (S.state === 2 && campA.side === 'A' && Math.random() < 0.02) { S.state = 1; feed('<b class="e">Sevirrus</b> turns back for the Allied Camp!', 'bad'); }
+}
+function startBlitz(su) {
+  const S = game.blitz; S.state = 1;
+  rig.getWorldPosition(tmpA); tmpA.y = 1.2; sparks(tmpA.clone(), 80, 6); shards(tmpA.clone(), 30);
+  const x = (Math.random() - 0.5) * 120; rig.position.set(x, 0, -20 + Math.random() * 60); su.pos.copy(rig.position);
+  tmpA.copy(rig.position); tmpA.y = 1.2; sparks(tmpA.clone(), 80, 6); shards(tmpA.clone(), 30);
+  feed('<b class="e">Sevirrus</b> vanishes from his camp in a burst of red light…', 'big');
+  setTimeout(() => game && game.bt && !game.over && feed('…and appears in the middle of the plain! He is racing for our main camp!', 'big'), 900);
+  morale('A', -5); morale('E', 6);
+  if (STAGE.id === 'alphinos') {
+    const jz = game.units.find(u => u.id === 'jazmak');
+    if (jz && jz.alive) { game.jazRaid = true; setTimeout(() => game && game.bt && !game.over && feed('With <b class="e">Sevirrus</b> gone from the keep, <b class="t">Jazmak Chompjak</b> marches on Alphinos!', 'big'), 2600); }
+  }
+}
 function officerDown(u, by) {
   if (!u.alive) return;
   if (u.gate) { gateDown(u, by); return; }
@@ -6631,6 +6725,9 @@ function officerDown(u, by) {
   u.downAt = game.t;
   updateOfficerCount();
   if (u === game.me) return;
+  creditKill(by, u);
+  u.stars = Math.max(1, (u.stars || 1) - 1);
+  if (u.factionLead) { u.factionLead = false; const nl = newFactionLead(u.side); feed(nl ? `${nameOf(u.side, nl.name)} now leads ${SIDE[u.side].army}!` : `${SIDE[u.side].army} has no one left to lead it!`, 'big'); }
   const who = nameOf(u.side, u.name), ks = killerSide(by);
   feed(u.side !== 'A' ? `${who} has been defeated!` : `${who} has retreated!`, u.side !== 'A' ? 'good' : 'bad');
   morale(u.side, u.side === 'A' ? -10 : -14); if (ks && ks !== u.side) morale(ks, u.side === 'A' ? 8 : 10); else if (u.side !== 'A') morale('A', 10);
@@ -6752,7 +6849,7 @@ function c4Swing(range = 3.0, cone = 0.0, dmg = 1) {
     if (d > range + 0.4 || (dx * fx + dz * fz) / Math.max(d, 1e-3) < cone) return;
     if (u.id === 'sevirrus' && !game.musouT && (game.sevBlock || 0) <= 0 && Math.random() < 0.35 * mf('E') && !(u.model.atk)) { game.sevBlock = 0.4; sev.j.wristR.getWorldPosition(tmpA); sparks(tmpA, 40, 3); feed('<b class="e">Sevirrus</b> blocks.', ''); return; }
     if (u.chief && u.tpl === 'jazmak' && !game.musouT && (game.jzBlock || 0) <= 0 && Math.random() < 0.3 * mf('T') && !(u.model.atk)) { game.jzBlock = 0.4; u.model.j.wristR.getWorldPosition(tmpA); sparks(tmpA, 40, 3); feed('<b class="t">Jazmak Chompjak</b> blocks.', ''); return; }
-    u.hp -= (u.leader ? 0.9 : 2.6) * dmg; hitAny = true; game.lastTarget = u;
+    u.hp -= (u.leader ? 0.9 : 2.6) * dmg * starGain(game.me) / starGain(u); hitAny = true; game.lastTarget = u;
     u.model.j.spine.getWorldPosition(tmpA); spray(tmpA, tmpB.set(dx / d, 0.4, dz / d).normalize(), 30, 2.2, 0.9); u.stag = 0.12;
     if (u.hp <= 0) officerDown(u, game.me);
   });
@@ -6893,21 +6990,38 @@ function officerUpdate(u, dt, time) {
   if (m.sev && (!u.alive || game.routed.E)) { m.atk = null; return; }
   if (m.sev) {
     // Sevirrus: in his camp until Arixal comes or he takes the field; then he hunts
-    const d = op.distanceTo(p);
-    if (d < 45) {
+    const d = op.distanceTo(p), bz = game.blitz && game.blitz.state, campA = bz ? game.bases.find(b => b.id === 'campA') : null;
+    // on his raid he only turns on Arixal if Arixal stands right in his way; holding the camp, he defends it
+    const huntR = bz === 1 ? 12 : bz === 2 && campA && p.distanceTo(campA.pos) > 90 ? 0 : 45;
+    if (bz && campA && d >= huntR) {
+      const to = tmpA.subVectors(campA.pos, op).setY(0), dl = to.length();
+      if (dl > 6) { to.normalize(); op.addScaledVector(to, (bz === 1 ? 13 : 3) * dt); rig.rotation.y = Math.atan2(to.x, to.z); applyPose(sev.j, addPose(mixPose('menace', 'idleBlade', 0.35), stepGait(sev.gait, dt))); }
+      else applyPose(sev.j, addPose(POSES.menace, { head: [0, Math.sin(time * 0.4) * 0.3, 0] }));
+      if (bz === 1 && Math.random() < dt * 3) { tmpB.copy(op); tmpB.y = 0.4; sparks(tmpB.clone(), 6, 2); }
+      u.pos.copy(op); setBlade(true, 1); trailSev(); return;
+    }
+    if (d < huntR) {
       const dx = p.x - op.x, dz = p.z - op.z, dd = Math.hypot(dx, dz) || 1; rig.rotation.y = Math.atan2(dx, dz);
       m.cd = (m.cd === undefined ? 1 : m.cd) - dt;
+      if (m.strafe && !m.atk) {
+        // he circles, so you never know which side the blade comes from
+        m.strafe.t -= dt; const sx = -dz / dd * m.strafe.dir, sz = dx / dd * m.strafe.dir; op.x += sx * 5.5 * dt; op.z += sz * 5.5 * dt;
+        applyPose(sev.j, addPose(POSES.guard, stepGait(sev.gait, dt))); if (m.strafe.t <= 0) m.strafe = null; u.pos.copy(op); setBlade(true, 1); trailSev(); return;
+      }
+      if (!m.atk && dd > 3.5 && dd < 9 && m.cd <= 0 && Math.random() < dt * 0.9) m.lunge = 0.35;
+      if (m.lunge > 0 && !m.atk) { m.lunge -= dt; op.x += dx / dd * 17 * dt; op.z += dz / dd * 17 * dt; applyPose(sev.j, POSES.thrustWind); if (m.lunge <= 0 || dd < 2.2) { m.lunge = 0; m.atk = { t: 0.2, n: 2, left: 1 }; } u.pos.copy(op); setBlade(true, 1); trailSev(); return; }
+      if (!m.atk && dd < 6 && dd > 2 && Math.random() < dt * 0.7) m.strafe = { t: 0.5 + Math.random() * 0.7, dir: Math.random() < 0.5 ? 1 : -1 };
       if (m.atk) {
         m.atk.t += dt; const a = m.atk, w = ['slashWind', 'overhead', 'thrustWind'][a.n], h = ['slashFollow', 'strikeDown', 'thrust'][a.n];
         applyPose(sev.j, a.t < 0.3 ? mixPose('guard', w, a.t / 0.3) : mixPose(w, h, Math.min(1, (a.t - 0.3) / 0.08)));
         if (!a.hit && a.t > 0.36) { a.hit = true; if (dd < 2.6) { hurtPlayer(STAGE.sevHit, u); game.j.spine.getWorldPosition(tmpA); spray(tmpA, tmpB.set(-dx / dd, 0.3, -dz / dd).normalize(), 40, 2, 0.8); }
           // his sweep cuts down any of Arixal's men beside him too
           game.troops.forEach(t => { if (t.side !== 'E' && t.state !== 'dead' && t.mover.position.distanceTo(op) < 2.8) killTrooper(t, false); }); }
-        if (a.t > 0.6) { m.atk = a.n < 2 ? { t: 0, n: a.n + 1 } : null; if (!m.atk) m.cd = 1.0 + Math.random() * 0.8; }
+        if (a.t > 0.6) { const left = (a.left === undefined ? 3 : a.left) - 1; m.atk = left > 0 ? { t: 0, n: Math.floor(Math.random() * 3), left } : null; if (!m.atk) m.cd = 0.5 + Math.random() * 1.7; }
       } else if (dd > 2.2) {
         const sp = dd > 9 ? 7.5 : 4.2; op.x += dx / dd * sp * dt; op.z += dz / dd * sp * dt;
         applyPose(sev.j, addPose(mixPose('menace', 'idleBlade', 0.35), stepGait(sev.gait, dt)));
-      } else { applyPose(sev.j, POSES.guard); if (m.cd <= 0) m.atk = { t: 0, n: 0 }; }
+      } else { applyPose(sev.j, POSES.guard); if (m.cd <= 0) m.atk = { t: Math.random() * 0.12, n: Math.floor(Math.random() * 3), left: 1 + Math.floor(Math.random() * 3) }; }
     } else if (u.dest && op.distanceTo(u.dest) > 4) {
       tmpA.subVectors(u.dest, op).setY(0).normalize(); op.addScaledVector(tmpA, 1.8 * dt); rig.rotation.y = Math.atan2(tmpA.x, tmpA.z);
       applyPose(sev.j, addPose(mixPose('menace', 'idleBlade', 0.35), stepGait(sev.gait, dt)));
@@ -6921,7 +7035,8 @@ function officerUpdate(u, dt, time) {
   let moving = false;
   if (f) {
     const ex = f.pos.x - op.x, ez = f.pos.z - op.z, ed = Math.hypot(ex, ez) || 1; m.mover.rotation.y = Math.atan2(ex, ez);
-    if (ed > 1.8 && !m.atk) { op.x += ex / ed * 4 * dt; op.z += ez / ed * 4 * dt; moving = true; }
+    if (m.back > 0 && !m.atk) { m.back -= dt; op.x -= ex / ed * 5 * dt; op.z -= ez / ed * 5 * dt; moving = true; }
+    else if (ed > 1.8 && !m.atk) { op.x += ex / ed * 4 * dt; op.z += ez / ed * 4 * dt; moving = true; }
     m.cd -= dt;
     if (!m.atk && m.cd <= 0 && ed < 2.4) m.atk = { t: 0, f };
   } else if (u.dest && op.distanceTo(u.dest) > 4) {
@@ -6932,8 +7047,8 @@ function officerUpdate(u, dt, time) {
   let pose = addPose('guard', stepGait(m.gait, dt));
   if (m.atk) {
     m.atk.t += dt; pose = m.atk.t < 0.4 ? mixPose('guard', 'overhead', m.atk.t / 0.4) : mixPose('overhead', 'strikeDown', Math.min(1, (m.atk.t - 0.4) / 0.1));
-    if (!m.atk.hit && m.atk.t > 0.45) { m.atk.hit = true; const g = m.atk.f; if (g && g.pos.distanceTo(op) < 2.8) officerHit(u, g, (u.chief ? 9 : u.captain ? 3 : 5) * mf(u.side)); }
-    if (m.atk.t > 0.75) { m.atk = null; m.cd = (u.captain ? 1.4 : 1.0) + Math.random() * 0.8; }
+    if (!m.atk.hit && m.atk.t > 0.45) { m.atk.hit = true; const g = m.atk.f; if (g && g.pos.distanceTo(op) < 2.8) officerHit(u, g, (u.chief ? 9 : u.captain ? 3 : 5) * mf(u.side) * starGain(u)); }
+    if (m.atk.t > 0.75) { m.atk = null; m.cd = (u.captain ? 1.4 : 0.7) + Math.random() * (u.captain ? 0.8 : 1.6); if (!u.captain && Math.random() < 0.25) m.back = 0.35; }
   }
   if (u.stag > 0) { u.stag -= dt; pose = addPose(pose, { spine: [-0.25, 0, 0] }); }
   applyPose(m.j, pose);
@@ -6948,17 +7063,19 @@ function updateTags() {
     tmpA.project(camera);
     if (tmpA.z > 1 || d > 70) { t.hidden = true; return; }
     t.hidden = false; t.style.transform = `translate(${(tmpA.x * 0.5 + 0.5) * w}px, ${(-tmpA.y * 0.5 + 0.5) * h}px) translate(-50%, -100%)`;
-    t.querySelector('i').style.width = Math.max(0, u.hp) + '%';
+    t.querySelector('.c4-bar i').style.width = Math.max(0, u.hp) + '%';
+    const st = t.querySelector('.st'); if (st && st.dataset.n !== String((u.stars || 1) + (u.factionLead ? 'L' : ''))) { st.dataset.n = (u.stars || 1) + (u.factionLead ? 'L' : ''); st.innerHTML = (u.factionLead ? '<b>LEADER</b> ' : '') + starHtml(u.stars || 1); }
   });
 }
 function updateTarget() {
   const t = game.lastTarget, el = G('c4Target');
   if (!t || (t.state === 'dead' && (t.t || 0) > 1.5) || t.alive === false) { el.hidden = true; return; }
-  const isOfficer = t.alive !== undefined, officer = isOfficer ? t : t.officer, lead = SIDE[officer.side].lead;
+  const isOfficer = t.alive !== undefined, officer = isOfficer ? t : t.officer, lead = leadOf(officer.side);
   el.hidden = false; el.className = 'c4-target ' + SIDE[officer.side].tag;
   G('c4TLead').textContent = lead.toUpperCase();
   // an officer shows his own name; a rank-and-file soldier is just a trooper of his side
   G('c4TName').textContent = isOfficer ? officer.name.toUpperCase() : 'TROOPER';
+  const ts = G('c4TSt'), sn = isOfficer && !officer.captain ? String(officer.stars || 1) : ''; if (ts.dataset.n !== sn) { ts.dataset.n = sn; ts.innerHTML = sn ? starHtml(+sn) : ''; }
   G('c4THp').style.width = (isOfficer ? Math.max(0, t.hp) : Math.max(0, t.hp / 3 * 100)) + '%';
 }
 function battleCamera(dt) {
