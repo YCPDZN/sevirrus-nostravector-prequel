@@ -394,6 +394,17 @@ body.run .g-sev.near b { color: var(--crimson); }
 .gwrap { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(8,3,14,.74); z-index: 12;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px); }
+.xfer { border-top: 1px solid var(--line); padding-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.xfer-h { font-size: 10px; letter-spacing: .25em; text-transform: uppercase; color: var(--frost); } .xfer-h small { display: block; margin-top: 4px; font-size: 11px; letter-spacing: .04em; text-transform: none; color: var(--dim); }
+.xfer-b { display: flex; flex-wrap: wrap; gap: 6px; }
+.xfer button { font-family: var(--font-ui); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--bone); background: none; border: 1px solid var(--line); padding: 7px 10px; cursor: pointer; }
+.xfer button:hover, .xfer button:focus-visible { border-color: var(--crimson); outline: none; } .xfer button.warn { border-color: var(--crimson); color: var(--crimson); } .xfer button.on { border-color: var(--frost); }
+.xfer-pane { display: flex; flex-direction: column; gap: 8px; } .xfer-pane[hidden] { display: none; } .xfer-pane p { font-size: 13px; }
+.xfer textarea { width: 100%; box-sizing: border-box; font: 11px/1.4 ui-monospace, Consolas, monospace; color: var(--bone); background: rgba(0,0,0,.45); border: 1px solid var(--line); padding: 8px; resize: vertical; word-break: break-all; }
+.xfer textarea:focus { outline: none; border-color: var(--frost); }
+.xfer-msg { font-size: 12px; min-height: 1.2em; color: var(--frost); } .xfer-msg.bad { color: var(--crimson); }
+.nostore { font-size: 13px; color: #ffb0a0 !important; border-left: 2px solid var(--crimson); padding-left: 10px; } .nostore[hidden] { display: none; }
+.nostore-tag { position: fixed; left: 50%; transform: translateX(-50%); bottom: max(10px, env(safe-area-inset-bottom, 0px)); z-index: 6; font-size: 11px; letter-spacing: .08em; color: #ffb0a0; background: rgba(20,4,8,.75); border: 1px solid rgba(255,90,90,.35); padding: 6px 12px; max-width: calc(100vw - 32px); text-align: center; } .nostore-tag[hidden] { display: none; }
 .slots { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .slots li { display: grid; grid-template-columns: 4.6em minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); background: rgba(255,255,255,.02); }
 #miContinue .note { max-width: 14em; text-align: right; line-height: 1.3; }
@@ -516,12 +527,20 @@ body.run .g-sev.near b { color: var(--crimson); }
   <p>Play in a well-lit room, sit a good distance from the screen, and take regular breaks.</p>
   <div class="pw-go">Press any key or tap to continue</div>
 </div></div>
+<script>// when the browser refuses storage (itch.io in a browser that blocks third-party storage, a private window), keep it in memory
+// for this visit, so the game still runs and a save can be exported before leaving
+(function () { let ok = false; try { const k = '__sv_t'; localStorage.setItem(k, '1'); localStorage.removeItem(k); ok = true; } catch (e) {}
+  if (ok) return; window.__noStore = true; const m = new Map();
+  const mem = { getItem: k => m.has(k) ? m.get(k) : null, setItem: (k, v) => { m.set(String(k), String(v)); }, removeItem: k => { m.delete(k); }, clear: () => m.clear(), key: i => [...m.keys()][i] ?? null, get length() { return m.size; } };
+  try { Object.defineProperty(window, 'localStorage', { value: mem, configurable: true }); } catch (e) {} })();
+</script>
 <script>(function () { const w = document.getElementById('pswarn'); w.focus();
   const go = e => { if (w.hidden) return; e.preventDefault(); e.stopImmediatePropagation(); w.hidden = true; window.removeEventListener('keydown', go, true); const f = document.querySelector('.mi'); f && f.focus(); };
   window.addEventListener('keydown', go, true); w.addEventListener('click', go); w.addEventListener('touchend', go); })();</script>
 <div class="loading" id="loading">Reconstituting subject…</div>
 
 <div class="ui">
+<div class="nostore-tag" id="noStoreTag" hidden>Saves aren’t kept in this browser here · use Save / Load → Export save</div>
   <header class="hud-top">
     <span class="rec">Aridaxx <span class="hide-sm">&nbsp;· Temporal index</span><b id="yrIdx">&nbsp;1790 AD</b></span>
     <span class="chrono hide-sm" id="chrono">—</span>
@@ -593,6 +612,22 @@ body.run .g-sev.near b { color: var(--crimson); }
     <h3 id="hSaves">Save / Load</h3>
     <p>The game never saves on its own. Save from the pause menu while you play (Esc or Pause), or when a chapter ends. Saves are kept in this browser.</p>
     <ol class="slots" id="slotList"></ol>
+    <p class="nostore" id="noStoreNote" hidden>This browser is not letting the game keep saves on this page, so your progress lasts only until you close it. Export your save before you leave, and import it next time.</p>
+    <div class="xfer">
+      <div class="xfer-h">Move your progress <small>to another browser, device, or the itch.io and downloaded versions</small></div>
+      <div class="xfer-b"><button id="xExport">Export save</button><button id="xImport">Import save</button></div>
+      <div class="xfer-pane" id="xExpPane" hidden>
+        <p>Your cleared chapters and all three slots, as one code. Copy it, or save it as a file.</p>
+        <textarea id="xExpCode" readonly rows="4" spellcheck="false" aria-label="Save code"></textarea>
+        <div class="xfer-b"><button id="xCopy">Copy code</button><button id="xFile">Download file</button></div>
+      </div>
+      <div class="xfer-pane" id="xImpPane" hidden>
+        <p>Paste a save code, or open a save file. This <b>replaces</b> the progress and saves in this browser.</p>
+        <textarea id="xImpCode" rows="4" spellcheck="false" placeholder="SEVIRRUS-SAVE-1:…" aria-label="Paste a save code"></textarea>
+        <div class="xfer-b"><button id="xOpen">Open file</button><button id="xDoImport" class="warn">Import</button><input type="file" id="xFileIn" accept=".txt,text/plain" hidden></div>
+      </div>
+      <div class="xfer-msg" id="xMsg" role="status" aria-live="polite"></div>
+    </div>
     <button class="close" data-close>Return</button>
   </div>
 </div>
@@ -965,6 +1000,39 @@ body.run .g-sev.near b { color: var(--crimson); }
   }
   const chOpen = (n, p) => n <= 1 || !!p['c' + (n - 1)];
   window.__menu.markCleared = n => { const p = progress(); p['c' + n] = true; active = { chapter: n, complete: true }; try { localStorage.setItem(PKEY, JSON.stringify(p)); } catch (e) {} refreshMenu(); };
+  // ---------- export / import: one code carries the cleared chapters, all three slots and settings ----------
+  const XPRE = 'SEVIRRUS-SAVE-1:', XKEYS = () => [PKEY, 'sevirrus.quality', ...Array.from({ length: SLOTS }, (_, i) => skey(i + 1))];
+  const xmsg = (t, bad) => { const m = $('#xMsg'); m.textContent = t; m.classList.toggle('bad', !!bad); };
+  const b64e = str => { const by = new TextEncoder().encode(str); let bin = ''; for (let i = 0; i < by.length; i += 0x8000) bin += String.fromCharCode.apply(null, by.subarray(i, i + 0x8000)); return btoa(bin); };
+  const b64d = b => new TextDecoder().decode(Uint8Array.from(atob(b), c => c.charCodeAt(0)));
+  function exportCode() {
+    const data = {}; XKEYS().forEach(k => { let v = null; try { v = localStorage.getItem(k); } catch (e) {} if (v !== null) data[k] = v; });
+    return XPRE + b64e(JSON.stringify({ v: 1, game: 'sevirrus', at: Date.now(), data }));
+  }
+  function importCode(code) {
+    code = (code || '').replace(/\s+/g, '');
+    if (!code.startsWith(XPRE)) throw new Error('That isn’t a SEVIRRUS save code. It should start with ' + XPRE);
+    let obj; try { obj = JSON.parse(b64d(code.slice(XPRE.length))); } catch (e) { throw new Error('That code is damaged or incomplete. Copy the whole thing and try again.'); }
+    if (!obj || obj.game !== 'sevirrus' || !obj.data || typeof obj.data !== 'object') throw new Error('That code is damaged or incomplete.');
+    const keys = XKEYS(); Object.keys(obj.data).forEach(k => { if (!keys.includes(k)) delete obj.data[k]; });
+    for (const k of keys) { if (obj.data[k] !== undefined && k !== 'sevirrus.quality') { try { JSON.parse(obj.data[k]); } catch (e) { throw new Error('That code is damaged or incomplete.'); } } }
+    keys.forEach(k => { try { if (obj.data[k] !== undefined) localStorage.setItem(k, String(obj.data[k])); else if (k !== 'sevirrus.quality') localStorage.removeItem(k); } catch (e) {} });
+    const p = progress(); return Object.keys(p).filter(k => p[k]).length;
+  }
+  const showPane = which => { $('#xExpPane').hidden = which !== 'exp'; $('#xImpPane').hidden = which !== 'imp'; $('#xExport').classList.toggle('on', which === 'exp'); $('#xImport').classList.toggle('on', which === 'imp'); xmsg(''); };
+  $('#xExport').addEventListener('click', () => { if (!$('#xExpPane').hidden) { showPane(null); return; } showPane('exp'); const t = $('#xExpCode'); t.value = exportCode(); t.focus(); t.select(); xmsg(`Code ready · ${Math.ceil(t.value.length / 1024)} KB`); });
+  $('#xImport').addEventListener('click', () => { if (!$('#xImpPane').hidden) { showPane(null); return; } showPane('imp'); $('#xImpCode').value = ''; $('#xImpCode').focus(); });
+  $('#xCopy').addEventListener('click', async () => { const t = $('#xExpCode'); try { await navigator.clipboard.writeText(t.value); xmsg('Copied. Paste it somewhere safe.'); } catch (e) { t.focus(); t.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (er) {} xmsg(ok ? 'Copied. Paste it somewhere safe.' : 'Copy blocked here: the code is selected, press Ctrl+C (or long-press → Copy).', !ok); } });
+  $('#xFile').addEventListener('click', () => { const d = new Date(), stamp = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([$('#xExpCode').value], { type: 'text/plain' })); a.download = `sevirrus-save-${stamp}.txt`; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); xmsg('Save file downloaded.'); });
+  $('#xOpen').addEventListener('click', () => $('#xFileIn').click());
+  $('#xFileIn').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; if (!f) return; f.text().then(t => { $('#xImpCode').value = t.trim(); xmsg(`Loaded ${f.name}. Press Import to use it.`); }); e.target.value = ''; });
+  $('#xDoImport').addEventListener('click', () => {
+    try { const n = importCode($('#xImpCode').value); renderSlots($('#slotList'), 'load'); refreshMenu(); try { renderChapters(); } catch (e) {} $('#xImpCode').value = '';
+      xmsg(`Imported · ${n} chapter${n === 1 ? '' : 's'} cleared${window.__noStore ? '. This browser still won’t keep it after you close the page, so export again before you go.' : '.'}`); doFlash(); }
+    catch (e) { xmsg(e.message, true); }
+  });
+  if (window.__noStore) { $('#noStoreNote').hidden = false; $('#noStoreTag').hidden = false; }
   function renderChapters() {
     const p = progress();
     document.querySelectorAll('.ch-card').forEach(c => { const n = +c.dataset.ch, open = chOpen(n, p); c.classList.toggle('locked', !open); c.classList.toggle('cleared', n >= 1 && !!p['c' + n]); c.setAttribute('aria-disabled', String(!open)); });
